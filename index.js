@@ -1,19 +1,3 @@
-/**
- * 一个全局的状态管理 store，有三个对外暴露的 API
- *  add(action: string, reducer: Object)
- *  dispatch(action: string, payload: any)
- *  addMultipleStates(reducers: Object)
- * 
- * 另外在 page 和 component 中增加了俩个配置
- * 
- * 这个钩子函数会在 page 和 component 创建之前调用，然后销毁，所以你可以在这里定义一些 reducer
- *  1. createReducer: Function
- *  
- * 这个是一个优化配置项，如果没有指定，则每当有 dispath 的时候，当前 page 或 component 都不会更新
- * 如果指定了，则只有当前指定的 action 被触发时才会更新，如果指定的是 "all"，则任何 dispath 都会更新
- *  2. requireActions: Array<action> | 'all'
- * */ 
-
 // 对一些参数做断言
 function assertreducer (action, reducer) {
   if (!('partialState' in reducer)) {
@@ -202,10 +186,15 @@ function createStore (initState) {
 
       // 更新组件
       container.pagesAndComponents.forEach(({cm, requireActions}) => {
-        if (requireActions === 'all') {
-          cm.setData({ global: container.state })
-        } else if (requireActions.includes(action)) {
-          cm.setData({ global: container.state })
+        if (requireActions === 'all' || requireActions.includes(action)) {
+          // 允许优化
+          if (typeof cm.updateGlobalState === 'function') {
+            if (cm.updateGlobalState(container.state) !== false) {
+              cm.setData({ global: container.state })
+            }
+          } else {
+            cm.setData({ global: container.state })
+          }
         }
       })
       isDispatching = false
