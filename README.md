@@ -4,7 +4,7 @@
 [npm-image]: https://img.shields.io/npm/v/@rustle/mp-store.svg?style=flat-square
 [npm-url]: https://www.npmjs.com/package/@rustle/mp-store
 
-一个轻量级的小程序状态管理库
+一个轻量级的小程序状态管理库。
 
 ## API
 一个全局的状态管理 store，有三个对外暴露的 API
@@ -27,7 +27,7 @@
 ## 初始化
 得在整个应用初始化之前初始化 store
 ```js
-import createStore from 'mp-store'
+import createStore from '@rustle/mp-store'
 
 // 第二个参数可以混入一些方法，就像 vue 那样，但这个不是一个好的扩展机制，谨慎使用
 export default createStore({}, mixin => {
