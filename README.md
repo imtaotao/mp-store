@@ -1,4 +1,9 @@
 ## mp-store
+[![NPM version][npm-image]][npm-url]
+
+[npm-image]: https://img.shields.io/npm/v/@rustle/mp-store.svg?style=flat-square
+[npm-url]: https://www.npmjs.com/package/@rustle/mp-store
+
 一个轻量级的小程序状态管理库
 
 ## API
@@ -7,17 +12,17 @@
   + `dispatch(action: string, payload: any)`
   + `addMultipleStates(reducers: Object)`
 
-初始化后 store 将会注入到 page 或者 component 实例中，所以你可以通过 `this.store` 获取到 store 的实例。另外在 page 和 component 中增加了三个配置
+初始化后 store 将会注入到 page 或者 component 实例中，所以你可以通过 `this.store` 获取到 store 的实例。另外在 page 和 component 中额外增加了三个配置。
 
 ### `createReducer: (store: Store) => void`
-这个钩子函数会在 page 和 component 创建之前调用，然后销毁，所以你可以在这里定义一些 reducer
+这个钩子函数会在 page 和 component 创建之前调用，然后销毁，所以你可以在这里定义一些 reducer。
 
 ### `updateGlobalState: (newState: any) => boolean`
-这个钩子函数可以优化你的 page 或者 component 渲染。如果返回 false 将阻止当前组件渲染
+这个钩子函数可以优化你的 page 或者 component 渲染。如果返回 false 将阻止当前组件渲染。
 
 ### `requireActions: Array<action> | 'all'`
-这个是一个优化配置项，如果没有指定，则每当有 dispath 的时候，当前 page 或 component 都不会更新
-如果指定了，则只有当前指定的 action 被触发时才会更新，如果指定的是 "all"，则任何 dispath 都会更新
+这个是一个优化配置项，如果没有指定，则每当有 dispath 的时候，当前 page 或 component 都不会更新，
+如果指定了，则只有当前指定的 action 被触发时才会更新，如果指定的是 `all`，则任何 dispath 都会更新。
 
 ## 初始化
 得在整个应用初始化之前初始化 store

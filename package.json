@@ -1,6 +1,6 @@
 {
-  "name": "mp-store",
-  "version": "0.0.0",
+  "name": "@rustle/mp-store",
+  "version": "0.0.1",
   "description": "a lightweight applet state management library",
   "main": "index.js",
   "scripts": {
@@ -12,7 +12,9 @@
   "keywords": [
     "store",
     "state",
-    "mp"
+    "mp",
+    "微信小程序",
+    "小程序"
   ],
   "author": "imtaotao",
   "license": "ISC",
