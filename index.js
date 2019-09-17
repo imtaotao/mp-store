@@ -63,7 +63,7 @@ function createStore (initState) {
   const store = {
     // 获取 page 或者 component 实例
     // require actions 为一个优化项，如果没有，默认不会被更新
-    // 如果指定了，则会如果当前 dispath 的 action 不包含在里面，则不会更新
+    // 如果指定了，则会如果当前 dispatch 的 action 不包含在里面，则不会更新
     rigisterComponent (config, isPage) {
       const store = this
       const requireActions = config.requireActions || []
@@ -158,7 +158,7 @@ function createStore (initState) {
       }
     },
 
-    dispath (action, payload) {
+    dispatch (action, payload) {
       if (isDispatching) {
         throw new Error(
           'It is not allowed to call "dispatch" during dispatch execution.'
@@ -173,8 +173,8 @@ function createStore (initState) {
         )
       }
 
-      // 我们不允许在 dispath 的时候再 dispath
-      // 这意味着不能在 setter 函数中调用 dispath
+      // 我们不允许在 dispatch 的时候再 dispatch
+      // 这意味着不能在 setter 函数中调用 dispatch
       isDispatching = true
 
       try {

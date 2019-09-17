@@ -21,8 +21,8 @@
 这个钩子函数可以优化你的 page 或者 component 渲染。如果返回 false 将阻止当前组件渲染。
 
 ### `requireActions: Array<action> | 'all'`
-这个是一个优化配置项，如果没有指定，则每当有 dispath 的时候，当前 page 或 component 都不会更新，
-如果指定了，则只有当前指定的 action 被触发时才会更新，如果指定的是 `all`，则任何 dispath 都会更新。
+这个是一个优化配置项，如果没有指定，则每当有 dispatch 的时候，当前 page 或 component 都不会更新，
+如果指定了，则只有当前指定的 action 被触发时才会更新，如果指定的是 `all`，则任何 dispatch 都会更新。
 
 ## 初始化
 得在整个应用初始化之前初始化 store
@@ -79,9 +79,19 @@ Component({
 
     created () {
       setTimeout(() => {
-        this.store.dispath('ACTION', 'imtaotao')
+        this.store.dispatch('ACTION', 'imtaotao')
       }, 3000)
     },
+  })
+```
+
+获取全局状态
+```js
+  Page({
+    created () {
+      // 你可以通过 global 获取到所有的全局状态
+      this.data.global
+    }
   })
 ```
 
