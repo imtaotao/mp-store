@@ -1,5 +1,5 @@
 // 对一些参数做断言
-function assertreducer (action, reducer) {
+function assertreducer (state, action, reducer) {
   if (!('partialState' in reducer)) {
     throw new Error(
       `You must defined "partialState" of "${action}".\n\n`
@@ -10,6 +10,15 @@ function assertreducer (action, reducer) {
     throw new Error(
       `The partialState of "${action}" must be an object.\n\n`
     )
+  }
+
+  for (const key in reducer.partialState) {
+    if (state.hasOwnProperty(key)) {
+      throw new Error(
+        `The "${key}" already exists in global state,` +
+          'Please don\'t repeat defined.'
+      )
+    }
   }
 
   if (!reducer.setter) {
@@ -49,6 +58,11 @@ function valueEqual (a, b) {
   }
 
   return false
+}
+
+
+function updateComponent (cm, partialState) {
+  
 }
 
 function createStore (initState) {
@@ -147,14 +161,16 @@ function createStore (initState) {
         )
       }
 
-      reducer = assertreducer(action, reducer)
-
+      reducer = assertreducer(container.state, action, reducer)
       container.actions.push(action)
+
       Object.assign(container.state, reducer.partialState)
 
       // wrop setter
       container.setters[action] = payload => {
-        reducer.setter(container.state, payload)
+        // 我们只给当前 reducer 的 partialState 进行更改
+        reducer.setter(reducer.partialState, payload)
+        return reducer.partialState
       }
     },
 
@@ -177,8 +193,11 @@ function createStore (initState) {
       // 这意味着不能在 setter 函数中调用 dispatch
       isDispatching = true
 
+      let newPartialState
+
       try {
-        container.setters[action](payload)
+        newPartialState = container.setters[action](payload)
+        Object.assign(container.state, newPartialState)
       } catch (err) {
         isDispatching = false
         throw new Error(`${err}\n\n   --- from [${action}] action\n\n`)
@@ -190,10 +209,10 @@ function createStore (initState) {
           // 允许优化
           if (typeof cm.updateGlobalState === 'function') {
             if (cm.updateGlobalState(container.state) !== false) {
-              cm.setData({ global: container.state })
+              updateComponent(cm, newPartialState)
             }
           } else {
-            cm.setData({ global: container.state })
+            updateComponent(cm, newPartialState)
           }
         }
       })
@@ -214,8 +233,9 @@ function createStore (initState) {
       return currentActions
     },
 
+    // container.state 只允许内部更改
     getState () {
-      return container.state
+      return Object.assign({}, container.state)
     },
   }
 
@@ -231,7 +251,7 @@ function createStore (initState) {
 export const nativePage = Page
 export const nativeComponent = Component
 
-export default function (initState, mixinMethods) {
+export default function (initState, mixinMethods, createHook) {
   // 扩展对象
   const extendMethods = {}
   const store = createStore(initState)
@@ -262,11 +282,18 @@ export default function (initState, mixinMethods) {
   // 添加需要扩展属性
   Page = function (config, ...args) {
     extendData(config, true)
+    // 允许外部再次进行更改
+    if (typeof createHook === 'function') {
+      createHook(config)
+    }
     nativePage.call(this, config, ...args)
   }
 
   Component = function (config, ...args) {
     extendData(config, false)
+    if (typeof createHook === 'function') {
+      createHook(config)
+    }
     nativeComponent.call(this, config, ...args)
   }
 
