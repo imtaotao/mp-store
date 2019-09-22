@@ -90,8 +90,8 @@ export default class Store {
     // We don't allow call dispacth again
     assertError(
       isDispatching,
-      'It is not allowed to call "dispatch" during dispatch execution.'
-        + `\n\n   --- from [${action}] action.`
+      'It is not allowed to call "dispatch" during dispatch execution.' +
+        `\n\n   --- from [${action}] action.`
     )
     
     const reducer = reducers.find(v => v.action === action)
