@@ -1,10 +1,11 @@
 import {
+  warn,
+  diff,
   remove,
-  parsePath,
   mergeState,
   assertError,
+  isPlainObject,
 } from './utils'
-import updateComponent from './update'
 
 const assertReducer = (state, action, reducer) => {
   const { setter, partialState } = reducer
@@ -29,14 +30,41 @@ const assertReducer = (state, action, reducer) => {
 
   if (typeof setter !== 'function') {
     reducer.setter = () => {
-      throw new Error(
+      warn(
         `Can\'t set "${action}" value. ` +
-          'Have you defined a setter?\n\n'
+          'Have you defined a setter?'
       )
     }
   }
 
   return reducer
+}
+
+// Update page and component 
+const updateComponent = deps => {
+  for (let i = 0, len = deps.length; i < len; i++) {
+    const { component, didUpdate, willUpdate, createState } = deps[i]
+
+    if (component.data.global) {
+      const newPartialState = createState()
+
+      // The `willUpdate` function will optimize component
+      if (typeof willUpdate === 'function') {
+        if (willUpdate(newPartialState) === false) {
+          continue
+        }
+      }
+      const patch = diff(component.data.global, newPartialState)
+
+      if (!isEmptyObject(patch)) {
+        component.setData(patch)
+
+        if (typeof didUpdate === 'function') {
+          didUpdate(newPartialState)
+        }
+      }
+    }
+  }
 }
 
 export default class Store {
@@ -84,7 +112,7 @@ export default class Store {
       // If call setter hook throw an error
       // The `isDispatching` will restore
       isDispatching = false
-      throw new Error(`${err}\n\n   --- from [${action}] action.`)
+      warn(`${err}\n\n   --- from [${action}] action.`)
     }
 
     // Update components
@@ -95,7 +123,8 @@ export default class Store {
   // Insert api
   _rewirteCfgAndAddDep (config, isPage) {
     const store = this
-    const { data, defineReducer, defineGlobalState } = config
+    const { data, storeConfig = {} } = config
+    const { didUpdate, willUpdate, defineReducer, defineGlobalState } = storeConfig
 
     data 
       ? data.global = {}
@@ -105,44 +134,35 @@ export default class Store {
     // Allow craete reducer in the page or component
     if (typeof defineReducer === 'function') {
       defineReducer.call(store, store)
-      delete config.defineReducer
+      delete config.storeConfig
     }
 
     const addDep = component => {
       // If no used global state word
       // No need to add dependencies
       if (typeof defineGlobalState === 'function') {
-        const usedState = defineGlobalState.call(store, this.state)
-        const usedWords = Object.keys(usedState)
-
-        // This is functions of get state
-        getValues = usedWords.map(key => parsePath(usedState[key]))
-
-        const createState = () => {
-          const state = {}
-          usedWords.forEach((key, i) => {
-            state[key] = getValues[i](this.state)
+        const usedState = defineGlobalState(this.state)
+        
+        if (isPlainObject(usedState)) {
+          // Add component to depComponents
+          this.depComponents.push({
+            isPage,
+            component,
+            didUpdate,
+            willUpdate,
+            createState: () => defineGlobalState(this.state),
           })
-          return state
+
+          // Set global state to view
+          component.setData({ global: usedState })
         }
-
-        // Rigister component to depComponents
-        this.depComponents.push({
-          isPage,
-          usedWords,
-          component,
-          createState,
-        })
-
-        // Set global state to view
-        component.setData({ global: createState() })
       }
     }
 
     if (isPage) {
       const nativeLoad = config.onLoad
       const nativeUnload = config.onUnload
-      
+
       config.onLoad = function (opts) {
         addDep(this)
 

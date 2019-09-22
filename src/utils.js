@@ -1,7 +1,9 @@
+export const warn = message => {
+  throw new Error(`\n[MpStore warn]: ${message}\n\n`)
+}
+
 export const assertError = (condition, message) => {
-  if (condition) {
-    throw new Error(`\nMpstore warn: ${message}\n\n`)
-  }
+  if (condition) warn(message)
 }
 
 export const isEmptyObject = obj => {
@@ -21,18 +23,17 @@ export const remove = (list, item) => {
   }
 }
 
-// Parse simple path.
-const bailRE = /[^\w.$]/
-export const parsePath = path => {
-  if (bailRE.test(path)) return
-  const segments = path.split('.')
-  return obj => {
-    for (let i = 0; i < segments.length; i++) {
-      if (!obj) return
-      obj = obj[segments[i]]
-    }
-    return obj
+export const isPlainObject = obj => {
+  if (typeof obj !== 'object' || obj === null) return false
+
+  const proto = Object.getPrototypeOf(obj)
+  if (proto === null) return true
+
+  let baseProto = proto
+  while (Object.getPrototypeOf(baseProto) !== null) {
+    baseProto = Object.getPrototypeOf(baseProto)
   }
+  return proto === baseProto
 }
 
 export const diff = (left, right) => {
