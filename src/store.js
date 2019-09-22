@@ -1,5 +1,6 @@
 import {
   remove,
+  parsePath,
   mergeState,
   assertError,
 } from './utils'
@@ -112,17 +113,29 @@ export default class Store {
       // No need to add dependencies
       if (typeof defineGlobalState === 'function') {
         const usedState = defineGlobalState.call(store, this.state)
-        const usedWords = Object.keys(usedState) 
+        const usedWords = Object.keys(usedState)
+
+        // This is functions of get state
+        getValues = usedWords.map(key => parsePath(usedState[key]))
+
+        const createState = () => {
+          const state = {}
+          usedWords.forEach((key, i) => {
+            state[key] = getValues[i](this.state)
+          })
+          return state
+        }
 
         // Rigister component to depComponents
         this.depComponents.push({
           isPage,
           usedWords,
           component,
+          createState,
         })
 
         // Set global state to view
-        component.setData({ global: usedState })
+        component.setData({ global: createState() })
       }
     }
 

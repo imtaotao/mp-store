@@ -21,6 +21,20 @@ export const remove = (list, item) => {
   }
 }
 
+// Parse simple path.
+const bailRE = /[^\w.$]/
+export const parsePath = path => {
+  if (bailRE.test(path)) return
+  const segments = path.split('.')
+  return obj => {
+    for (let i = 0; i < segments.length; i++) {
+      if (!obj) return
+      obj = obj[segments[i]]
+    }
+    return obj
+  }
+}
+
 export const diff = (left, right) => {
 
 }

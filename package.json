@@ -7,7 +7,9 @@
   "scripts": {
     "dev": "node build.js -w",
     "build": "node build.js",
-    "publish": "npm version major"
+    "publish": "npm version major",
+    "test": "karma start test/karma.unit.config.js",
+    "test:cover": "karma start test/karma.cover.config.js"
   },
   "repository": {
     "type": "git",
@@ -23,12 +25,24 @@
   "devDependencies": {
     "@babel/core": "^7.5.5",
     "@babel/preset-env": "^7.5.5",
+    "jasmine-core": "^3.5.0",
+    "karma": "^3.1.1",
+    "karma-chrome-launcher": "^2.2.0",
+    "karma-coverage": "^1.1.2",
+    "karma-dirname-preprocessor": "^0.0.4",
+    "karma-filemap-preprocessor": "^0.1.0",
+    "karma-jasmine": "^1.1.2",
+    "karma-mocha-reporter": "^2.2.5",
+    "karma-sourcemap-loader": "^0.3.7",
+    "karma-webpack": "^3.0.5",
+    "miniprogram-simulate": "^1.0.8",
     "rimraf": "^2.7.0",
     "rollup": "^1.19.4",
     "rollup-plugin-babel": "^4.3.3",
     "rollup-plugin-cleanup": "^3.1.1",
     "rollup-plugin-commonjs": "^10.0.2",
-    "rollup-plugin-node-resolve": "^5.2.0"
+    "rollup-plugin-node-resolve": "^5.2.0",
+    "webpack": "^3.10.0"
   },
   "author": "imtaotao",
   "license": "ISC",
