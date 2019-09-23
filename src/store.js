@@ -42,7 +42,6 @@ const assertReducer = (state, action, reducer) => {
       )
     }
   }
-
   return reducer
 }
 

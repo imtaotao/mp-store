@@ -21,6 +21,5 @@ export default function (inject) {
 
     inject(callback)
   }
-
   return expandMethods
 }

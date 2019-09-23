@@ -49,8 +49,5 @@
   "bugs": {
     "url": "https://github.com/imtaotao/mp-store/issues"
   },
-  "homepage": "https://github.com/imtaotao/mp-store#readme",
-  "dependencies": {
-    "express": "^4.17.1"
-  }
+  "homepage": "https://github.com/imtaotao/mp-store#readme"
 }

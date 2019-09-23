@@ -233,9 +233,7 @@ class Router {
   }
 
   handle(action, payload) {
-    const len = this.stack.length;
-
-    if (len > 0) {
+    if (this.stack.length > 0) {
       let idx = 0;
 
       const next = prevPayload => {
