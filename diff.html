@@ -7,7 +7,6 @@
   <title>Document</title>
 </head>
 <body>
-  <script src="./test.js"></script>
   <script>
     const ADD = 'add'
     const REMOVE = 'remove'
@@ -53,7 +52,6 @@
       while (--len >= 0) {
         const path = `${base}[${len}]`
 
-        // If a.length > b.length
         if (len > b.length - 1) {
           patchs.push(new Patch(REMOVE, path, null))
         } else if (a[len] !== b[len]) {
@@ -61,7 +59,6 @@
         }
       }
 
-      // If b.length > a.length
       if (b.length > a.length) {
         len = b.length
         while (--len >= a.length) {
@@ -102,9 +99,7 @@
   </script>
 
   <script>
-    const patchs = diff(examples.arrays[1], examples.arrays[0], 'root')
-    console.log(examples.arrays[1], examples.arrays[0]);
-    console.log(patchs)
+    
   </script>
 </body>
 </html>

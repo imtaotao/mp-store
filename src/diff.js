@@ -42,7 +42,6 @@ function walkArray (a, b, base, patchs) {
   while (--len >= 0) {
     const path = `${base}[${len}]`
 
-    // If a.length > b.length
     if (len > b.length - 1) {
       patchs.push(new Patch(REMOVE, path, null))
     } else if (a[len] !== b[len]) {
@@ -50,7 +49,6 @@ function walkArray (a, b, base, patchs) {
     }
   }
 
-  // If b.length > a.length
   if (b.length > a.length) {
     len = b.length
     while (--len >= a.length) {
