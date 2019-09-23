@@ -2,7 +2,7 @@ export const warn = message => {
   throw new Error(`\n[MpStore warn]: ${message}\n\n`)
 }
 
-export const assertError = (condition, message) => {
+export const assert = (condition, message) => {
   if (condition) warn(message)
 }
 

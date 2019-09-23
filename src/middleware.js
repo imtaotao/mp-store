@@ -1,7 +1,7 @@
-import { warn } from './utils'
+export const COMMONACTION = '*'
 
 const match = (layer, action) => {
-  if (action === '/') return true
+  if (action === COMMONACTION) return true
   return action === layer.action
 }
 
@@ -21,6 +21,16 @@ export default class Router {
     this.stack.push(new Layer(action, fn))
   }
 
+  remove (action, fn) {
+    const index = this.stack.findIndex(layer => {
+      return layer.fn === fn && layer.action === action
+    })
+
+    if (index > -1) {
+      this.stack.splice(index, 1)
+    }
+  }
+
   handle (action, payload) {
     const len = this.stack.length
 
@@ -34,11 +44,7 @@ export default class Router {
         }
 
         if (layer) {
-          try {
-            layer.fn.call(this.store, prevPayload, next)
-          } catch (err) {
-            warn(`${err}\n\n   --- from [${action}] action.`)
-          }
+          layer.fn.call(this.store, prevPayload, next)
         }
       }
 

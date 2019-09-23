@@ -1,13 +1,14 @@
 import {
   warn,
+  assert,
   remove,
+  callHook,
   mapObject,
   mergeState,
-  assertError,
   isPlainObject,
 } from './utils'
-import Router from './middleware'
 import updateComponent from './update'
+import Router, { COMMONACTION } from './middleware'
 
 // global state namespace
 export let GLOBALWORD = 'global'
@@ -15,18 +16,18 @@ export let GLOBALWORD = 'global'
 const assertReducer = (state, action, reducer) => {
   const { setter, partialState } = reducer
 
-  assertError(
+  assert(
     !('partialState' in reducer),
     `You must defined "partialState" of "${action}".`,
   )
 
-  assertError(
+  assert(
     !partialState || typeof partialState !== 'object',
     `The partialState of "${action}" must be an object.`,
   )
 
   for (const key in partialState) {
-    assertError(
+    assert(
       state.hasOwnProperty(key),
       `The "${key}" already exists in global state,` +
         'Please don\'t repeat defined.'
@@ -68,7 +69,7 @@ export default class Store {
 
     // if we in call dispatch process,
     // we don't allow call dispacth again.
-    assertError(
+    assert(
       isDispatching,
       'It is not allowed to call "dispatch" during dispatch execution.' +
         `\n\n   --- from [${action}] action.`
@@ -76,40 +77,56 @@ export default class Store {
 
     const reducer = reducers.find(v => v.action === action)
 
-    assertError(
+    assert(
       !reducer,
       `The "${action}" does not exist. ` +
         'Maybe you have not defined.'
     )
 
-    this.isDispatching = true
-    let newPartialState = null
+    const removeMiddleware = this.use(action, prevPayload => {
+      // the current function is called only once
+      removeMiddleware()
 
-    try {
-      newPartialState = reducer.setter(this.state, payload)
+      const newPartialState = reducer.setter(this.state, prevPayload)
       this.state = mergeState(this.state, newPartialState)
-    } catch (err) {
-      // if call setter function throw an error,
-      // the `isDispatching` need restore.
-      isDispatching = false
-      warn(`${err}\n\n   --- from [${action}] action.`)
-    }
 
-    // update components
-    updateComponent(this.depComponents, this.hooks)
-    isDispatching = false
+      // update components
+      updateComponent(this.depComponents, this.hooks)
+    })
+
+    // call middleware
+    this.router.handle(action, payload)
   }
 
   // add middleware
   use (action, fn) {
     if (typeof action !== 'string') {
       fn = action
-      action = '/'
+      action = COMMONACTION
     }
 
-    if (typeof action === 'string' && typeof fn === 'function') {
-      this.router.use(match, fn)
+    const wrapfn = (payload, next) => {
+      this.isDispatching = true
+      // if call setter function throw an error,
+      // the `isDispatching` need restore.
+      try {
+        fn(payload, next)
+      } catch (err) {
+        this.isDispatching = false
+
+        // if the error hook exist, don't throw error
+        if (this.hooks && typeof this.hooks[middlewareError] === 'function') {
+          this.hooks[middlewareError](action, payload, err)
+        } else {
+          warn(`${err}\n\n   --- from [${action}] action.`)
+        }
+      }
+
+      this.isDispatching = false
     }
+
+    this.router.use(match, wrapfn)
+    return () => this.router.remove(action, wrapfn)
   }
 
   // allow change `GLOBALWORD`.
@@ -137,6 +154,8 @@ export default class Store {
     }
 
     const addDep = component => {
+      callHook(this.hooks, 'addDep', [component, isPage])
+
       // if no used global state word,
       // no need to add dependencies.
       if (typeof defineGlobalState === 'function') {

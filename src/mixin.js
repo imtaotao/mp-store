@@ -1,16 +1,16 @@
-import { assertError } from './utils'
+import { assert } from './utils'
 
 export default function (inject) {
   const expandMethods = Object.create(null)
 
   if (typeof inject === 'function') {
     const callback = (name, fn) => {
-      assertError(
+      assert(
         typeof name !== 'string' || typeof fn !== 'functin',
         `Mixed callback parameters are illegal.`,
       )
 
-      assertError(
+      assert(
         name in expandMethods,
         `The "${name}" is exist,`, +
           `Please don't repeat mixin.`
