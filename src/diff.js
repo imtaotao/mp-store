@@ -8,22 +8,22 @@ function Patch (type, path, value) {
   this.value = value
 }
 
-// Compare left and right values
+// compare left and right values
 function diffValues (left, right, path, patchs) {
-  // Filter functin and null
+  // filter functin and null
   if (typeof left === 'function' || left === null) {
     patchs.push(new Patch(REPLACE, path, right))
   } else if (Array.isArray(left)) {
-    // Diff array
+    // diff array
     if (Array.isArray(right)) {
       walkArray(left, right, path, patchs)
     } else {
       patchs.push(new Patch(REPLACE, path, right))
     }
   } else if (typeof left === 'object') {
-    // Diff object
+    // diff object
     if (right !== null && typeof right === 'object') {
-      // Filter Date object
+      // filter Date object
       if (left instanceof Date || right instanceof Date) {
         patchs.push(new Patch(REPLACE, path, right))
       } else {
@@ -69,9 +69,9 @@ function walkArray (a, b, base, patchs) {
 }
 
 function walkObject (a, b, base, patchs) {
-  // Walk left object
+  // walk left object
   for (const key in a) {
-    // Current path
+    // current path
     const path = `${base}.${key}`
 
     if (!(key in b)) {
@@ -79,13 +79,13 @@ function walkObject (a, b, base, patchs) {
     } else if (a[key] !== b[key]) {
       diffValues(a[key], b[key], path, patchs)
 
-      // Don't use `delete` statement,
+      // don't use `delete` statement,
       // will destroy the stability of the `object` structure
       // delete b[key]
     }
   }
 
-  // Walk right object
+  // walk right object
   for (const key in b) {
     if (!(key in a)) {
       const path = `${base}.${key}`
@@ -94,7 +94,7 @@ function walkObject (a, b, base, patchs) {
   }
 }                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 
 
-// Root `a` and root `b` is an object
+// root `a` and root `b` is an object
 export default function (a, b, basePath) {
   const patchs = []
   walkObject(a, b, basePath, patchs)

@@ -1,11 +1,16 @@
 import {
   warn,
   remove,
+  mapObject,
   mergeState,
   assertError,
   isPlainObject,
 } from './utils'
-import diff from './diff'
+import Router from './middleware'
+import updateComponent from './update'
+
+// global state namespace
+export let GLOBALWORD = 'global'
 
 const assertReducer = (state, action, reducer) => {
   const { setter, partialState } = reducer
@@ -40,42 +45,14 @@ const assertReducer = (state, action, reducer) => {
   return reducer
 }
 
-// Update page and component 
-const updateComponent = deps => {
-  for (let i = 0, len = deps.length; i < len; i++) {
-    const { component, didUpdate, willUpdate, createState } = deps[i]
-
-    if (component.data.global) {
-      const newPartialState = createState()
-
-      // The `willUpdate` function will optimize component
-      if (typeof willUpdate === 'function') {
-        if (willUpdate(newPartialState) === false) {
-          continue
-        }
-      }
-
-      // The base path is `global`
-      // this.setData({ 'global.xx.xx': xx })
-      const patch = diff(component.data.global, newPartialState, 'global')
-
-      if (!isEmptyObject(patch)) {
-        component.setData(patch)
-
-        if (typeof didUpdate === 'function') {
-          didUpdate(newPartialState)
-        }
-      }
-    }
-  }
-}
-
 export default class Store {
-  constructor () {
+  constructor (hooks) {
     this.state = {}
+    this.hooks = hooks
     this.reducers = []
     this.depComponents = []
     this.isDispatching = false
+    this.router = new Router(this)
   }
 
   add (action, reducer) {
@@ -89,14 +66,14 @@ export default class Store {
   dispatch (action, payload) {
     const { reducers, isDispatching } = this
 
-    // If we in call dispatch process,
-    // We don't allow call dispacth again
+    // if we in call dispatch process,
+    // we don't allow call dispacth again.
     assertError(
       isDispatching,
       'It is not allowed to call "dispatch" during dispatch execution.' +
         `\n\n   --- from [${action}] action.`
     )
-    
+
     const reducer = reducers.find(v => v.action === action)
 
     assertError(
@@ -105,59 +82,82 @@ export default class Store {
         'Maybe you have not defined.'
     )
 
-    let newPartialState = null
     this.isDispatching = true
-    
+    let newPartialState = null
+
     try {
-      newPartialState = reducer.setter(payload)
+      newPartialState = reducer.setter(this.state, payload)
       this.state = mergeState(this.state, newPartialState)
     } catch (err) {
-      // If call setter hook throw an error
-      // The `isDispatching` will restore
+      // if call setter function throw an error,
+      // the `isDispatching` need restore.
       isDispatching = false
       warn(`${err}\n\n   --- from [${action}] action.`)
     }
 
-    // Update components
-    updateComponent(this.depComponents, newPartialState)
+    // update components
+    updateComponent(this.depComponents, this.hooks)
     isDispatching = false
   }
 
-  // Insert api
+  // add middleware
+  use (action, fn) {
+    if (typeof action !== 'string') {
+      fn = action
+      action = '/'
+    }
+
+    if (typeof action === 'string' && typeof fn === 'function') {
+      this.router.use(match, fn)
+    }
+  }
+
+  // allow change `GLOBALWORD`.
+  setNamespace (key) {
+    if (typeof key === 'string') {
+      GLOBALWORD = key
+    }
+  }
+
+  // insert method
   _rewirteCfgAndAddDep (config, isPage) {
     const store = this
     const { data, storeConfig = {} } = config
     const { didUpdate, willUpdate, defineReducer, defineGlobalState } = storeConfig
 
     data 
-      ? data.global = {}
-      : config.data = { global: {} }
+      ? data[GLOBALWORD] = {}
+      : config.data = { [GLOBALWORD]: {} }
 
-    // This is a uitl method
-    // Allow craete reducer in the page or component
+    // this is a uitl method,
+    // allow craete reducer in the page or component.
     if (typeof defineReducer === 'function') {
       defineReducer.call(store, store)
       delete config.storeConfig
     }
 
     const addDep = component => {
-      // If no used global state word
-      // No need to add dependencies
+      // if no used global state word,
+      // no need to add dependencies.
       if (typeof defineGlobalState === 'function') {
-        const usedState = defineGlobalState(this.state)
-        
+        const defineObject = defineGlobalState.call(store, store)
+        const createState = () => mapObject(defineObject, fn => fn(this.state))
+
+        // get state used by the current component
+        const usedState = createState()
+
         if (isPlainObject(usedState)) {
-          // Add component to depComponents
+          // add component to depComponents
           this.depComponents.push({
             isPage,
             component,
             didUpdate,
             willUpdate,
-            createState: () => defineGlobalState(this.state),
+            createState,
           })
 
-          // Set global state to view
-          component.setData({ global: usedState })
+          // set global state to view
+          component.setData({ [GLOBALWORD]: usedState })
         }
       }
     }
@@ -169,7 +169,7 @@ export default class Store {
       config.onLoad = function (opts) {
         addDep(this)
 
-        // Rigister store to component within
+        // rigister store to component within
         this.store = store
         if (typeof nativeLoad === 'function') {
           nativeLoad.call(this, opts)
@@ -181,7 +181,7 @@ export default class Store {
           nativeUnload.call(this, opts)
         }
 
-        // Clear cache
+        // clear cache
         this.store = null
         remove(store.depComponents, this)
       }
@@ -200,7 +200,7 @@ export default class Store {
           nativeAttached.call(this, opts)
         }
       }
-      
+
       config.detached =
       config.lifetimes.detached = function (opts) {
         if (typeof nativeDetached === 'function') {

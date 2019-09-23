@@ -23,6 +23,22 @@ export const remove = (list, item) => {
   }
 }
 
+export const callHook = (hooks, name, args) => {
+  if (hooks && typeof hooks[name] === 'function') {
+    return hooks[name].apply(hooks, args)
+  }
+}
+
+export const mapObject = (obj, fn) => {
+  const desObject = {}
+  for (const key in obj) {
+    if (obj.hasOwnProperty(key)) {
+      desObject[key] = fn(obj[key])
+    }
+  }
+  return desObject
+}
+
 export const isPlainObject = obj => {
   if (typeof obj !== 'object' || obj === null) return false
 
