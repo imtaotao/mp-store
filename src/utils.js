@@ -35,7 +35,3 @@ export const isPlainObject = obj => {
   }
   return proto === baseProto
 }
-
-export const diff = (left, right) => {
-
-}

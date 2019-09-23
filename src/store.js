@@ -1,11 +1,11 @@
 import {
   warn,
-  diff,
   remove,
   mergeState,
   assertError,
   isPlainObject,
 } from './utils'
+import diff from './diff'
 
 const assertReducer = (state, action, reducer) => {
   const { setter, partialState } = reducer
@@ -54,7 +54,10 @@ const updateComponent = deps => {
           continue
         }
       }
-      const patch = diff(component.data.global, newPartialState)
+
+      // The base path is `global`
+      // this.setData({ 'global.xx.xx': xx })
+      const patch = diff(component.data.global, newPartialState, 'global')
 
       if (!isEmptyObject(patch)) {
         component.setData(patch)
