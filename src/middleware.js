@@ -41,7 +41,7 @@ export default class Middleware {
     }
   }
 
-  handle (action, payload) {
+  process (action, payload) {
     if (this.stack.length > 0) {
       let idx = 0
       const next = prevPayload => {

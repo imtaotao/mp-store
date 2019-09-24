@@ -108,8 +108,8 @@ export default class Store {
     // add setter fn to middleware
     this.middleware.use(action, fn)
 
-    // call middleware
-    this.middleware.handle(action, payload)
+    // call all middleware
+    this.middleware.process(action, payload)
   }
 
   // add middleware
