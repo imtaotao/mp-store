@@ -3,6 +3,7 @@ import {
   b,
   c,
   d,
+  e,
 } from '../examples'
 import { expectPatch } from '../utils'
 import diff, { ADD, REMOVE, REPLACE } from '../../src/diff'
@@ -42,5 +43,16 @@ describe('Diff json', () => {
     expectPatch(patchs, '/.reverse', null, REMOVE)
     expectPatch(patchs, '/.error', d[1].error, ADD)
     expectPatch(patchs, '/.right', d[1].right, REPLACE)
+  })
+
+  it('e', () => {
+    const patchs = diff(e[0], e[1], root)
+    expect(patchs.length).toBe(6)
+    expectPatch(patchs, '/.left', 42, REPLACE)
+    expectPatch(patchs, '/.right', e[1].right, REPLACE)
+    expectPatch(patchs, '/.delta[0]', 42, REPLACE)
+    expectPatch(patchs, '/.delta[1]', e[1].delta[1], REPLACE)
+    expectPatch(patchs, '/.reverse[0]', e[1].reverse[0], REPLACE)
+    expectPatch(patchs, '/.reverse[1]', e[1].reverse[1], REPLACE)
   })
 })

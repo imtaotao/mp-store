@@ -79,3 +79,19 @@ export const d = [
     error: /not supported/,
   },
 ]
+
+export const e = [
+  {
+    left: null,
+    right: 42,
+    delta: [null, 42],
+    reverse: [42, null],
+  },
+
+  {
+    left: 42,
+    right: [1, 2, 3],
+    delta: [42, [1, 2, 3]],
+    reverse: [[1, 2, 3], 42],
+  },
+]
