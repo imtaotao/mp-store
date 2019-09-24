@@ -11,20 +11,23 @@ const webpackConfig = {
 }
 
 module.exports = {
+  webpack: webpackConfig,
   frameworks: ['jasmine'],
   basePath: path.resolve(__dirname),
-  files: [
-    'node_modules/miniprogram-simulate/build.js',
-    'script/*.spec.js',
-  ],
-  preprocessors: {
-    'script/*.spec.js': ['webpack', 'dirname', 'sourcemap'],
-  },
-  
-  webpack: webpackConfig,
+
   webpackMiddleware: {
     noInfo: true,
   },
+
+  files: [
+    'script/*.spec.js',
+    'miniprogram-simulate.js',
+  ],
+
+  preprocessors: {
+    'script/*.spec.js': ['webpack', 'dirname', /** 'sourcemap' **/],
+  },
+  
   plugins: [
     'karma-webpack',
     'karma-jasmine',
@@ -32,5 +35,5 @@ module.exports = {
     'karma-sourcemap-loader',
     'karma-filemap-preprocessor',
     'karma-dirname-preprocessor',
-  ]
+  ],
 }

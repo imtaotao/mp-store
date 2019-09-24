@@ -8,13 +8,14 @@ const cleanup = require('rollup-plugin-cleanup')
 const { terser } = require('rollup-plugin-terser')
 const resolve = require('rollup-plugin-node-resolve')
 
+const libName = 'mpstore'
 const entryPath = path.resolve(__dirname, './src/index.js')
 const outputPath = filename => path.resolve(__dirname, './dist', filename)
 
 const esm = {
   input: entryPath,
   output: {
-    file: outputPath('mpstore.esm.js'),
+    file: outputPath(`${libName}.esm.js`),
     format: 'es',
   },
 }
@@ -22,7 +23,7 @@ const esm = {
 const cjs = {
   input: entryPath,
   output: {
-    file: outputPath('mpstore.common.js'),
+    file: outputPath(`${libName}.common.js`),
     format: 'cjs',
   },
 }
@@ -30,7 +31,7 @@ const cjs = {
 const uglifyCjs = {
   input: entryPath,
   output: {
-    file: outputPath('mpstore.min.js'),
+    file: outputPath(`${libName}.min.js`),
     format: 'cjs',
   },
 }
