@@ -5,6 +5,7 @@ const rm = require('rimraf').sync
 const babel = require('rollup-plugin-babel')
 const cmd = require('rollup-plugin-commonjs')
 const cleanup = require('rollup-plugin-cleanup')
+const { terser } = require('rollup-plugin-terser')
 const resolve = require('rollup-plugin-node-resolve')
 
 const entryPath = path.resolve(__dirname, './src/index.js')
@@ -15,7 +16,7 @@ const esm = {
   output: {
     file: outputPath('mpstore.esm.js'),
     format: 'es',
-  }
+  },
 }
 
 const cjs = {
@@ -23,13 +24,21 @@ const cjs = {
   output: {
     file: outputPath('mpstore.common.js'),
     format: 'cjs',
-  }
+  },
 }
 
-async function build (cfg, sourcemap = false) {
+const uglifyCjs = {
+  input: entryPath,
+  output: {
+    file: outputPath('mpstore.min.js'),
+    format: 'cjs',
+  },
+}
+
+async function build (cfg, needUglify, sourcemap = false) {
   cfg.output.sourcemap = sourcemap
 
-  const bundle = await rollup.rollup({
+  const buildCfg = {
     input: cfg.input,
     plugins: [
       cleanup(),
@@ -40,7 +49,17 @@ async function build (cfg, sourcemap = false) {
       }),
       cmd(),
     ]
-  })
+  }
+
+  if (needUglify) {
+    buildCfg.plugins.unshift(
+      terser({
+        sourcemap: false,
+      })
+    )
+  }
+
+  const bundle = await rollup.rollup(buildCfg)
   await bundle.generate(cfg.output)
   await bundle.write(cfg.output)
 }
@@ -50,8 +69,9 @@ console.clear()
 rm('./dist')
 
 const buildVersion = sourcemap => {
-  build(esm, sourcemap)
-  build(cjs, sourcemap)
+  build(esm, false, sourcemap)
+  build(cjs, false, sourcemap)
+  build(uglifyCjs, true, sourcemap)
 }
 
 // watch, use in dev and test
