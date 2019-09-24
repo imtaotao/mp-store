@@ -126,7 +126,7 @@ function walkArray(a, b, base, patchs) {
 
 function walkObject(a, b, base, patchs) {
   for (const key in a) {
-    const path = `${base}.${key}`;
+    const path = `${base}['${key}']`;
 
     if (!(key in b)) {
       patchs.push(new Patch(REMOVE, path, null));
@@ -137,7 +137,7 @@ function walkObject(a, b, base, patchs) {
 
   for (const key in b) {
     if (!(key in a)) {
-      const path = `${base}.${key}`;
+      const path = `${base}['${key}']`;
       patchs.push(new Patch(ADD, path, b[key]));
     }
   }
@@ -246,7 +246,7 @@ class Middleware {
     }
   }
 
-  handle(action, payload) {
+  process(action, payload) {
     if (this.stack.length > 0) {
       let idx = 0;
 
@@ -338,7 +338,7 @@ class Store {
     };
 
     this.middleware.use(action, fn);
-    this.middleware.handle(action, payload);
+    this.middleware.process(action, payload);
   }
 
   use(action, fn) {
