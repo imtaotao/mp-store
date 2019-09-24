@@ -16,7 +16,7 @@ function applyPatchs (component, patchs) {
 // update page and component
 export default function updateComponent (deps, hooks) {
   for (let i = 0, len = deps.length; i < len; i++) {
-    const { component, didUpdate, willUpdate, createState } = deps[i]
+    const { isPage, component, didUpdate, willUpdate, createState } = deps[i]
 
     if (component.data.global) {
       const newPartialState = createState()
@@ -35,7 +35,7 @@ export default function updateComponent (deps, hooks) {
       if (patch.length > 0) {
         // Call global hooks
         if (callHook(hooks,
-          'willUpdate', [component, newPartialState, patch]) === false) {
+          'willUpdate', [component, newPartialState, patch, isPage]) === false) {
           continue
         }
 
@@ -45,7 +45,7 @@ export default function updateComponent (deps, hooks) {
         if (typeof didUpdate === 'function') {
           didUpdate(newPartialState)
         }
-        callHook(hooks, 'didUpdate', [component, newPartialState])
+        callHook(hooks, 'didUpdate', [component, newPartialState, isPage])
       }
     }
   }

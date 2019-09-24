@@ -167,6 +167,7 @@ function applyPatchs(component, patchs) {
 function updateComponent(deps, hooks) {
   for (let i = 0, len = deps.length; i < len; i++) {
     const {
+      isPage,
       component,
       didUpdate,
       willUpdate,
@@ -185,7 +186,7 @@ function updateComponent(deps, hooks) {
       const patch = diff(component.data.global, newPartialState, GLOBALWORD);
 
       if (patch.length > 0) {
-        if (callHook(hooks, 'willUpdate', [component, newPartialState, patch]) === false) {
+        if (callHook(hooks, 'willUpdate', [component, newPartialState, patch, isPage]) === false) {
           continue;
         }
 
@@ -195,7 +196,7 @@ function updateComponent(deps, hooks) {
           didUpdate(newPartialState);
         }
 
-        callHook(hooks, 'didUpdate', [component, newPartialState]);
+        callHook(hooks, 'didUpdate', [component, newPartialState, isPage]);
       }
     }
   }
@@ -213,7 +214,7 @@ function Layer(action, fn) {
   this.action = action;
 }
 
-class Router {
+class Middleware {
   constructor(store) {
     this.stack = [];
     this.store = store;
@@ -287,7 +288,7 @@ class Store {
     this.reducers = [];
     this.depComponents = [];
     this.isDispatching = false;
-    this.router = new Router(this);
+    this.middleware = new Middleware(this);
   }
 
   add(action, reducer) {
@@ -313,7 +314,7 @@ class Store {
       this.state = mergeState(this.state, newPartialState);
       updateComponent(this.depComponents, this.hooks);
     });
-    this.router.handle(action, payload);
+    this.middleware.handle(action, payload);
   }
 
   use(action, fn) {
@@ -340,8 +341,8 @@ class Store {
       this.isDispatching = false;
     };
 
-    this.router.use(match, wrapfn);
-    return () => this.router.remove(action, wrapfn);
+    this.middleware.use(match, wrapfn);
+    return () => this.middleware.remove(action, wrapfn);
   }
 
   setNamespace(key) {

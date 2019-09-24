@@ -8,7 +8,7 @@ import {
   isPlainObject,
 } from './utils'
 import updateComponent from './update'
-import Router, { COMMONACTION } from './middleware'
+import Middleware, { COMMONACTION } from './middleware'
 
 // global state namespace
 export let GLOBALWORD = 'global'
@@ -52,7 +52,7 @@ export default class Store {
     this.reducers = []
     this.depComponents = []
     this.isDispatching = false
-    this.router = new Router(this)
+    this.middleware = new Middleware(this)
   }
 
   add (action, reducer) {
@@ -94,7 +94,7 @@ export default class Store {
     })
 
     // call middleware
-    this.router.handle(action, payload)
+    this.middleware.handle(action, payload)
   }
 
   // add middleware
@@ -124,8 +124,8 @@ export default class Store {
       this.isDispatching = false
     }
 
-    this.router.use(match, wrapfn)
-    return () => this.router.remove(action, wrapfn)
+    this.middleware.use(match, wrapfn)
+    return () => this.middleware.remove(action, wrapfn)
   }
 
   // allow change `GLOBALWORD`.

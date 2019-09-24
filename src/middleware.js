@@ -11,7 +11,7 @@ function Layer (action, fn) {
 }
 
 // deal with all middleware
-export default class Router {
+export default class Middleware {
   constructor (store) {
     this.stack = []
     this.store = store
@@ -44,6 +44,7 @@ export default class Router {
         if (layer) {
           layer.fn.call(this.store, prevPayload, next)
         }
+
         idx++
       }
 
