@@ -5,9 +5,19 @@ const match = (layer, action) => {
   return action === layer.action
 }
 
-function Layer (action, fn) {
-  this.fn = fn
-  this.action = action
+const handleLayer = (fn, action, store, payload, next) => {
+  try {
+    fn.call(store, payload, next)
+  } catch (err) {
+    const hooks = store.hooks
+
+    // if the error hook exist, don't throw error
+    if (hooks && typeof hooks['middlewareError'] === 'function') {
+      hooks['middlewareError'](action, payload, err)
+    } else {
+      warn(`${err}\n\n   --- from [${action}] action.`)
+    }
+  }
 }
 
 // deal with all middleware
@@ -18,7 +28,7 @@ export default class Middleware {
   }
 
   use (action, fn) {
-    this.stack.push(new Layer(action, fn))
+    this.stack.push({ fn, action })
   }
 
   remove (action, fn) {
@@ -42,7 +52,9 @@ export default class Middleware {
         }
 
         if (layer) {
-          layer.fn.call(this.store, prevPayload, next)
+          // put `try catch` in a separate function,
+          // avoid the entire function not being optimized.
+          handleLayer(layer.fn, action, this.store, prevPayload, next)
         }
 
         idx++

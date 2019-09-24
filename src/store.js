@@ -82,16 +82,31 @@ export default class Store {
         'Maybe you have not defined.'
     )
 
-    const removeMiddleware = this.use(action, prevPayload => {
+    const fn = prevPayload => {
+      this.isDispatching = true
+
       // the current function is called only once
-      removeMiddleware()
-
-      const newPartialState = reducer.setter(this.state, prevPayload)
-      this.state = mergeState(this.state, newPartialState)
-
+      this.middleware.remove(action, fn)
+      
+      try {
+        const newPartialState = reducer.setter(this.state, prevPayload)
+        this.state = mergeState(this.state, newPartialState)
+      } catch (err) {
+        // if call setter function throw an error,
+        // the `isDispatching` need restore.
+        this.isDispatching = false
+        warn(`${err}\n\n   --- from [${action}] action setter.`)
+      }
+      
+      
       // update components
       updateComponent(this.depComponents, this.hooks)
-    })
+
+      this.isDispatching = false
+    }
+
+    // add setter fn to middleware
+    this.middleware.use(action, fn)
 
     // call middleware
     this.middleware.handle(action, payload)
@@ -104,28 +119,8 @@ export default class Store {
       action = COMMONACTION
     }
 
-    const wrapfn = (payload, next) => {
-      this.isDispatching = true
-      // if call setter function throw an error,
-      // the `isDispatching` need restore.
-      try {
-        fn(payload, next)
-      } catch (err) {
-        this.isDispatching = false
-
-        // if the error hook exist, don't throw error
-        if (this.hooks && typeof this.hooks[middlewareError] === 'function') {
-          this.hooks[middlewareError](action, payload, err)
-        } else {
-          warn(`${err}\n\n   --- from [${action}] action.`)
-        }
-      }
-
-      this.isDispatching = false
-    }
-
-    this.middleware.use(match, wrapfn)
-    return () => this.middleware.remove(action, wrapfn)
+    this.middleware.use(action, fn)
+    return () => this.middleware.remove(action, fn)
   }
 
   // allow change `GLOBALWORD`.

@@ -34,8 +34,9 @@ export default function (mixinInject, hooks) {
 
     // we allow add additional config attributes
     callHook(hooks, 'createBefore', [true, config])
-    nativePage.call(this, config)
+    const result = nativePage.call(this, config)
     callHook(hooks, 'created', [true])
+    return result
   }
 
   function createComponent (config) {
@@ -43,8 +44,9 @@ export default function (mixinInject, hooks) {
     store._rewirteCfgAndAddDep(config, false)
 
     callHook(hooks, 'createBefore', [false, config])
-    nativeComponent.call(this, config)
+    const result = nativeComponent.call(this, config)
     callHook(hooks, 'created', [true])
+    return result
   }
 
   return { createPage, createComponent, store }

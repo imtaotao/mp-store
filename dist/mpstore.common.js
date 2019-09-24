@@ -1,10 +1,10 @@
 'use strict';
 
-const warn = message => {
+const warn$1 = message => {
   throw new Error(`\n[MpStore warn]: ${message}\n\n`);
 };
 const assert = (condition, message) => {
-  if (condition) warn(message);
+  if (condition) warn$1(message);
 };
 const mergeState = (oldState, newState) => {
   return Object.freeze({ ...oldState,
@@ -88,7 +88,7 @@ function diffValues(left, right, path, patchs) {
       patchs.push(new Patch(REPLACE, path, right));
     }
   } else if (typeof left === 'object') {
-    if (right !== null && typeof right === 'object') {
+    if (right !== null && typeof right === 'object' && !Array.isArray(right)) {
       if (left instanceof Date || right instanceof Date) {
         patchs.push(new Patch(REPLACE, path, right));
       } else {
@@ -206,15 +206,24 @@ function updateComponent(deps, hooks) {
 
 const COMMONACTION = '*';
 
-const match$1 = (layer, action) => {
+const match = (layer, action) => {
   if (action === COMMONACTION) return true;
   return action === layer.action;
 };
 
-function Layer(action, fn) {
-  this.fn = fn;
-  this.action = action;
-}
+const handleLayer = (fn, action, store, payload, next) => {
+  try {
+    fn.call(store, payload, next);
+  } catch (err) {
+    const hooks = store.hooks;
+
+    if (hooks && typeof hooks['middlewareError'] === 'function') {
+      hooks['middlewareError'](action, payload, err);
+    } else {
+      warn(`${err}\n\n   --- from [${action}] action.`);
+    }
+  }
+};
 
 class Middleware {
   constructor(store) {
@@ -223,7 +232,10 @@ class Middleware {
   }
 
   use(action, fn) {
-    this.stack.push(new Layer(action, fn));
+    this.stack.push({
+      fn,
+      action
+    });
   }
 
   remove(action, fn) {
@@ -243,12 +255,12 @@ class Middleware {
       const next = prevPayload => {
         let layer = this.stack[idx];
 
-        while (layer && !match$1(layer, action)) {
+        while (layer && !match(layer, action)) {
           layer = this.stack[++idx];
         }
 
         if (layer) {
-          layer.fn.call(this.store, prevPayload, next);
+          handleLayer(layer.fn, action, this.store, prevPayload, next);
         }
 
         idx++;
@@ -276,7 +288,7 @@ const assertReducer = (state, action, reducer) => {
 
   if (typeof setter !== 'function') {
     reducer.setter = () => {
-      warn(`Can\'t set "${action}" value. ` + 'Have you defined a setter?');
+      warn$1(`Can\'t set "${action}" value. ` + 'Have you defined a setter?');
     };
   }
 
@@ -310,12 +322,24 @@ class Store {
     assert(isDispatching, 'It is not allowed to call "dispatch" during dispatch execution.' + `\n\n   --- from [${action}] action.`);
     const reducer = reducers.find(v => v.action === action);
     assert(!reducer, `The "${action}" does not exist. ` + 'Maybe you have not defined.');
-    const removeMiddleware = this.use(action, prevPayload => {
-      removeMiddleware();
-      const newPartialState = reducer.setter(this.state, prevPayload);
-      this.state = mergeState(this.state, newPartialState);
+
+    const fn = prevPayload => {
+      this.isDispatching = true;
+      this.middleware.remove(action, fn);
+
+      try {
+        const newPartialState = reducer.setter(this.state, prevPayload);
+        this.state = mergeState(this.state, newPartialState);
+      } catch (err) {
+        this.isDispatching = false;
+        warn$1(`${err}\n\n   --- from [${action}] action setter.`);
+      }
+
       updateComponent(this.depComponents, this.hooks);
-    });
+      this.isDispatching = false;
+    };
+
+    this.middleware.use(action, fn);
     this.middleware.handle(action, payload);
   }
 
@@ -325,26 +349,8 @@ class Store {
       action = COMMONACTION;
     }
 
-    const wrapfn = (payload, next) => {
-      this.isDispatching = true;
-
-      try {
-        fn(payload, next);
-      } catch (err) {
-        this.isDispatching = false;
-
-        if (this.hooks && typeof this.hooks[middlewareError] === 'function') {
-          this.hooks[middlewareError](action, payload, err);
-        } else {
-          warn(`${err}\n\n   --- from [${action}] action.`);
-        }
-      }
-
-      this.isDispatching = false;
-    };
-
-    this.middleware.use(match, wrapfn);
-    return () => this.middleware.remove(action, wrapfn);
+    this.middleware.use(action, fn);
+    return () => this.middleware.remove(action, fn);
   }
 
   setNamespace(key) {
@@ -475,8 +481,9 @@ function index (mixinInject, hooks) {
     store._rewirteCfgAndAddDep(config, true);
 
     callHook(hooks, 'createBefore', [true, config]);
-    nativePage.call(this, config);
+    const result = nativePage.call(this, config);
     callHook(hooks, 'created', [true]);
+    return result;
   }
 
   function createComponent(config) {
@@ -485,8 +492,9 @@ function index (mixinInject, hooks) {
     store._rewirteCfgAndAddDep(config, false);
 
     callHook(hooks, 'createBefore', [false, config]);
-    nativeComponent.call(this, config);
+    const result = nativeComponent.call(this, config);
     callHook(hooks, 'created', [true]);
+    return result;
   }
 
   return {

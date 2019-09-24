@@ -1,6 +1,16 @@
-export const ADD = 1
-export const REMOVE = 2
-export const REPLACE = 3
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>diff test</title>
+</head>
+<body>
+<script>
+const ADD = 'add'
+const REMOVE = 'remove'
+const REPLACE = 'replace'
 
 function Patch (type, path, value) {
   this.type = type
@@ -92,8 +102,30 @@ function walkObject (a, b, base, patchs) {
 }                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 
 
 // root `a` and root `b` is an object
-export default function (a, b, basePath) {
+function diff (a, b, basePath) {
   const patchs = []
   walkObject(a, b, basePath, patchs)
   return patchs
 }
+
+console.log(diff(
+  {
+    left: undefined,
+    right: [1, 2, 3],
+    delta: [[1, 2, 3]],
+    reverse: [[1, 2, 3], 0, 0],
+  },
+
+  {
+    left: undefined,
+    right(x) {
+      return x * x
+    },
+    error: /not supported/,
+  },
+
+  '/',
+))
+</script>
+</body>
+</html>
