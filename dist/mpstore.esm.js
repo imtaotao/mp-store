@@ -101,25 +101,26 @@ function diffValues(left, right, path, patchs) {
 }
 
 function walkArray(a, b, base, patchs) {
-  let len = a.length;
+  if (a.length <= b.length) {
+    let len = a.length;
 
-  while (--len >= 0) {
-    const path = `${base}[${len}]`;
-
-    if (len > b.length - 1) {
-      patchs.push(new Patch(REMOVE, path, null));
-    } else if (a[len] !== b[len]) {
-      diffValues(a[len], b[len], path, patchs);
+    while (--len >= 0) {
+      if (a[len] !== b[len]) {
+        const path = `${base}[${len}]`;
+        diffValues(a[len], b[len], path, patchs);
+      }
     }
-  }
 
-  if (b.length > a.length) {
-    len = b.length;
+    if (b.length > a.length) {
+      len = b.length;
 
-    while (--len >= a.length) {
-      const path = `${base}[${len}]`;
-      patchs.push(new Patch(ADD, path, b[len]));
+      while (--len >= a.length) {
+        const path = `${base}[${len}]`;
+        patchs.push(new Patch(ADD, path, b[len]));
+      }
     }
+  } else {
+    patchs.push(new Patch(REPLACE, base, b));
   }
 }
 
@@ -223,12 +224,12 @@ class Router {
   }
 
   remove(action, fn) {
-    const index = this.stack.findIndex(layer => {
+    const idx = this.stack.findIndex(layer => {
       return layer.fn === fn && layer.action === action;
     });
 
-    if (index > -1) {
-      this.stack.splice(index, 1);
+    if (idx > -1) {
+      this.stack.splice(idx, 1);
     }
   }
 
@@ -246,6 +247,8 @@ class Router {
         if (layer) {
           layer.fn.call(this.store, prevPayload, next);
         }
+
+        idx++;
       };
 
       next(payload);

@@ -38,34 +38,27 @@ function diffValues (left, right, path, patchs) {
 }
 
 function walkArray (a, b, base, patchs) {
-  let len = a.length
-  while (--len >= 0) {
-    const path = `${base}[${len}]`
-
-    if (len > b.length - 1) {
-      patchs.push(new Patch(REMOVE, path, null))
-    } else if (a[len] !== b[len]) {
-      diffValues(a[len], b[len], path, patchs)
+  if (a.length <= b.length) {
+    let len = a.length
+    while (--len >= 0) {
+      if (a[len] !== b[len]) {
+        const path = `${base}[${len}]`
+        diffValues(a[len], b[len], path, patchs)
+      }
     }
-  }
-
-  if (b.length > a.length) {
-    len = b.length
-    while (--len >= a.length) {
-      const path = `${base}[${len}]`
-      patchs.push(new Patch(ADD, path, b[len]))
+  
+    if (b.length > a.length) {
+      len = b.length
+      while (--len >= a.length) {
+        const path = `${base}[${len}]`
+        patchs.push(new Patch(ADD, path, b[len]))
+      }
     }
+  } else {
+    // if new list less than old list,
+    // no need diff, direct replac is fine.
+    patchs.push(new Patch(REPLACE, base, b))
   }
-
-  // if (a.length === b.length) {
-  //   let len = a.length
-  //   while (--len >= 0) {
-  //     const path = `${base}[${len}]`
-  //     diffValues(a[len], b[len], path, patchs)
-  //   }
-  // } else {
-  //   patchs.push(new Patch(REPLACE, base, b))
-  // }
 }
 
 function walkObject (a, b, base, patchs) {

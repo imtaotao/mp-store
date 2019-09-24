@@ -22,12 +22,12 @@ export default class Router {
   }
 
   remove (action, fn) {
-    const index = this.stack.findIndex(layer => {
+    const idx = this.stack.findIndex(layer => {
       return layer.fn === fn && layer.action === action
     })
 
-    if (index > -1) {
-      this.stack.splice(index, 1)
+    if (idx > -1) {
+      this.stack.splice(idx, 1)
     }
   }
 
@@ -44,6 +44,7 @@ export default class Router {
         if (layer) {
           layer.fn.call(this.store, prevPayload, next)
         }
+        idx++
       }
 
       next(payload)
