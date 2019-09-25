@@ -7,8 +7,9 @@ import {
   mergeState,
   isPlainObject,
 } from './utils'
-import updateComponent from './update'
+import { diff } from './diff'
 import Middleware, { COMMONACTION } from './middleware'
+import { applyPatchs, updateComponents } from './update'
 
 // global state namespace
 export let GLOBALWORD = 'global'
@@ -100,7 +101,7 @@ export default class Store {
       
       
       // update components
-      updateComponent(this.depComponents, this.hooks)
+      updateComponents(this.depComponents, this.hooks)
 
       this.isDispatching = false
     }
@@ -132,13 +133,10 @@ export default class Store {
 
   // insert method
   _rewirteCfgAndAddDep (config, isPage) {
+    let createState = null
     const store = this
     const { data, storeConfig = {} } = config
     const { didUpdate, willUpdate, defineReducer, defineGlobalState } = storeConfig
-
-    data 
-      ? data[GLOBALWORD] = {}
-      : config.data = { [GLOBALWORD]: {} }
 
     // this is a uitl method,
     // allow craete reducer in the page or component.
@@ -147,19 +145,29 @@ export default class Store {
       delete config.storeConfig
     }
 
+    // get the global state words used
+    if (typeof defineGlobalState === 'function') {
+      const defineObject = defineGlobalState.call(store, store)
+      createState = () => mapObject(defineObject, fn => fn(this.state))
+    }
+
+    // get state used by the current component
+    if (createState !== null) {
+      const usedState = createState()
+      if (isPlainObject(usedState)) {
+        data 
+          ? data[GLOBALWORD] = usedState
+          : config.data = { [GLOBALWORD]: usedState }
+      }
+    }
+
     const addDep = component => {
-      callHook(this.hooks, 'addDep', [component, isPage])
+      const shouldAdd = callHook(this.hooks, 'addDep', [component, isPage])
 
       // if no used global state word,
       // no need to add dependencies.
-      if (typeof defineGlobalState === 'function') {
-        const defineObject = defineGlobalState.call(store, store)
-        const createState = () => mapObject(defineObject, fn => fn(this.state))
-
-        // get state used by the current component
-        const usedState = createState()
-
-        if (isPlainObject(usedState)) {
+      if (shouldAdd !== false && createState !== null) {
+        if (isPlainObject(component.data[GLOBALWORD])) {
           // add component to depComponents
           this.depComponents.push({
             isPage,
@@ -169,8 +177,11 @@ export default class Store {
             createState,
           })
 
-          // set global state to view
-          component.setData({ [GLOBALWORD]: usedState })
+          // if the global state is changed, need update component
+          const patchs = diff(component.data[GLOBALWORD], createState())
+          if (patchs.length > 0) {
+            applyPatchs(component, patchs)
+          }
         }
       }
     }

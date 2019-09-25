@@ -12,7 +12,9 @@ const mergeState = (oldState, newState) => {
   });
 };
 const isEmptyObject = obj => {
-  for (const key in obj) return false;
+  for (const key in obj) {
+    return false;
+  }
 
   return true;
 };
@@ -223,61 +225,6 @@ const restore = (obj, patchs) => {
   return obj;
 };
 
-function applyPatchs(component, patchs) {
-  const desObject = {};
-
-  for (let i = 0, len = patchs.length; i < len; i++) {
-    const {
-      type,
-      value,
-      path
-    } = patchs[i];
-    desObject[path] = value;
-  }
-
-  component.setData(desObject);
-}
-
-function updateComponent(deps, hooks) {
-  for (let i = 0, len = deps.length; i < len; i++) {
-    const {
-      isPage,
-      component,
-      didUpdate,
-      willUpdate,
-      createState
-    } = deps[i];
-
-    if (component.data.global) {
-      const newPartialState = createState();
-
-      if (typeof willUpdate === 'function') {
-        if (willUpdate(newPartialState) === false) {
-          continue;
-        }
-      }
-
-      const patchs = diff(component.data.global, newPartialState, GLOBALWORD);
-
-      if (patchs.length > 0) {
-        const params = [component, newPartialState, patchs, restore, isPage];
-
-        if (callHook(hooks, 'willUpdate', params) === false) {
-          continue;
-        }
-
-        applyPatchs(component, patchs);
-
-        if (typeof didUpdate === 'function') {
-          didUpdate(newPartialState);
-        }
-
-        callHook(hooks, 'didUpdate', [component, newPartialState, isPage]);
-      }
-    }
-  }
-}
-
 const COMMONACTION = '*';
 
 const match = (layer, action) => {
@@ -346,6 +293,59 @@ class Middleware {
 
 }
 
+const applyPatchs = (component, patchs) => {
+  const desObject = {};
+
+  for (let i = 0, len = patchs.length; i < len; i++) {
+    const {
+      value,
+      path
+    } = patchs[i];
+    desObject[path] = value;
+  }
+
+  component.setData(desObject);
+};
+const updateComponents = (deps, hooks) => {
+  for (let i = 0, len = deps.length; i < len; i++) {
+    const {
+      isPage,
+      component,
+      didUpdate,
+      willUpdate,
+      createState
+    } = deps[i];
+
+    if (component.data[GLOBALWORD]) {
+      const newPartialState = createState();
+
+      if (typeof willUpdate === 'function') {
+        if (willUpdate(newPartialState) === false) {
+          continue;
+        }
+      }
+
+      const patchs = diff(component.data[GLOBALWORD], newPartialState, GLOBALWORD);
+
+      if (patchs.length > 0) {
+        const params = [component, newPartialState, patchs, restore, isPage];
+
+        if (callHook(hooks, 'willUpdate', params) === false) {
+          continue;
+        }
+
+        applyPatchs(component, patchs);
+
+        if (typeof didUpdate === 'function') {
+          didUpdate(newPartialState);
+        }
+
+        callHook(hooks, 'didUpdate', [component, newPartialState, isPage]);
+      }
+    }
+  }
+};
+
 let GLOBALWORD = 'global';
 
 const assertReducer = (state, action, reducer) => {
@@ -409,7 +409,7 @@ class Store {
         warn$1(`${err}\n\n   --- from [${action}] action setter.`);
       }
 
-      updateComponent(this.depComponents, this.hooks);
+      updateComponents(this.depComponents, this.hooks);
       this.isDispatching = false;
     };
 
@@ -434,6 +434,7 @@ class Store {
   }
 
   _rewirteCfgAndAddDep(config, isPage) {
+    let createState = null;
     const store = this;
     const {
       data,
@@ -445,26 +446,33 @@ class Store {
       defineReducer,
       defineGlobalState
     } = storeConfig;
-    data ? data[GLOBALWORD] = {} : config.data = {
-      [GLOBALWORD]: {}
-    };
 
     if (typeof defineReducer === 'function') {
       defineReducer.call(store, store);
       delete config.storeConfig;
     }
 
+    if (typeof defineGlobalState === 'function') {
+      const defineObject = defineGlobalState.call(store, store);
+
+      createState = () => mapObject(defineObject, fn => fn(this.state));
+    }
+
+    if (createState !== null) {
+      const usedState = createState();
+
+      if (isPlainObject(usedState)) {
+        data ? data[GLOBALWORD] = usedState : config.data = {
+          [GLOBALWORD]: usedState
+        };
+      }
+    }
+
     const addDep = component => {
-      callHook(this.hooks, 'addDep', [component, isPage]);
+      const shouldAdd = callHook(this.hooks, 'addDep', [component, isPage]);
 
-      if (typeof defineGlobalState === 'function') {
-        const defineObject = defineGlobalState.call(store, store);
-
-        const createState = () => mapObject(defineObject, fn => fn(this.state));
-
-        const usedState = createState();
-
-        if (isPlainObject(usedState)) {
+      if (shouldAdd !== false && createState !== null) {
+        if (isPlainObject(component.data[GLOBALWORD])) {
           this.depComponents.push({
             isPage,
             component,
@@ -472,9 +480,11 @@ class Store {
             willUpdate,
             createState
           });
-          component.setData({
-            [GLOBALWORD]: usedState
-          });
+          const patchs = diff(component.data[GLOBALWORD], createState());
+
+          if (patchs.length > 0) {
+            applyPatchs(component, patchs);
+          }
         }
       }
     };

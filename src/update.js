@@ -2,7 +2,7 @@ import { callHook } from './utils'
 import { GLOBALWORD } from './store'
 import { diff, restore } from './diff'
 
-function applyPatchs (component, patchs) {
+export const applyPatchs = (component, patchs) => {
   const desObject = {}
 
   for (let i = 0, len = patchs.length; i < len; i++) {
@@ -14,11 +14,11 @@ function applyPatchs (component, patchs) {
 }
 
 // update page and component
-export default function updateComponent (deps, hooks) {
+export const updateComponents = (deps, hooks) => {
   for (let i = 0, len = deps.length; i < len; i++) {
     const { isPage, component, didUpdate, willUpdate, createState } = deps[i]
 
-    if (component.data.global) {
+    if (component.data[GLOBALWORD]) {
       const newPartialState = createState()
 
       // the `willUpdate` function will optimize component
@@ -30,7 +30,7 @@ export default function updateComponent (deps, hooks) {
 
       // the base path is `GLOBALWORD`
       // example: this.setData({ 'global.xx': xx })
-      const patchs = diff(component.data.global, newPartialState, GLOBALWORD)
+      const patchs = diff(component.data[GLOBALWORD], newPartialState, GLOBALWORD)
 
       if (patchs.length > 0) {
         // call global hooks
