@@ -151,7 +151,7 @@ describe('Diff json', () => {
 
   it('g restore', () => {
     const patchs = diff(g[0], g[1], root)
-    const nv = restore(g[1], patchs)
+    const nv = restore(clone(g[1]), patchs)
     expect(diff(g[0], nv).length).toBe(0)
   })
 
@@ -166,9 +166,9 @@ describe('Diff json', () => {
     expectPatch(patchs, `/['reverse']['_3'][1]`, h[1].reverse._3[1], ADD)
   })
 
-  // it('h restore', () => {
-  //   const patchs = diff(h[0], h[1], root)
-  //   const nv = restore(clone(h[1]), patchs)
-  //   expect(diff(h[0], nv).length).toBe(0)
-  // })
+  it('h restore', () => {
+    const patchs = diff(h[0], h[1], root)
+    const nv = restore(clone(h[1]), patchs)
+    expect(diff(h[0], nv).length).toBe(0)
+  })
 })

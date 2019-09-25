@@ -146,6 +146,11 @@ function walkObject(a, b, base, patchs) {
   }
 }
 
+const diff = (a, b, basePath) => {
+  const patchs = [];
+  walkObject(a, b, basePath, patchs);
+  return patchs;
+};
 const REG = /[^\[]+(?=\])/g;
 
 const filter = key => key.replace(/'/g, '');
@@ -155,23 +160,23 @@ const separatePath = (obj, path) => {
 
   if (keys) {
     let i = -1;
+    let key = null;
     let target = obj;
+    let prevTarget = null;
 
     while (i++ < keys.length - 2) {
-      target = target[filter(keys[i])];
+      prevTarget = target;
+      key = filter(keys[i]);
+      target = target[key];
     }
 
-    return [target, filter(keys[keys.length - 1])];
+    return [target, key, prevTarget, filter(keys[keys.length - 1])];
   }
 };
 
-const diff = (a, b, basePath) => {
-  const patchs = [];
-  walkObject(a, b, basePath, patchs);
-  return patchs;
-};
 const restore = (obj, patchs) => {
   let len = patchs.length;
+  const delEmpty = new Map();
 
   while (--len >= 0) {
     const {
@@ -182,13 +187,9 @@ const restore = (obj, patchs) => {
     const parseItem = separatePath(obj, path);
 
     if (parseItem) {
-      const [target, lastKey] = parseItem;
+      const [target, key, prevTarget, lastKey] = parseItem;
 
       switch (type) {
-        case ADD:
-          delete target[lastKey];
-          break;
-
         case REMOVE:
           target[lastKey] = leftValue;
           break;
@@ -196,9 +197,30 @@ const restore = (obj, patchs) => {
         case REPLACE:
           target[lastKey] = leftValue;
           break;
+
+        case ADD:
+          if (Array.isArray(target) && target === prevTarget[key]) {
+            delEmpty.set(target, {
+              key,
+              prevTarget
+            });
+          }
+
+          delete target[lastKey];
+          break;
       }
     }
   }
+
+  delEmpty.forEach(({
+    key,
+    prevTarget
+  }, target) => {
+    const clone = new target.constructor();
+    target.forEach(item => clone.push(item));
+    prevTarget[key] = clone;
+  });
+  return obj;
 };
 
 function applyPatchs(component, patchs) {
