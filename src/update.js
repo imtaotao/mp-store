@@ -6,7 +6,7 @@ function applyPatchs (component, patchs) {
   const desObject = {}
 
   for (let i = 0, len = patchs.length; i < len; i++) {
-    const { type, value, path } = patchs[i]
+    const { value, path } = patchs[i]
     desObject[path] = value
   }
 
@@ -34,7 +34,6 @@ export default function updateComponent (deps, hooks) {
 
       if (patchs.length > 0) {
         // call global hooks
-
         const params = [component, newPartialState, patchs, restore, isPage]
         if (callHook(hooks, 'willUpdate', params) === false) {
           continue
