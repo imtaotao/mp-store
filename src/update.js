@@ -1,6 +1,6 @@
-import diff from './diff'
 import { callHook } from './utils'
 import { GLOBALWORD } from './store'
+import { diff, restore } from './diff'
 
 function applyPatchs (component, patchs) {
   const desObject = {}
@@ -30,17 +30,18 @@ export default function updateComponent (deps, hooks) {
 
       // the base path is `GLOBALWORD`
       // example: this.setData({ 'global.xx': xx })
-      const patch = diff(component.data.global, newPartialState, GLOBALWORD)
+      const patchs = diff(component.data.global, newPartialState, GLOBALWORD)
 
-      if (patch.length > 0) {
-        // Call global hooks
-        if (callHook(hooks,
-          'willUpdate', [component, newPartialState, patch, isPage]) === false) {
+      if (patchs.length > 0) {
+        // call global hooks
+
+        const params = [component, newPartialState, patchs, restore, isPage]
+        if (callHook(hooks, 'willUpdate', params) === false) {
           continue
         }
 
         // update component
-        applyPatchs(component, patch)
+        applyPatchs(component, patchs)
 
         if (typeof didUpdate === 'function') {
           didUpdate(newPartialState)

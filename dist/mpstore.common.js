@@ -72,33 +72,34 @@ const ADD = 1;
 const REMOVE = 2;
 const REPLACE = 3;
 
-function Patch(type, path, value) {
+function Patch(type, path, value, leftValue) {
   this.type = type;
   this.path = path;
   this.value = value;
+  this.leftValue = leftValue;
 }
 
 function diffValues(left, right, path, patchs) {
   if (typeof left === 'function' || left === null) {
-    patchs.push(new Patch(REPLACE, path, right));
+    patchs.push(new Patch(REPLACE, path, right, left));
   } else if (Array.isArray(left)) {
     if (Array.isArray(right)) {
       walkArray(left, right, path, patchs);
     } else {
-      patchs.push(new Patch(REPLACE, path, right));
+      patchs.push(new Patch(REPLACE, path, right, left));
     }
   } else if (typeof left === 'object') {
     if (right !== null && typeof right === 'object' && !Array.isArray(right)) {
       if (left instanceof Date || right instanceof Date) {
-        patchs.push(new Patch(REPLACE, path, right));
+        patchs.push(new Patch(REPLACE, path, right, left));
       } else {
         walkObject(left, right, path, patchs);
       }
     } else {
-      patchs.push(new Patch(REPLACE, path, right));
+      patchs.push(new Patch(REPLACE, path, right, left));
     }
   } else {
-    patchs.push(new Patch(REPLACE, path, right));
+    patchs.push(new Patch(REPLACE, path, right, left));
   }
 }
 
@@ -118,11 +119,11 @@ function walkArray(a, b, base, patchs) {
 
       while (--len >= a.length) {
         const path = `${base}[${len}]`;
-        patchs.push(new Patch(ADD, path, b[len]));
+        patchs.push(new Patch(ADD, path, b[len], a[len]));
       }
     }
   } else {
-    patchs.push(new Patch(REPLACE, base, b));
+    patchs.push(new Patch(REPLACE, base, b, a));
   }
 }
 
@@ -131,7 +132,7 @@ function walkObject(a, b, base, patchs) {
     const path = `${base}['${key}']`;
 
     if (!(key in b)) {
-      patchs.push(new Patch(REMOVE, path, null));
+      patchs.push(new Patch(REMOVE, path, null, a[key]));
     } else if (a[key] !== b[key]) {
       diffValues(a[key], b[key], path, patchs);
     }
@@ -140,16 +141,65 @@ function walkObject(a, b, base, patchs) {
   for (const key in b) {
     if (!(key in a)) {
       const path = `${base}['${key}']`;
-      patchs.push(new Patch(ADD, path, b[key]));
+      patchs.push(new Patch(ADD, path, b[key], null));
     }
   }
 }
 
-function diff (a, b, basePath) {
+const REG = /[^\[]+(?=\])/g;
+
+const filter = key => key.replace(/'/g, '');
+
+const separatePath = (obj, path) => {
+  const keys = path.match(REG);
+
+  if (keys) {
+    let i = -1;
+    let target = obj;
+
+    while (i++ < keys.length - 2) {
+      target = target[filter(keys[i])];
+    }
+
+    return [target, filter(keys[keys.length - 1])];
+  }
+};
+
+const diff = (a, b, basePath) => {
   const patchs = [];
   walkObject(a, b, basePath, patchs);
   return patchs;
-}
+};
+const restore = (obj, patchs) => {
+  let len = patchs.length;
+
+  while (--len >= 0) {
+    const {
+      type,
+      path,
+      leftValue
+    } = patchs[len];
+    const parseItem = separatePath(obj, path);
+
+    if (parseItem) {
+      const [target, lastKey] = parseItem;
+
+      switch (type) {
+        case ADD:
+          delete target[lastKey];
+          break;
+
+        case REMOVE:
+          target[lastKey] = leftValue;
+          break;
+
+        case REPLACE:
+          target[lastKey] = leftValue;
+          break;
+      }
+    }
+  }
+};
 
 function applyPatchs(component, patchs) {
   const desObject = {};
@@ -185,14 +235,16 @@ function updateComponent(deps, hooks) {
         }
       }
 
-      const patch = diff(component.data.global, newPartialState, GLOBALWORD);
+      const patchs = diff(component.data.global, newPartialState, GLOBALWORD);
 
-      if (patch.length > 0) {
-        if (callHook(hooks, 'willUpdate', [component, newPartialState, patch, isPage]) === false) {
+      if (patchs.length > 0) {
+        const params = [component, newPartialState, patchs, restore, isPage];
+
+        if (callHook(hooks, 'willUpdate', params) === false) {
           continue;
         }
 
-        applyPatchs(component, patch);
+        applyPatchs(component, patchs);
 
         if (typeof didUpdate === 'function') {
           didUpdate(newPartialState);

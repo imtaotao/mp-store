@@ -1,5 +1,7 @@
 // Data resource:
 // https://github.com/benjamine/jsondiffpatch/blob/master/test/examples/diffpatch.js
+const exampleDate = new Date()
+
 export const a = [
   {
     left: undefined,
@@ -228,5 +230,75 @@ export const f = [
       _2: ['', 1, 3],
     },
     exactReverse: false,
+  },
+]
+
+export const g = [
+  {
+    name: 'simple values',
+    left: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+    right: [1, 3, 4, 5, 8, 9, 9.1, 10],
+    delta: {
+      _t: 'a',
+      _1: [2, 0, 0],
+      _5: [6, 0, 0],
+      _6: [7, 0, 0],
+      6: [9.1],
+    },
+    reverse: {
+      _t: 'a',
+      1: [2],
+      5: [6],
+      6: [7],
+      _6: [9.1, 0, 0],
+      _8: [1, 2],
+    },
+  },
+
+  {
+    name: 'added block',
+    left: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+    right: [1, 2, 3, 4, 5, 5.1, 5.2, 5.3, 6, 7, 8, 9, 10],
+    delta: {
+      _t: 'a',
+      5: [5.1],
+      6: [5.2],
+      7: [5.3],
+    },
+    reverse: {
+      _t: 'a',
+      _5: [5.1, 0, 0],
+      _6: [5.2, 0, 0],
+      _7: [5.3, 0, 0],
+      _8: [1],
+    },
+  },
+]
+
+export const h = [
+  {
+    left: exampleDate,
+    right: new Date(),
+    delta: {
+      _a: new Date(),
+    },
+    reverse: {
+      _1: [exampleDate, 1],
+      _2: [new Date(), 1, 2],
+      _3: [exampleDate],
+    },
+  },
+
+  {
+    left: exampleDate,
+    right: new Date(),
+    delta: {
+      _b: new Date(),
+    },
+    reverse: {
+      _1: [exampleDate, 1],
+      _2: [exampleDate, 2],
+      _3: [1, exampleDate],
+    },
   },
 ]
