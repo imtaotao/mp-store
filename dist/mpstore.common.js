@@ -176,7 +176,7 @@ const separatePath = (obj, path) => {
 
 const restore = (obj, patchs) => {
   let len = patchs.length;
-  const delEmpty = new Map();
+  const delEmptys = new Map();
 
   while (--len >= 0) {
     const {
@@ -200,7 +200,7 @@ const restore = (obj, patchs) => {
 
         case ADD:
           if (Array.isArray(target) && target === prevTarget[key]) {
-            delEmpty.set(target, {
+            delEmptys.set(target, {
               key,
               prevTarget
             });
@@ -212,7 +212,7 @@ const restore = (obj, patchs) => {
     }
   }
 
-  delEmpty.forEach(({
+  delEmptys.forEach(({
     key,
     prevTarget
   }, target) => {
