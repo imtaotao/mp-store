@@ -99,7 +99,6 @@ export default class Store {
         warn(`${err}\n\n   --- from [${action}] action setter.`)
       }
       
-      
       // update components
       updateComponents(this.depComponents, this.hooks)
 

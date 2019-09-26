@@ -1,6 +1,7 @@
 import mixin from './mixin'
 import Store from './store'
 import { callHook, isEmptyObject } from './utils'
+export { restore } from './diff'
 
 const nativePage = Page
 const nativeComponent = Component

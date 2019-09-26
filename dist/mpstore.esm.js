@@ -326,7 +326,7 @@ const updateComponents = (deps, hooks) => {
       const patchs = diff(component.data[GLOBALWORD], newPartialState, GLOBALWORD);
 
       if (patchs.length > 0) {
-        const params = [component, newPartialState, patchs, restore, isPage];
+        const params = [component, newPartialState, patchs, isPage];
 
         if (callHook(hooks, 'willUpdate', params) === false) {
           continue;
@@ -587,3 +587,4 @@ function index (mixinInject, hooks) {
 }
 
 export default index;
+export { restore };

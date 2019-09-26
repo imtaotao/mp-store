@@ -1,6 +1,6 @@
+import { diff } from './diff'
 import { callHook } from './utils'
 import { GLOBALWORD } from './store'
-import { diff, restore } from './diff'
 
 export const applyPatchs = (component, patchs) => {
   const desObject = {}
@@ -34,7 +34,7 @@ export const updateComponents = (deps, hooks) => {
 
       if (patchs.length > 0) {
         // call global hooks
-        const params = [component, newPartialState, patchs, restore, isPage]
+        const params = [component, newPartialState, patchs, isPage]
         if (callHook(hooks, 'willUpdate', params) === false) {
           continue
         }

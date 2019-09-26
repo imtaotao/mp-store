@@ -1,5 +1,7 @@
 'use strict';
 
+Object.defineProperty(exports, '__esModule', { value: true });
+
 const warn$1 = message => {
   throw new Error(`\n[MpStore warn]: ${message}\n\n`);
 };
@@ -328,7 +330,7 @@ const updateComponents = (deps, hooks) => {
       const patchs = diff(component.data[GLOBALWORD], newPartialState, GLOBALWORD);
 
       if (patchs.length > 0) {
-        const params = [component, newPartialState, patchs, restore, isPage];
+        const params = [component, newPartialState, patchs, isPage];
 
         if (callHook(hooks, 'willUpdate', params) === false) {
           continue;
@@ -588,4 +590,5 @@ function index (mixinInject, hooks) {
   };
 }
 
-module.exports = index;
+exports.default = index;
+exports.restore = restore;
