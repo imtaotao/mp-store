@@ -5,6 +5,7 @@ import {
   callHook,
   mapObject,
   mergeState,
+  createWraper,
   isPlainObject,
 } from './utils'
 import { diff } from './diff'
@@ -186,53 +187,46 @@ export default class Store {
     }
 
     if (isPage) {
-      const nativeLoad = config.onLoad
-      const nativeUnload = config.onUnload
-
-      config.onLoad = function (opts) {
-        addDep(this)
-
-        // rigister store to component within
-        this.store = store
-        if (typeof nativeLoad === 'function') {
-          nativeLoad.call(this, opts)
-        }
-      }
-
-      config.onUnload = function (opts) {
-        if (typeof nativeUnload === 'function') {
-          nativeUnload.call(this, opts)
-        }
-
-        // clear cache
-        this.store = null
-        remove(store.depComponents, this)
-      }
+      config.onLoad = createWraper(
+        config.onLoad,
+        function () {
+          addDep(this)
+          // rigister store to component within
+          this.store = store
+        },
+      )
+      
+      config.onUnload = createWraper(
+        config.onLoad,
+        null,
+        function () {
+          // clear cache
+          this.store = null
+          remove(store.depComponents, this)
+        },
+      )
     } else {
       // Component
       config.lifetimes = config.lifetimes || {}
-      const nativeAttached = config.attached || config.lifetimes.attached
-      const nativeDetached = config.detached || config.lifetimes.detached
+      const get = name => config[name] || config.lifetimes[name]
+      const set = (name, fn) => config[name] = config.lifetimes[name] = fn
 
-      config.attached =
-      config.lifetimes.attached = function (opts) {
-        addDep(this)
-        this.store = store
+      set('attached', createWraper(
+        get('attached'),
+        function () {
+          addDep(this)
+          this.store = store
+        },
+      ))
 
-        if (typeof nativeAttached === 'function') {
-          nativeAttached.call(this, opts)
-        }
-      }
-
-      config.detached =
-      config.lifetimes.detached = function (opts) {
-        if (typeof nativeDetached === 'function') {
-          nativeDetached.call(this, opts)
-        }
-
-        this.store = null
-        remove(store.depComponents, this)
-      }
+      set('detached', createWraper(
+        get('detached'),
+        null,
+        function () {
+          this.store = null
+          remove(store.depComponents, this)
+        },
+      ))
     }
   }
 }

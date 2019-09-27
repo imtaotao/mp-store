@@ -30,6 +30,26 @@ export const callHook = (hooks, name, args) => {
   }
 }
 
+export const createWraper = (target, before, after) => {
+  return function (...args) {
+    let result
+
+    if (typeof before === 'function') {
+      before.apply(this, args)
+    }
+
+    if (typeof target === 'function') {
+      result = target.apply(this, args)
+    }
+
+    if (typeof after === 'function') {
+      after.apply(this, args)
+    }
+
+    return result
+  }
+}
+
 export const mapObject = (obj, fn) => {
   const desObject = {}
   for (const key in obj) {

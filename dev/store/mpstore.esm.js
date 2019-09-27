@@ -28,6 +28,25 @@ const callHook = (hooks, name, args) => {
     return hooks[name].apply(hooks, args);
   }
 };
+const createWraper = (target, before, after) => {
+  return function (...args) {
+    let result;
+
+    if (typeof before === 'function') {
+      before.apply(this, args);
+    }
+
+    if (typeof target === 'function') {
+      result = target.apply(this, args);
+    }
+
+    if (typeof after === 'function') {
+      after.apply(this, args);
+    }
+
+    return result;
+  };
+};
 const mapObject = (obj, fn) => {
   const desObject = {};
 
@@ -488,48 +507,29 @@ class Store {
     };
 
     if (isPage) {
-      const nativeLoad = config.onLoad;
-      const nativeUnload = config.onUnload;
-
-      config.onLoad = function (opts) {
+      config.onLoad = createWraper(config.onLoad, function () {
         addDep(this);
         this.store = store;
-
-        if (typeof nativeLoad === 'function') {
-          nativeLoad.call(this, opts);
-        }
-      };
-
-      config.onUnload = function (opts) {
-        if (typeof nativeUnload === 'function') {
-          nativeUnload.call(this, opts);
-        }
-
+      });
+      config.onUnload = createWraper(config.onLoad, null, function () {
         this.store = null;
         remove(store.depComponents, this);
-      };
+      });
     } else {
       config.lifetimes = config.lifetimes || {};
-      const nativeAttached = config.attached || config.lifetimes.attached;
-      const nativeDetached = config.detached || config.lifetimes.detached;
 
-      config.attached = config.lifetimes.attached = function (opts) {
+      const get = name => config[name] || config.lifetimes[name];
+
+      const set = (name, fn) => config[name] = config.lifetimes[name] = fn;
+
+      set('attached', createWraper(get('attached'), function () {
         addDep(this);
         this.store = store;
-
-        if (typeof nativeAttached === 'function') {
-          nativeAttached.call(this, opts);
-        }
-      };
-
-      config.detached = config.lifetimes.detached = function (opts) {
-        if (typeof nativeDetached === 'function') {
-          nativeDetached.call(this, opts);
-        }
-
+      }));
+      set('detached', createWraper(get('detached'), null, function () {
         this.store = null;
         remove(store.depComponents, this);
-      };
+      }));
     }
   }
 
@@ -556,36 +556,20 @@ const expandConfig = (config, expandMethods, isPage) => {
 function index (mixinInject, hooks) {
   const store = new Store(hooks);
   const expandMethods = mixin(mixinInject);
-
-  function createPage(config) {
+  Page = createWraper(nativePage, function (config) {
+    callHook(hooks, 'createBefore', [true, config]);
     expandConfig(config, expandMethods, true);
 
     store._rewirteCfgAndAddDep(config, true);
-
-    callHook(hooks, 'createBefore', [true, config]);
-    const result = nativePage.call(this, config);
-    callHook(hooks, 'created', [true]);
-    return result;
-  }
-
-  function createComponent(config) {
+  });
+  Component = createWraper(nativeComponent, function (config) {
+    callHook(hooks, 'createBefore', [false, config]);
     expandConfig(config, expandMethods, false);
 
     store._rewirteCfgAndAddDep(config, false);
-
-    callHook(hooks, 'createBefore', [false, config]);
-    const result = nativeComponent.call(this, config);
-    callHook(hooks, 'created', [true]);
-    return result;
-  }
-
-  return {
-    createPage,
-    createComponent,
-    store
-  };
+  });
+  return store;
 }
 
 export default index;
 export { restore };
-//# sourceMappingURL=mpstore.esm.js.map

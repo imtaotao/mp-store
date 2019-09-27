@@ -1,8 +1,10 @@
 import createStore from './store/mpstore.esm'
 
-const { store, createComponent, createPage } = createStore()
-Page = createPage
-Component = createComponent
+const store = createStore(null, {
+  createBefore (isPage, config) {
+    console.log(isPage, config)
+  },
+})
 
 //app.js
 App({})
