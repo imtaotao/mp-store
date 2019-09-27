@@ -9,6 +9,8 @@ const { terser } = require('rollup-plugin-terser')
 const resolve = require('rollup-plugin-node-resolve')
 
 const libName = 'mpstore'
+const testLibPath = path.resolve(__dirname, './dev')
+const sdkDir = path.resolve(testLibPath, './store')
 const entryPath = path.resolve(__dirname, './src/index.js')
 const outputPath = filename => path.resolve(__dirname, './dist', filename)
 
@@ -68,11 +70,37 @@ async function build (cfg, needUglify, sourcemap = false) {
 console.clear()
 // delete old build files
 rm('./dist')
+rm(sdkDir)
+
+const transferfile = (from, desPath) => {
+  const readable = fs.createReadStream(from)
+  readable.on('open', () => readable.pipe(fs.createWriteStream(desPath)))
+}
 
 const buildVersion = sourcemap => {
-  build(esm, false, sourcemap)
-  build(cjs, false, sourcemap)
-  build(uglifyCjs, true, sourcemap)
+  const builds = [
+    build(esm, false, sourcemap),
+    build(cjs, false, sourcemap),
+  ]
+  if (!sourcemap) {
+    builds.push(build(uglifyCjs, true, sourcemap))
+  }
+
+  Promise.all(builds).then(() => {
+    // transfer esm package to dev folder
+    if (fs.existsSync(testLibPath)) {
+      if (!fs.existsSync(sdkDir)) {
+        fs.mkdirSync(sdkDir)
+      }
+
+      const sdkPath = esm.output.file
+      const desPath = path.join(sdkDir, `${libName}.esm.js`)
+      transferfile(sdkPath, desPath)
+      if (sourcemap) {
+        transferfile(sdkPath + '.map', desPath + '.map')
+      }
+    }
+  })
 }
 
 // watch, use in dev and test

@@ -2,6 +2,9 @@
 node_modules/
 src/
 test/
+dev/
+dev/mpstore.common.js.mp
+dev/mpstore.esm.js.mp
 
 .gitignore
 .npmignore

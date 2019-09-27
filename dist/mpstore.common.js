@@ -592,3 +592,4 @@ function index (mixinInject, hooks) {
 
 exports.default = index;
 exports.restore = restore;
+//# sourceMappingURL=mpstore.common.js.map
