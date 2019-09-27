@@ -1,6 +1,6 @@
 {
   "component": true,
   "usingComponents": {
-    "Two": "./two"
+    "Two": "../two/two"
   }
 }
