@@ -1,5 +1,5 @@
 export const warn = message => {
-  throw new Error(`\n[MpStore warn]: ${message}\n\n`)
+  throw new Error(`\n\n[MpStore warn]: ${message}\n\n`)
 }
 
 export const assert = (condition, message) => {

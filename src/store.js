@@ -20,28 +20,27 @@ const assertReducer = (state, action, reducer) => {
 
   assert(
     !('partialState' in reducer),
-    `You must defined "partialState" of "${action}".`,
+    `You must defined [partialState].` + 
+      `\n\n --- from [${action}] action.`,
   )
 
   assert(
     !partialState || typeof partialState !== 'object',
-    `The partialState of "${action}" must be an object.`,
+    `The [partialState] must be an object.` +
+      `\n\n --- from [${action}] action.`,
   )
 
   for (const key in partialState) {
     assert(
       state.hasOwnProperty(key),
-      `The "${key}" already exists in global state,` +
-        'Please don\'t repeat defined.'
+      `The [${key}] already exists in global state, ` +
+        `Please don't repeat defined. \n\n --- from [${action}] action.`
     )
   }
 
   if (typeof setter !== 'function') {
     reducer.setter = () => {
-      warn(
-        `Can\'t set "${action}" value. ` +
-          'Have you defined a setter?'
-      )
+      throw `Can\'t changed [${action}] action value. Have you defined a setter?`
     }
   }
   return reducer
@@ -58,6 +57,11 @@ export default class Store {
   }
 
   add (action, reducer) {
+    assert(
+      this.reducers.find(v => v.action === action),
+      `Can't repeat defined [${action}] action.`,
+    )
+
     const { partialState } = assertReducer(this.state, action, reducer)
 
     reducer.action = action
@@ -93,11 +97,11 @@ export default class Store {
       try {
         const newPartialState = reducer.setter(this.state, prevPayload)
         this.state = mergeState(this.state, newPartialState)
-      } catch (err) {
+      } catch (error) {
         // if call setter function throw an error,
         // the `isDispatching` need restore.
         this.isDispatching = false
-        warn(`${err}\n\n   --- from [${action}] action setter.`)
+        throw error
       }
       
       // update components
@@ -136,7 +140,7 @@ export default class Store {
     let createState = null
     const store = this
     const { data, storeConfig = {} } = config
-    const { didUpdate, willUpdate, defineReducer, defineGlobalState } = storeConfig
+    const { didUpdate, willUpdate, defineReducer, usedGlobalState } = storeConfig
 
     // this is a uitl method,
     // allow craete reducer in the page or component.
@@ -146,8 +150,15 @@ export default class Store {
     }
 
     // get the global state words used
-    if (typeof defineGlobalState === 'function') {
-      const defineObject = defineGlobalState.call(store, store)
+    if (typeof usedGlobalState === 'function') {
+      const defineObject = usedGlobalState.call(store, store)
+
+      assert(
+        !isPlainObject(defineObject),
+        '[usedGlobalState] must return a plain object,' +
+          `but now is return a [${typeof defineObject}]`,
+      )
+
       createState = () => mapObject(defineObject, fn => fn(this.state))
     }
 

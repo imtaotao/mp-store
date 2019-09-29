@@ -2,11 +2,11 @@
 
 Object.defineProperty(exports, '__esModule', { value: true });
 
-const warn$1 = message => {
-  throw new Error(`\n[MpStore warn]: ${message}\n\n`);
+const warn = message => {
+  throw new Error(`\n\n[MpStore warn]: ${message}\n\n`);
 };
 const assert = (condition, message) => {
-  if (condition) warn$1(message);
+  if (condition) warn(message);
 };
 const mergeState = (oldState, newState) => {
   return Object.freeze({ ...oldState,
@@ -163,7 +163,7 @@ function walkObject(a, b, base, patchs) {
 
   for (const key in b) {
     if (!(key in a)) {
-      const path = `${base}['${key}']`;
+      const path = `${base}[${key}]`;
       patchs.push(new Patch(ADD, path, b[key], null));
     }
   }
@@ -374,16 +374,16 @@ const assertReducer = (state, action, reducer) => {
     setter,
     partialState
   } = reducer;
-  assert(!('partialState' in reducer), `You must defined "partialState" of "${action}".`);
-  assert(!partialState || typeof partialState !== 'object', `The partialState of "${action}" must be an object.`);
+  assert(!('partialState' in reducer), `You must defined [partialState].` + `\n\n --- from [${action}] action.`);
+  assert(!partialState || typeof partialState !== 'object', `The [partialState] must be an object.` + `\n\n --- from [${action}] action.`);
 
   for (const key in partialState) {
-    assert(state.hasOwnProperty(key), `The "${key}" already exists in global state,` + 'Please don\'t repeat defined.');
+    assert(state.hasOwnProperty(key), `The [${key}] already exists in global state, ` + `Please don't repeat defined. \n\n --- from [${action}] action.`);
   }
 
   if (typeof setter !== 'function') {
     reducer.setter = () => {
-      warn$1(`Can\'t set "${action}" value. ` + 'Have you defined a setter?');
+      throw `Can\'t changed [${action}] action value. Have you defined a setter?`;
     };
   }
 
@@ -401,6 +401,7 @@ class Store {
   }
 
   add(action, reducer) {
+    assert(this.reducers.find(v => v.action === action), `Can't repeat defined [${action}] action.`);
     const {
       partialState
     } = assertReducer(this.state, action, reducer);
@@ -425,9 +426,9 @@ class Store {
       try {
         const newPartialState = reducer.setter(this.state, prevPayload);
         this.state = mergeState(this.state, newPartialState);
-      } catch (err) {
+      } catch (error) {
         this.isDispatching = false;
-        warn$1(`${err}\n\n   --- from [${action}] action setter.`);
+        throw error;
       }
 
       updateComponents(this.depComponents, this.hooks);
@@ -465,7 +466,7 @@ class Store {
       didUpdate,
       willUpdate,
       defineReducer,
-      defineGlobalState
+      usedGlobalState
     } = storeConfig;
 
     if (typeof defineReducer === 'function') {
@@ -473,8 +474,9 @@ class Store {
       delete config.storeConfig;
     }
 
-    if (typeof defineGlobalState === 'function') {
-      const defineObject = defineGlobalState.call(store, store);
+    if (typeof usedGlobalState === 'function') {
+      const defineObject = usedGlobalState.call(store, store);
+      assert(!isPlainObject(defineObject), '[usedGlobalState] must return a plain object,' + `but now is return a [${typeof defineObject}]`);
 
       createState = () => mapObject(defineObject, fn => fn(this.state));
     }
@@ -577,3 +579,4 @@ function index (mixinInject, hooks) {
 
 exports.default = index;
 exports.restore = restore;
+//# sourceMappingURL=mpstore.common.js.map
