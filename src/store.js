@@ -130,9 +130,11 @@ export default class Store {
 
   // allow change `GLOBALWORD`.
   setNamespace (key) {
-    if (typeof key === 'string') {
-      GLOBALWORD = key
-    }
+    assert(
+      !key || typeof key !== 'string',
+      'The [namespace] must be a string',
+    )
+    GLOBALWORD = key
   }
 
   // insert method

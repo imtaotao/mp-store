@@ -42,6 +42,7 @@ function diffValues (left, right, path, patchs) {
   }
 }
 
+// if array is `[1, 2, 3, a: dd]`, filter `a`
 function walkArray (a, b, base, patchs) {
   if (a.length <= b.length) {
     let len = a.length
@@ -70,7 +71,7 @@ function walkObject (a, b, base, patchs) {
   // walk left object
   for (const key in a) {
     // current path
-    const path = `${base}['${key}']`
+    const path = `${base}.${key}`
 
     if (!(key in b)) {
       patchs.push(new Patch(REMOVE, path, null, a[key]))
@@ -86,7 +87,7 @@ function walkObject (a, b, base, patchs) {
   // walk right object
   for (const key in b) {
     if (!(key in a)) {
-      const path = `${base}[${key}]`
+      const path = `${base}.${key}.`
       patchs.push(new Patch(ADD, path, b[key], null))
     }
   }
@@ -99,8 +100,7 @@ export const diff = (a, b, basePath) => {
   return patchs
 }
 
-const REG = /[^\[]+(?=\])/g
-const filter = key => key.replace(/'/g, '')
+const REG = /(?<=[\[\].])[^\[\].]+/g
 
 // return target object
 const separatePath = (obj, path) => {
@@ -114,11 +114,11 @@ const separatePath = (obj, path) => {
 
     while (i++ < keys.length - 2) {
       prevTarget = target
-      key = filter(keys[i])
+      key = keys[i]
       target = target[key]
     }
 
-    return [target, key, prevTarget, filter(keys[keys.length -1])]
+    return [target, key, prevTarget, keys[keys.length -1]]
   }
 }
 

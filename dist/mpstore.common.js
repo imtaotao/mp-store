@@ -152,7 +152,7 @@ function walkArray(a, b, base, patchs) {
 
 function walkObject(a, b, base, patchs) {
   for (const key in a) {
-    const path = `${base}['${key}']`;
+    const path = `${base}.${key}`;
 
     if (!(key in b)) {
       patchs.push(new Patch(REMOVE, path, null, a[key]));
@@ -163,7 +163,7 @@ function walkObject(a, b, base, patchs) {
 
   for (const key in b) {
     if (!(key in a)) {
-      const path = `${base}[${key}]`;
+      const path = `${base}.${key}.`;
       patchs.push(new Patch(ADD, path, b[key], null));
     }
   }
@@ -174,9 +174,7 @@ const diff = (a, b, basePath) => {
   walkObject(a, b, basePath, patchs);
   return patchs;
 };
-const REG = /[^\[]+(?=\])/g;
-
-const filter = key => key.replace(/'/g, '');
+const REG = /(?<=[\[\].])[^\[\].]+/g;
 
 const separatePath = (obj, path) => {
   const keys = path.match(REG);
@@ -189,11 +187,11 @@ const separatePath = (obj, path) => {
 
     while (i++ < keys.length - 2) {
       prevTarget = target;
-      key = filter(keys[i]);
+      key = keys[i];
       target = target[key];
     }
 
-    return [target, key, prevTarget, filter(keys[keys.length - 1])];
+    return [target, key, prevTarget, keys[keys.length - 1]];
   }
 };
 
@@ -450,9 +448,8 @@ class Store {
   }
 
   setNamespace(key) {
-    if (typeof key === 'string') {
-      GLOBALWORD = key;
-    }
+    assert(!key || typeof key !== 'string', 'The [namespace] must be a string');
+    GLOBALWORD = key;
   }
 
   _rewirteCfgAndAddDep(config, isPage) {
@@ -579,4 +576,3 @@ function index (mixinInject, hooks) {
 
 exports.default = index;
 exports.restore = restore;
-//# sourceMappingURL=mpstore.common.js.map

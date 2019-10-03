@@ -2,7 +2,7 @@
 <view class="container">
   <view bindtap="jump">跳转到子页面</view>
   <view class="usermotto">
-    <text class="user-motto">{{ motto }} {{ global.name }}</text>
+    <text class="user-motto">{{ motto }} {{ global[1] }}</text>
   </view>
 
   <One />

@@ -52,6 +52,7 @@ function diffValues (left, right, path, patchs) {
   }
 }
 
+// if array is `[1, 2, 3, a: dd]`, filter `a`
 function walkArray (a, b, base, patchs) {
   if (a.length <= b.length) {
     let len = a.length
@@ -80,7 +81,7 @@ function walkObject (a, b, base, patchs) {
   // walk left object
   for (const key in a) {
     // current path
-    const path = `${base}['${key}']`
+    const path = `${base}.${key}`
 
     if (!(key in b)) {
       patchs.push(new Patch(REMOVE, path, null, a[key]))
@@ -96,22 +97,23 @@ function walkObject (a, b, base, patchs) {
   // walk right object
   for (const key in b) {
     if (!(key in a)) {
-      const path = `${base}['${key}']`
+      const path = `${base}.${key}.`
       patchs.push(new Patch(ADD, path, b[key], null))
     }
   }
 }
 
 // root `a` and root `b` is an object
-function diff (a, b, basePath) {
+const diff = (a, b, basePath) => {
   const patchs = []
   walkObject(a, b, basePath, patchs)
   return patchs
 }
 
-const REG = /[^\[]+(?=\])/g
+const REG = /(?<=[\[\].])[^\[\].]+/g
 const filter = key => key.replace(/'/g, '')
 
+// return target object
 const separatePath = (obj, path) => {
   const keys = path.match(REG)
 
@@ -120,6 +122,7 @@ const separatePath = (obj, path) => {
     let key = null
     let target = obj
     let prevTarget = null
+
     while (i++ < keys.length - 2) {
       prevTarget = target
       key = filter(keys[i])
@@ -132,7 +135,7 @@ const separatePath = (obj, path) => {
 
 const restore = (obj, patchs) => {
   let len = patchs.length
-  const delEmpty = new Map()
+  const delEmptys = new Map()
 
   while (--len >= 0) {
     const { type, path, leftValue } = patchs[len]
@@ -150,10 +153,8 @@ const restore = (obj, patchs) => {
           target[lastKey] = leftValue
           break
         case ADD :
-          if (Array.isArray(target)) {
-            if (target === prevTarget[key]) {
-              delEmpty.set(target, { key, prevTarget })
-            }
+          if (Array.isArray(target) && target === prevTarget[key]) {
+            delEmptys.set(target, { key, prevTarget })
           }
           delete target[lastKey]
           break
@@ -161,9 +162,9 @@ const restore = (obj, patchs) => {
     }
   }
 
-  delEmpty.forEach(({ key, prevTarget }, target) => {
+  delEmptys.forEach(({ key, prevTarget }, target) => {
     const clone = new target.constructor()
-    // remove empty item
+    // filter empty item
     target.forEach(item => clone.push(item))
     prevTarget[key] = clone
   })
@@ -212,7 +213,7 @@ const data = [
     },
   },
 ]
-const patchs = diff(data[0], data[1])
+const patchs = diff(data[0], data[1], '')
 console.log(patchs)
 restore(data[1], patchs)
 console.log(data[0], data[1])

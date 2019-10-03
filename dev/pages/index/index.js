@@ -11,25 +11,19 @@ Page({
     defineReducer (store) {
       store.add('name', {
         partialState: {
-          a: 1,
+          1: 1,
         },
         setter (a, b) {
           console.log(a, b);
           return {
-            a: b
+            1: b
           }
-        }
-      })
-
-      store.add('name1', {
-        partialState: {
-          b: 1,
         }
       })
     },
     usedGlobalState () {
       return {
-        name: store => store.a,
+        1: store => store[1],
       }
     },
   },
