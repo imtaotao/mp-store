@@ -87,7 +87,7 @@ function walkObject (a, b, base, patchs) {
   // walk right object
   for (const key in b) {
     if (!(key in a)) {
-      const path = `${base}.${key}.`
+      const path = `${base}.${key}`
       patchs.push(new Patch(ADD, path, b[key], null))
     }
   }
