@@ -1,5 +1,4 @@
 import {
-  warn,
   assert,
   remove,
   callHook,
@@ -69,7 +68,7 @@ export default class Store {
     this.state = mergeState(this.state, partialState)
   }
 
-  dispatch (action, payload) {
+  dispatch (action, payload, callback) {
     const { reducers, isDispatching } = this
 
     // if we in call dispatch process,
@@ -108,6 +107,10 @@ export default class Store {
       updateComponents(this.depComponents, this.hooks)
 
       this.isDispatching = false
+
+      if (typeof callback === 'function') {
+        callback()
+      }
     }
 
     // add setter fn to middleware

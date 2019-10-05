@@ -43,7 +43,7 @@ export const updateComponents = (deps, hooks) => {
         applyPatchs(component, patchs)
 
         if (typeof didUpdate === 'function') {
-          didUpdate(newPartialState)
+          didUpdate(newPartialState, patchs)
         }
         callHook(hooks, 'didUpdate', [component, newPartialState, isPage])
       }

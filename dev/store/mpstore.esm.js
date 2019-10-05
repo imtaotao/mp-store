@@ -352,7 +352,7 @@ const updateComponents = (deps, hooks) => {
         applyPatchs(component, patchs);
 
         if (typeof didUpdate === 'function') {
-          didUpdate(newPartialState);
+          didUpdate(newPartialState, patchs);
         }
 
         callHook(hooks, 'didUpdate', [component, newPartialState, isPage]);
@@ -404,7 +404,7 @@ class Store {
     this.state = mergeState(this.state, partialState);
   }
 
-  dispatch(action, payload) {
+  dispatch(action, payload, callback) {
     const {
       reducers,
       isDispatching
@@ -427,6 +427,10 @@ class Store {
 
       updateComponents(this.depComponents, this.hooks);
       this.isDispatching = false;
+
+      if (typeof callback === 'function') {
+        callback();
+      }
     };
 
     this.middleware.use(action, fn);
