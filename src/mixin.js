@@ -6,12 +6,12 @@ export default function (inject) {
   if (typeof inject === 'function') {
     const callback = (name, fn) => {
       assert(
-        typeof name !== 'string' || typeof fn !== 'functin',
+        typeof name === 'string' && typeof fn === 'functin',
         `Mixed callback parameters are illegal.`,
       )
 
       assert(
-        name in expandMethods,
+        !(name in expandMethods),
         `The "${name}" is exist,`, +
           `Please don't repeat mixin.`
       )

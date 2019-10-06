@@ -3,7 +3,7 @@ export const warn = message => {
 }
 
 export const assert = (condition, message) => {
-  if (condition) warn(message)
+  if (!condition) warn(message)
 }
 
 export const mergeState = (oldState, newState) => {

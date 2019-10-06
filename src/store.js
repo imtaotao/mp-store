@@ -18,20 +18,20 @@ const assertReducer = (state, action, reducer) => {
   const { setter, partialState } = reducer
 
   assert(
-    !('partialState' in reducer),
+    'partialState' in reducer,
     `You must defined [partialState].` + 
       `\n\n --- from [${action}] action.`,
   )
 
   assert(
-    !isPlainObject(partialState),
+    isPlainObject(partialState),
     `The [partialState] must be an object.` +
       `\n\n --- from [${action}] action.`,
   )
 
   for (const key in partialState) {
     assert(
-      state.hasOwnProperty(key),
+      !state.hasOwnProperty(key),
       `The [${key}] already exists in global state, ` +
         `Please don't repeat defined. \n\n --- from [${action}] action.`
     )
@@ -57,7 +57,7 @@ export default class Store {
 
   add (action, reducer) {
     assert(
-      this.reducers.find(v => v.action === action),
+      !this.reducers.find(v => v.action === action),
       `Can't repeat defined [${action}] action.`,
     )
 
@@ -74,7 +74,7 @@ export default class Store {
     // if we in call dispatch process,
     // we don't allow call dispacth again.
     assert(
-      isDispatching,
+      !isDispatching,
       'It is not allowed to call "dispatch" during dispatch execution.' +
         `\n\n   --- from [${action}] action.`
     )
@@ -82,7 +82,7 @@ export default class Store {
     const reducer = reducers.find(v => v.action === action)
 
     assert(
-      !reducer,
+      reducer,
       `The "${action}" does not exist. ` +
         'Maybe you have not defined.'
     )
@@ -97,7 +97,7 @@ export default class Store {
         const newPartialState = reducer.setter(this.state, prevPayload)
 
         assert(
-          !isPlainObject(newPartialState),
+          isPlainObject(newPartialState),
           'setter function should be return a plain object.',
         )
 
@@ -140,7 +140,7 @@ export default class Store {
   // allow change `GLOBALWORD`.
   setNamespace (key) {
     assert(
-      !key || typeof key !== 'string',
+      key && typeof key === 'string',
       'The [namespace] must be a string',
     )
     GLOBALWORD = key
@@ -166,7 +166,7 @@ export default class Store {
       const defineObject = usedGlobalState.call(store, store)
 
       assert(
-        !isPlainObject(defineObject),
+        isPlainObject(defineObject),
         '[usedGlobalState] must return a plain object,' +
           `but now is return a [${typeof defineObject}]`,
       )

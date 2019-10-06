@@ -6,7 +6,7 @@ const warn = message => {
   throw new Error(`\n\n[MpStore warn]: ${message}\n\n`);
 };
 const assert = (condition, message) => {
-  if (condition) warn(message);
+  if (!condition) warn(message);
 };
 const mergeState = (oldState, newState) => {
   return Object.freeze(Object.assign({}, oldState, newState));
@@ -78,8 +78,8 @@ function mixin (inject) {
 
   if (typeof inject === 'function') {
     const callback = (name, fn) => {
-      assert(typeof name !== 'string' || typeof fn !== 'functin', `Mixed callback parameters are illegal.`);
-      assert(name in expandMethods, `The "${name}" is exist,`);
+      assert(typeof name === 'string' && typeof fn === 'functin', `Mixed callback parameters are illegal.`);
+      assert(!(name in expandMethods), `The "${name}" is exist,`);
       expandMethods.name = fn;
     };
 
@@ -373,11 +373,11 @@ const assertReducer = (state, action, reducer) => {
     setter,
     partialState
   } = reducer;
-  assert(!('partialState' in reducer), `You must defined [partialState].` + `\n\n --- from [${action}] action.`);
-  assert(!isPlainObject(partialState), `The [partialState] must be an object.` + `\n\n --- from [${action}] action.`);
+  assert('partialState' in reducer, `You must defined [partialState].` + `\n\n --- from [${action}] action.`);
+  assert(isPlainObject(partialState), `The [partialState] must be an object.` + `\n\n --- from [${action}] action.`);
 
   for (const key in partialState) {
-    assert(state.hasOwnProperty(key), `The [${key}] already exists in global state, ` + `Please don't repeat defined. \n\n --- from [${action}] action.`);
+    assert(!state.hasOwnProperty(key), `The [${key}] already exists in global state, ` + `Please don't repeat defined. \n\n --- from [${action}] action.`);
   }
 
   if (typeof setter !== 'function') {
@@ -400,7 +400,7 @@ class Store {
   }
 
   add(action, reducer) {
-    assert(this.reducers.find(v => v.action === action), `Can't repeat defined [${action}] action.`);
+    assert(!this.reducers.find(v => v.action === action), `Can't repeat defined [${action}] action.`);
     const {
       partialState
     } = assertReducer(this.state, action, reducer);
@@ -414,9 +414,9 @@ class Store {
       reducers,
       isDispatching
     } = this;
-    assert(isDispatching, 'It is not allowed to call "dispatch" during dispatch execution.' + `\n\n   --- from [${action}] action.`);
+    assert(!isDispatching, 'It is not allowed to call "dispatch" during dispatch execution.' + `\n\n   --- from [${action}] action.`);
     const reducer = reducers.find(v => v.action === action);
-    assert(!reducer, `The "${action}" does not exist. ` + 'Maybe you have not defined.');
+    assert(reducer, `The "${action}" does not exist. ` + 'Maybe you have not defined.');
 
     const fn = prevPayload => {
       this.isDispatching = true;
@@ -424,7 +424,7 @@ class Store {
 
       try {
         const newPartialState = reducer.setter(this.state, prevPayload);
-        assert(!isPlainObject(newPartialState), 'setter function should be return a plain object.');
+        assert(isPlainObject(newPartialState), 'setter function should be return a plain object.');
         this.state = mergeState(this.state, newPartialState);
       } catch (error) {
         this.isDispatching = false;
@@ -454,7 +454,7 @@ class Store {
   }
 
   setNamespace(key) {
-    assert(!key || typeof key !== 'string', 'The [namespace] must be a string');
+    assert(key && typeof key === 'string', 'The [namespace] must be a string');
     GLOBALWORD = key;
   }
 
@@ -479,7 +479,7 @@ class Store {
 
     if (typeof usedGlobalState === 'function') {
       const defineObject = usedGlobalState.call(store, store);
-      assert(!isPlainObject(defineObject), '[usedGlobalState] must return a plain object,' + `but now is return a [${typeof defineObject}]`);
+      assert(isPlainObject(defineObject), '[usedGlobalState] must return a plain object,' + `but now is return a [${typeof defineObject}]`);
 
       createState = () => mapObject(defineObject, fn => fn(this.state));
     }
