@@ -15,7 +15,10 @@ export const applyPatchs = (component, patchs) => {
 
 // update page and component
 export const updateComponents = (deps, hooks) => {
-  for (let i = 0, len = deps.length; i < len; i++) {
+  const len = deps.length
+  if (len <= 0) return
+
+  for (let i = 0; i < len; i++) {
     const { isPage, component, didUpdate, willUpdate, createState } = deps[i]
 
     if (component.data[GLOBALWORD]) {
