@@ -24,7 +24,7 @@ const assertReducer = (state, action, reducer) => {
   )
 
   assert(
-    !partialState || typeof partialState !== 'object',
+    !isPlainObject(partialState),
     `The [partialState] must be an object.` +
       `\n\n --- from [${action}] action.`,
   )
@@ -147,11 +147,12 @@ export default class Store {
     const { data, storeConfig = {} } = config
     const { didUpdate, willUpdate, defineReducer, usedGlobalState } = storeConfig
 
+    delete config.storeConfig
+
     // this is a uitl method,
     // allow craete reducer in the page or component.
     if (typeof defineReducer === 'function') {
       defineReducer.call(store, store)
-      delete config.storeConfig
     }
 
     // get the global state words used

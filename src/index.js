@@ -30,7 +30,7 @@ export default function (mixinInject, hooks) {
     nativePage,
     function (config) {
       // we allow add additional config attributes
-      callHook(hooks, 'createBefore', [true, config])
+      callHook(hooks, 'createBefore', [config, true])
 
       expandConfig(config, expandMethods, true)
     
@@ -43,7 +43,7 @@ export default function (mixinInject, hooks) {
   Component = createWraper(
     nativeComponent,
     function (config) {
-      callHook(hooks, 'createBefore', [false, config])
+      callHook(hooks, 'createBefore', [config, false])
 
       expandConfig(config, expandMethods, false)
       store._rewirteCfgAndAddDep(config, false)

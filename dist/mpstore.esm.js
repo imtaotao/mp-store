@@ -369,7 +369,7 @@ const assertReducer = (state, action, reducer) => {
     partialState
   } = reducer;
   assert(!('partialState' in reducer), `You must defined [partialState].` + `\n\n --- from [${action}] action.`);
-  assert(!partialState || typeof partialState !== 'object', `The [partialState] must be an object.` + `\n\n --- from [${action}] action.`);
+  assert(!isPlainObject(partialState), `The [partialState] must be an object.` + `\n\n --- from [${action}] action.`);
 
   for (const key in partialState) {
     assert(state.hasOwnProperty(key), `The [${key}] already exists in global state, ` + `Please don't repeat defined. \n\n --- from [${action}] action.`);
@@ -465,10 +465,10 @@ class Store {
       defineReducer,
       usedGlobalState
     } = storeConfig;
+    delete config.storeConfig;
 
     if (typeof defineReducer === 'function') {
       defineReducer.call(store, store);
-      delete config.storeConfig;
     }
 
     if (typeof usedGlobalState === 'function') {
@@ -560,13 +560,13 @@ function index (mixinInject, hooks) {
   const store = new Store(hooks);
   const expandMethods = mixin(mixinInject);
   Page = createWraper(nativePage, function (config) {
-    callHook(hooks, 'createBefore', [true, config]);
+    callHook(hooks, 'createBefore', [config, true]);
     expandConfig(config, expandMethods, true);
 
     store._rewirteCfgAndAddDep(config, true);
   });
   Component = createWraper(nativeComponent, function (config) {
-    callHook(hooks, 'createBefore', [false, config]);
+    callHook(hooks, 'createBefore', [config, false]);
     expandConfig(config, expandMethods, false);
 
     store._rewirteCfgAndAddDep(config, false);
