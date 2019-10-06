@@ -7,7 +7,9 @@ export const assert = (condition, message) => {
 }
 
 export const mergeState = (oldState, newState) => {
-  return Object.freeze({ ...oldState, ...newState })
+  return Object.freeze(
+    Object.assign({}, oldState, newState)
+  )
 }
 
 export const isEmptyObject = obj => {

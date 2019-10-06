@@ -1,5 +1,5 @@
 ## 测试用例
-由于小程序官方推荐的测试库 `miniprogram-simulate` 太过于鸡肋，所以，与运行时有关的测试用例，放到小程序工程中
+由于小程序官方推荐的测试库 `miniprogram-simulate` 太过于鸡肋，所以，与运行时有关的测试用例，只能放到小程序工程中了
 
 ### json diff
 + [x] path 是否正确
@@ -12,13 +12,13 @@
 + [x] 以上所有 diff 测试能否根据 patchs 复原
 
 ### reducer 定义（正反测试）
-+ [ ] 不能添加重复的 reducer(action 相同的)
 + [ ] reducer 里面必须定义 `partialState` 字段
 + [ ] `partialState` 字段必须为一个普通对象
 + [ ] `partialState` 中不能有重复的全局字段
 + [ ] `setter` 函数没有将会被重置为默认函数，调用会抛出错误
 + [ ] `setter` 函数接受两个参数，全局 state 和 payload
 + [ ] `setter` 函数应该返回一个对象，将被合并进全局 state
++ [ ] 不能添加重复的 reducer(action 相同的)
 
 ### dispatch（正反测试）
 + [ ] 全局 state 将不可被更改

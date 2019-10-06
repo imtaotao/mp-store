@@ -95,6 +95,12 @@ export default class Store {
       
       try {
         const newPartialState = reducer.setter(this.state, prevPayload)
+
+        assert(
+          !isPlainObject(newPartialState),
+          'setter function should be return a plain object.',
+        )
+
         this.state = mergeState(this.state, newPartialState)
       } catch (error) {
         // if call setter function throw an error,

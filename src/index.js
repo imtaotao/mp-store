@@ -11,11 +11,8 @@ const expandConfig = (config, expandMethods, isPage) => {
     if (isPage) {
       Object.assign(config, expandMethods)
     } else {
-      if (config.methods) {
-        Object.assign(config.methods, expandMethods)
-      } else {
-        config.methods = { ...expandMethods }
-      }
+      config.methods = config.methods || {}
+      Object.assign(config.methods, expandMethods)
     }
   }
 }

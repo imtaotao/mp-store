@@ -5,9 +5,7 @@ const assert = (condition, message) => {
   if (condition) warn(message);
 };
 const mergeState = (oldState, newState) => {
-  return Object.freeze({ ...oldState,
-    ...newState
-  });
+  return Object.freeze(Object.assign({}, oldState, newState));
 };
 const isEmptyObject = obj => {
   for (const key in obj) {
@@ -322,7 +320,10 @@ const applyPatchs = (component, patchs) => {
   component.setData(desObject);
 };
 const updateComponents = (deps, hooks) => {
-  for (let i = 0, len = deps.length; i < len; i++) {
+  const len = deps.length;
+  if (len <= 0) return;
+
+  for (let i = 0; i < len; i++) {
     const {
       isPage,
       component,
@@ -419,6 +420,7 @@ class Store {
 
       try {
         const newPartialState = reducer.setter(this.state, prevPayload);
+        assert(!isPlainObject(newPartialState), 'setter function should be return a plain object.');
         this.state = mergeState(this.state, newPartialState);
       } catch (error) {
         this.isDispatching = false;
@@ -546,12 +548,8 @@ const expandConfig = (config, expandMethods, isPage) => {
     if (isPage) {
       Object.assign(config, expandMethods);
     } else {
-      if (config.methods) {
-        Object.assign(config.methods, expandMethods);
-      } else {
-        config.methods = { ...expandMethods
-        };
-      }
+      config.methods = config.methods || {};
+      Object.assign(config.methods, expandMethods);
     }
   }
 };

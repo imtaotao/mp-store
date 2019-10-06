@@ -1,3 +1,4 @@
+import '../utils'
 import createStore from '../../src/index'
 
 let store
