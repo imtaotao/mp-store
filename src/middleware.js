@@ -9,7 +9,7 @@ const match = (layer, action) => {
 
 const handleLayer = (fn, action, store, payload, next) => {
   try {
-    fn.call(store, payload, next)
+    fn.call(store, payload, next, action)
   } catch (err) {
     const hooks = store.hooks
 

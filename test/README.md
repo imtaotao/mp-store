@@ -1,5 +1,5 @@
 ## 测试用例
-由于小程序官方推荐的测试库 `miniprogram-simulate` 太过于鸡肋，所以，与运行时有关的测试用例，只能放到小程序工程中了
+由于小程序官方推荐的测试库 `miniprogram-simulate` 太过于鸡肋，所以，与运行时有关的测试用例，只能放到小程序工程中了。很大一部分测试都需要正反测试，错误测试用 `[error]` 前缀标识
 
 ### json diff
 + [x] path 是否正确
@@ -11,7 +11,7 @@
 + [x] Date 类型的 value 是否使用新值
 + [x] 以上所有 diff 测试能否根据 patchs 复原
 
-### reducer 定义（正反测试）
+### reducer 定义
 + [x] reducer 里面必须定义 `partialState` 字段
 + [x] `partialState` 字段必须为一个普通对象
 + [x] `partialState` 中不能有重复的全局字段
@@ -20,14 +20,14 @@
 + [x] `setter` 函数应该返回一个对象，将被合并进全局 state
 + [x] 不能添加重复的 reducer(action 相同的)
 
-### dispatch（正反测试）
+### dispatch
 + [x] 全局 state 将不可被更改
 + [x] dispatch 的 action 不存在的时候报错
 + [x] 不能再 dispatch 的时候再次调用 dispatch
 + [x] dispatch 的时候能在中间件中再次调用 dispatch
 + [x] dispatch 后，组件更新完毕后调用回调
 
-### component config（正反测试）
+### component config
 + [ ] `storeConfig` 配置项会被删除
 + [ ] `defineReducer` 方法在小程序初始化的时候调用，允许定义 reducer，接受一个参数为 store，上下文为 store
 + [ ] 没有 `usedGlobalState` 方法当前组件将不会被添加到依赖中
@@ -37,23 +37,24 @@
 + [ ] `willUpdate` 将在当前组件更新之前调用，返回 false 将阻止更新，接受一个参数 newPartialState
 + [ ] `didUpdate` 将在组件更新完毕之后调用，接受两个参数，为 newPartialState 和 patchs
 
-### setNamespace（正反测试）
+### setNamespace
 + [ ] 更改了使用的全局 state 命名空间，是否生效了
 
-### mixin（正反测试）
+### mixin
 + [ ] 检查参数是否合法，两个参数，第一个为 string，第二个为 function
 + [ ] 不能混入重复的方法
 + [ ] 混入的方法在 组件 和 page 里面是否生效
 
-### hooks（正反测试）
+### hooks
 + [ ] `createBefore` 在调用组件和 page 原生函数之前调用，接受两个参数，一个为 config，一个为是否是 page
 + [ ] `addDep` 在添加依赖之前调用，返回 false 将会阻止添加进依赖，接受两个参数，一个为组件，一个为是否是 page
 + [ ] `willUpdate` 在每个组件更新之前调用，返回 fakse 将阻止当前组件更新，将接受 5 个参数，component, newPartialState, patchs, isPage
 + [ ] `didUpdate` 将在每个组件更新之后调用，接受三个参数，component, newPartialState, isPage
 
-### middleware（正反测试）
+### middleware
 + [ ] 如果没有指定 action，则默认为拦截所有 dispatch
++ [ ] 拦截所有 action
 + [ ] 返回一个 remove 当前中间件的函数
-+ [ ] 中间件函数接受两个参数，第一个为上一个中间件传递的 payload，第二个为 next（function）
++ [ ] 中间件函数接受三个个参数，第一个为上一个中间件传递的 payload，第二个为 next（function），第三个为当前的 action
 + [ ] 中间件如果没有调用 next 将不会更新
 + [ ] 中间件调用的顺序与添加的顺序保持一致
