@@ -297,11 +297,11 @@ class Middleware {
           layer = this.stack[++idx];
         }
 
+        idx++;
+
         if (layer) {
           handleLayer(layer.fn, action, this.store, prevPayload, next);
         }
-
-        idx++;
       };
 
       next(payload);

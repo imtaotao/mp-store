@@ -19,7 +19,7 @@ import { clone, expectPatch } from '../utils'
 
 const root = '/'
 
-describe('Diff json', () => {
+describe('json diff', () => {
   it('a', () => {
     const patchs = diff(a[0], a[1], root)
     expect(patchs.length).toBe(3)

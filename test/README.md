@@ -21,11 +21,11 @@
 + [x] 不能添加重复的 reducer(action 相同的)
 
 ### dispatch（正反测试）
-+ [ ] 全局 state 将不可被更改
-+ [ ] dispatch 的 action 不存在的时候报错
-+ [ ] 不能再 dispatch 的时候再次调用 dispatch
-+ [ ] dispatch 的时候能在中间件中再次调用 dispatch
-+ [ ] dispatch 后，组件更新完毕后调用回调
++ [x] 全局 state 将不可被更改
++ [x] dispatch 的 action 不存在的时候报错
++ [x] 不能再 dispatch 的时候再次调用 dispatch
++ [x] dispatch 的时候能在中间件中再次调用 dispatch
++ [x] dispatch 后，组件更新完毕后调用回调
 
 ### component config（正反测试）
 + [ ] `storeConfig` 配置项会被删除
