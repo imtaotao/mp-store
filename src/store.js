@@ -1,4 +1,5 @@
 import {
+  warn,
   assert,
   remove,
   callHook,
@@ -87,14 +88,12 @@ export default class Store {
         'Maybe you have not defined.'
     )
 
-    const fn = prevPayload => {
+    // call all middleware
+    this.middleware.process(action, payload, (desPayload, restoreProcessState) => {
       this.isDispatching = true
 
-      // the current function is called only once
-      this.middleware.remove(action, fn)
-      
       try {
-        const newPartialState = reducer.setter(this.state, prevPayload)
+        const newPartialState = reducer.setter(this.state, desPayload)
 
         assert(
           isPlainObject(newPartialState),
@@ -106,29 +105,26 @@ export default class Store {
         // if call setter function throw an error,
         // the `isDispatching` need restore.
         this.isDispatching = false
-        throw error
+        restoreProcessState()
+        warn(`${error}\n\n   --- from [${action}] action.`)
       }
       
       // update components
       updateComponents(this.depComponents, this.hooks)
 
+      // restore state
       this.isDispatching = false
+      restoreProcessState()
 
       if (typeof callback === 'function') {
         callback()
       }
-    }
-
-    // add setter fn to middleware
-    this.middleware.use(action, fn)
-
-    // call all middleware
-    this.middleware.process(action, payload)
+    })
   }
 
   // add middleware
   use (action, fn) {
-    if (typeof action !== 'string') {
+    if (typeof action === 'function') {
       fn = action
       action = COMMONACTION
     }

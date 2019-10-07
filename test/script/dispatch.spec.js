@@ -44,6 +44,45 @@ describe('dispatch', () => {
     store.dispatch('testActionOne')
   })
 
+  it('allow call dispatch in update callback', () => {
+    let i = 0
+    store.add('testAction', {
+      partialState: {},
+      setter (state, payload) {
+        i += payload
+        return {}
+      },
+    })
+    store.dispatch('testAction', 1, () => {
+      store.dispatch('testAction', 2)
+    })
+    expect(i).toBe(3)
+  })
+
+  it('allow add new middleware in update callback', () => {
+    let i = 0
+    store.add('testAction', {
+      partialState: {},
+      setter (state, payload) {
+        expect(payload).toBeNull()
+        return {}
+      },
+    })
+    expect(store.middleware.stack.length).toBe(0)
+    store.dispatch('testAction', null, () => {
+      store.use((payload, next) => {
+        i++
+        next(payload)
+      })
+      // no call `next`, so only need expect null
+      store.use('testAction', (payload, next) => { i++ })
+      expect(store.middleware.stack.length).toBe(2)
+      store.dispatch('testAction')
+    })
+    expect(store.middleware.stack.length).toBe(2)
+    expect(i).toBe(2)
+  })
+
   it('allow call dispatch again in the middleware', done => {
     let i = 0
     store.add('testActionOne', {

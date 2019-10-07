@@ -245,20 +245,22 @@ const restore = (obj, patchs) => {
 const COMMONACTION = '*';
 
 const match = (layer, action) => {
-  if (action === COMMONACTION) return true;
+  if (layer.action === COMMONACTION) return true;
   return action === layer.action;
 };
 
-const handleLayer = (fn, action, store, payload, next) => {
+const handleLayer = (action, fn, store, payload, next, restoreProcessState) => {
   try {
     fn.call(store, payload, next, action);
-  } catch (err) {
+    restoreProcessState();
+  } catch (error) {
     const hooks = store.hooks;
+    restoreProcessState();
 
     if (hooks && typeof hooks['middlewareError'] === 'function') {
       hooks['middlewareError'](action, payload, err);
     } else {
-      warn(`${err}\n\n   --- from [${action}] action.`);
+      warn(`${error}\n\n   --- from middleware [${action}] action.`);
     }
   }
 };
@@ -267,9 +269,11 @@ class Middleware {
   constructor(store) {
     this.stack = [];
     this.store = store;
+    this.isProcessing = false;
   }
 
   use(action, fn) {
+    assert(!this.isProcessing, 'can\'t allow add new middleware in the middleware processing.');
     this.stack.push({
       fn,
       action
@@ -286,25 +290,34 @@ class Middleware {
     }
   }
 
-  process(action, payload) {
+  process(action, payload, finish) {
+    this.isProcessing = true;
+
+    const restoreProcessState = () => {
+      this.isProcessing = false;
+    };
+
     if (this.stack.length > 0) {
       let idx = 0;
 
       const next = prevPayload => {
         let layer = this.stack[idx];
-
-        while (layer && !match(layer, action)) {
-          layer = this.stack[++idx];
-        }
-
         idx++;
 
+        while (layer && !match(layer, action)) {
+          layer = this.stack[idx++];
+        }
+
         if (layer) {
-          handleLayer(layer.fn, action, this.store, prevPayload, next);
+          handleLayer(action, layer.fn, this.store, prevPayload, next, restoreProcessState);
+        } else {
+          finish(prevPayload, restoreProcessState);
         }
       };
 
       next(payload);
+    } else {
+      finish(payload, restoreProcessState);
     }
   }
 
@@ -417,34 +430,31 @@ class Store {
     assert(!isDispatching, 'It is not allowed to call "dispatch" during dispatch execution.' + `\n\n   --- from [${action}] action.`);
     const reducer = reducers.find(v => v.action === action);
     assert(reducer, `The "${action}" does not exist. ` + 'Maybe you have not defined.');
-
-    const fn = prevPayload => {
+    this.middleware.process(action, payload, (desPayload, restoreProcessState) => {
       this.isDispatching = true;
-      this.middleware.remove(action, fn);
 
       try {
-        const newPartialState = reducer.setter(this.state, prevPayload);
+        const newPartialState = reducer.setter(this.state, desPayload);
         assert(isPlainObject(newPartialState), 'setter function should be return a plain object.');
         this.state = mergeState(this.state, newPartialState);
       } catch (error) {
         this.isDispatching = false;
-        throw error;
+        restoreProcessState();
+        warn(`${error}\n\n   --- from [${action}] action.`);
       }
 
       updateComponents(this.depComponents, this.hooks);
       this.isDispatching = false;
+      restoreProcessState();
 
       if (typeof callback === 'function') {
         callback();
       }
-    };
-
-    this.middleware.use(action, fn);
-    this.middleware.process(action, payload);
+    });
   }
 
   use(action, fn) {
-    if (typeof action !== 'string') {
+    if (typeof action === 'function') {
       fn = action;
       action = COMMONACTION;
     }

@@ -69,7 +69,7 @@ describe('reducer', () => {
     expect(isError(reducer.setter)).toBeFalsy()
   })
 
-  it('setter function accept params', done => {
+  it('inspect setter function accept params', done => {
     store.add('testAction', {
       partialState: {},
       setter (state, payload) {

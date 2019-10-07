@@ -24,6 +24,8 @@
 + [x] 全局 state 将不可被更改
 + [x] dispatch 的 action 不存在的时候报错
 + [x] 不能再 dispatch 的时候再次调用 dispatch
++ [x] 更新完毕的回调中可以调用 dispatch
++ [x] 更新完毕的回调中可以增加新的 middleware
 + [x] dispatch 的时候能在中间件中再次调用 dispatch
 + [x] dispatch 后，组件更新完毕后调用回调
 
@@ -52,9 +54,12 @@
 + [ ] `didUpdate` 将在每个组件更新之后调用，接受三个参数，component, newPartialState, isPage
 
 ### middleware
-+ [ ] 如果没有指定 action，则默认为拦截所有 dispatch
-+ [ ] 拦截所有 action
-+ [ ] 返回一个 remove 当前中间件的函数
-+ [ ] 中间件函数接受三个个参数，第一个为上一个中间件传递的 payload，第二个为 next（function），第三个为当前的 action
-+ [ ] 中间件如果没有调用 next 将不会更新
-+ [ ] 中间件调用的顺序与添加的顺序保持一致
++ [x] 如果没有指定 action，则默认为拦截所有 dispatch
++ [x] 拦截所有 action
++ [x] 检查中间件的数量
++ [x] 不允许在中间件调用的过程中增加新的中间件
++ [x] `setter` 函数中不能添加 middleware
++ [x] 返回一个移除当前中间件的函数，用于删除当前中间件
++ [x] 中间件函数接受三个个参数，第一个为上一个中间件传递的 payload，第二个为 next（function），第三个为当前的 action
++ [x] 中间件如果没有调用 next 将不会更新
++ [x] 中间件调用的顺序与添加的顺序保持一致
