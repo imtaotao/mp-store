@@ -5,7 +5,7 @@ const opts = {
   projectPath: path.resolve(__dirname, './dev'),
 }
 
-// 工具 cli 位置，如果你没有更改过默认安装位置，可以忽略此项
+// wechat devtool's position, if no alter default install postion, you can ignore.
 if (process.argv.includes('-m')) {
   opts.cliPath =  path.resolve('D:/wechat-devtool/cli.bat')
 }
