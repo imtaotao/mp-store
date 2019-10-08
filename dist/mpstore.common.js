@@ -78,7 +78,8 @@ function mixin (inject) {
 
   if (typeof inject === 'function') {
     const callback = (name, fn) => {
-      assert(typeof name === 'string' && typeof fn === 'functin', `Mixed callback parameters are illegal.`);
+      assert(typeof name === 'string', `The mixed method name must a string.`);
+      assert(typeof fn === 'function', 'The mixed method is not a function.');
       assert(!(name in expandMethods), `The "${name}" is exist,`);
       expandMethods.name = fn;
     };

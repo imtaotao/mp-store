@@ -20,6 +20,7 @@ module.exports = {
   },
 
   files: [
+    'simulate.js',
     'script/*.spec.js',
     'miniprogram-simulate.js',
   ],

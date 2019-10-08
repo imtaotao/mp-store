@@ -1,7 +1,3 @@
-// set global env function
-window.Page = function () {}
-window.Component = function () {}
-
 export const isError = fn => {
   try {
     fn()
