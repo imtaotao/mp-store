@@ -1,5 +1,5 @@
 ## 测试用例
-由于小程序官方推荐的测试库 `miniprogram-simulate` 太过于鸡肋，所以，与运行时有关的测试用例，只能放到小程序工程中了。很大一部分测试都需要正反测试，错误测试用 `[error]` 前缀标识
+由于小程序官方推荐的测试库 `miniprogram-simulate` 太过于鸡肋，所以，只对 `Componnet` 进行测试，`Page` 一部分测试需要放到小程序的运行时环境中去。很大一部分测试都需要正反测试，错误测试用 `[error]` 前缀标识
 
 ### json diff
 + [x] path 是否正确
@@ -28,6 +28,8 @@
 + [x] 更新完毕的回调中可以增加新的 middleware
 + [x] dispatch 的时候能在中间件中再次调用 dispatch
 + [x] dispatch 后，组件更新完毕后调用回调
++ [ ] 组件的 data 能否正常
++ [ ] 组件的视图能否正常更新
 
 ### component config
 + [ ] `storeConfig` 配置项会被删除
@@ -40,7 +42,10 @@
 + [ ] `didUpdate` 将在组件更新完毕之后调用，接受两个参数，为 newPartialState 和 patchs
 
 ### setNamespace
-+ [ ] 更改了使用的全局 state 命名空间，是否生效了
++ [ ] 默认的 namespace 是否正确
++ [ ] setNamespace 参数检测
++ [ ] 组件内部 data 上是否成功加上了
++ [ ] 模板中能否正常使用
 
 ### mixin
 + [x] 检查参数是否合法，两个参数，第一个为 string，第二个为 function

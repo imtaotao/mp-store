@@ -6,7 +6,7 @@ import { callHook, createWraper, isEmptyObject } from './utils'
 const nativePage = Page
 const nativeComponent = Component
 
-const expandConfig = (config, expandMethods, isPage) => {
+function expandConfig (config, expandMethods, isPage) {
   if (!isEmptyObject(expandMethods)) {
     if (isPage) {
       Object.assign(config, expandMethods)

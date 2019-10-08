@@ -2,7 +2,7 @@ import { diff } from './diff'
 import { callHook } from './utils'
 import { GLOBALWORD } from './store'
 
-export const applyPatchs = (component, patchs) => {
+export function applyPatchs (component, patchs) {
   const desObject = {}
 
   for (let i = 0, len = patchs.length; i < len; i++) {
@@ -14,7 +14,7 @@ export const applyPatchs = (component, patchs) => {
 }
 
 // update page and component
-export const updateComponents = (deps, hooks) => {
+export function updateComponents (deps, hooks) {
   const len = deps.length
   if (len <= 0) return
 

@@ -1,9 +1,15 @@
 const path = require('path')
+const webpack = require('webpack')
 
 const webpackConfig = {
   module: {
     rules: [],
   },
+  plugins: [
+    new webpack.DefinePlugin({
+      __VERSION__: '"0.0.0"',
+    }),
+  ],
   node: {
     __dirname: false,
   },

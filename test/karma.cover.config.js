@@ -14,7 +14,7 @@ module.exports = function (config) {
     plugins: base.plugins.concat([
       'karma-coverage',
       'karma-chrome-launcher',
-    ])
+    ]),
   })
 
   config.set(options)

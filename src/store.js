@@ -15,7 +15,7 @@ import { applyPatchs, updateComponents } from './update'
 // global state namespace
 export let GLOBALWORD = 'global'
 
-const assertReducer = (state, action, reducer) => {
+function assertReducer (state, action, reducer) {
   const { setter, partialState } = reducer
 
   assert(
@@ -53,6 +53,7 @@ export default class Store {
     this.reducers = []
     this.depComponents = []
     this.isDispatching = false
+    this.version = __VERSION__
     this.middleware = new Middleware(this)
   }
 

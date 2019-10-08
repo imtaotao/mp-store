@@ -1,38 +1,48 @@
-export const warn = message => {
+export function warn (message) {
   throw new Error(`\n\n[MpStore warn]: ${message}\n\n`)
 }
 
-export const assert = (condition, message) => {
+export function assert (condition, message) {
   if (!condition) warn(message)
 }
 
-export const mergeState = (oldState, newState) => {
+export function mergeState (oldState, newState) {
   return Object.freeze(
     Object.assign({}, oldState, newState)
   )
 }
 
-export const isEmptyObject = obj => {
-  for (const key in obj){
-    return false
-  }
-  return true
-}
-
-export const remove = (list, item) => {
+export function remove (list, item) {
   const index = list.indexOf(item)
   if (index > -1) {
     list.splice(index, 1)
   }
 }
 
-export const callHook = (hooks, name, args) => {
+export function callHook (hooks, name, args) {
   if (hooks && typeof hooks[name] === 'function') {
     return hooks[name].apply(hooks, args)
   }
 }
 
-export const createWraper = (target, before, after) => {
+export function isEmptyObject (obj) {
+  for (const k in obj){
+    return false
+  }
+  return true
+}
+
+export function mapObject (obj, fn) {
+  const desObject = {}
+  for (const key in obj) {
+    if (obj.hasOwnProperty(key)) {
+      desObject[key] = fn(obj[key])
+    }
+  }
+  return desObject
+}
+
+export function createWraper (target, before, after) {
   return function (...args) {
     let result
 
@@ -52,17 +62,7 @@ export const createWraper = (target, before, after) => {
   }
 }
 
-export const mapObject = (obj, fn) => {
-  const desObject = {}
-  for (const key in obj) {
-    if (obj.hasOwnProperty(key)) {
-      desObject[key] = fn(obj[key])
-    }
-  }
-  return desObject
-}
-
-export const isPlainObject = obj => {
+export function isPlainObject (obj) {
   if (typeof obj !== 'object' || obj === null) return false
 
   const proto = Object.getPrototypeOf(obj)

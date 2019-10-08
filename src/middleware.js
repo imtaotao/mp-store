@@ -2,19 +2,19 @@ import { warn, assert } from './utils'
 
 export const COMMONACTION = '*'
 
-const match = (layer, action) => {
+function match (layer, action) {
   if (layer.action === COMMONACTION) return true
   return action === layer.action
 }
 
-const handleLayer = (
-    action,
-    fn,
-    store,
-    payload,
-    next,
-    restoreProcessState,
-) => {
+function handleLayer (
+  action,
+  fn,
+  store,
+  payload,
+  next,
+  restoreProcessState,
+) {
   try {
     fn.call(store, payload, next, action)
     restoreProcessState()

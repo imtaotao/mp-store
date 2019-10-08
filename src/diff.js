@@ -94,7 +94,7 @@ function walkObject (a, b, base, patchs) {
 }
 
 // root `a` and root `b` is an object
-export const diff = (a, b, basePath) => {
+export function diff (a, b, basePath) {
   const patchs = []
   walkObject(a, b, basePath, patchs)
   return patchs
@@ -103,7 +103,7 @@ export const diff = (a, b, basePath) => {
 const REG = /(?<=[\[\].])[^\[\].]+/g
 
 // return target object
-const separatePath = (obj, path) => {
+function separatePath (obj, path) {
   const keys = path.match(REG)
 
   if (keys) {
@@ -122,7 +122,7 @@ const separatePath = (obj, path) => {
   }
 }
 
-export const restore = (obj, patchs) => {
+export function restore (obj, patchs) {
   let len = patchs.length
   const delEmptys = new Map()
 

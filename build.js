@@ -4,11 +4,13 @@ const rollup = require('rollup')
 const rm = require('rimraf').sync
 const babel = require('rollup-plugin-babel')
 const cmd = require('rollup-plugin-commonjs')
+const replace = require('rollup-plugin-replace')
 const cleanup = require('rollup-plugin-cleanup')
 const { terser } = require('rollup-plugin-terser')
 const resolve = require('rollup-plugin-node-resolve')
 
 const libName = 'mpstore'
+const version = require('./package.json').version
 const testLibPath = path.resolve(__dirname, './dev')
 const sdkDir = path.resolve(testLibPath, './store')
 const entryPath = path.resolve(__dirname, './src/index.js')
@@ -38,6 +40,13 @@ const uglifyCjs = {
   },
 }
 
+// create env variable
+const createReplacePlugin = () => {
+  return replace({
+    __VERSION__: `'${version}'`,
+  })
+}
+
 async function build (cfg, needUglify, sourcemap = false) {
   cfg.output.sourcemap = sourcemap
 
@@ -51,6 +60,7 @@ async function build (cfg, needUglify, sourcemap = false) {
         exclude: 'node_modules/**',
       }),
       cmd(),
+      createReplacePlugin(),
     ]
   }
 

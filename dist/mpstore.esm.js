@@ -1,32 +1,43 @@
-const warn = message => {
+function warn(message) {
   throw new Error(`\n\n[MpStore warn]: ${message}\n\n`);
-};
-const assert = (condition, message) => {
+}
+function assert(condition, message) {
   if (!condition) warn(message);
-};
-const mergeState = (oldState, newState) => {
+}
+function mergeState(oldState, newState) {
   return Object.freeze(Object.assign({}, oldState, newState));
-};
-const isEmptyObject = obj => {
-  for (const key in obj) {
-    return false;
-  }
-
-  return true;
-};
-const remove = (list, item) => {
+}
+function remove(list, item) {
   const index = list.indexOf(item);
 
   if (index > -1) {
     list.splice(index, 1);
   }
-};
-const callHook = (hooks, name, args) => {
+}
+function callHook(hooks, name, args) {
   if (hooks && typeof hooks[name] === 'function') {
     return hooks[name].apply(hooks, args);
   }
-};
-const createWraper = (target, before, after) => {
+}
+function isEmptyObject(obj) {
+  for (const k in obj) {
+    return false;
+  }
+
+  return true;
+}
+function mapObject(obj, fn) {
+  const desObject = {};
+
+  for (const key in obj) {
+    if (obj.hasOwnProperty(key)) {
+      desObject[key] = fn(obj[key]);
+    }
+  }
+
+  return desObject;
+}
+function createWraper(target, before, after) {
   return function (...args) {
     let result;
 
@@ -44,19 +55,8 @@ const createWraper = (target, before, after) => {
 
     return result;
   };
-};
-const mapObject = (obj, fn) => {
-  const desObject = {};
-
-  for (const key in obj) {
-    if (obj.hasOwnProperty(key)) {
-      desObject[key] = fn(obj[key]);
-    }
-  }
-
-  return desObject;
-};
-const isPlainObject = obj => {
+}
+function isPlainObject(obj) {
   if (typeof obj !== 'object' || obj === null) return false;
   const proto = Object.getPrototypeOf(obj);
   if (proto === null) return true;
@@ -67,7 +67,7 @@ const isPlainObject = obj => {
   }
 
   return proto === baseProto;
-};
+}
 
 function mixin (inject) {
   const expandMethods = Object.create(null);
@@ -77,7 +77,7 @@ function mixin (inject) {
       assert(typeof name === 'string', `The mixed method name must a string.`);
       assert(typeof fn === 'function', 'The mixed method is not a function.');
       assert(!(name in expandMethods), `The "${name}" is exist,`);
-      expandMethods.name = fn;
+      expandMethods[name] = fn;
     };
 
     inject(callback);
@@ -164,14 +164,14 @@ function walkObject(a, b, base, patchs) {
   }
 }
 
-const diff = (a, b, basePath) => {
+function diff(a, b, basePath) {
   const patchs = [];
   walkObject(a, b, basePath, patchs);
   return patchs;
-};
+}
 const REG = /(?<=[\[\].])[^\[\].]+/g;
 
-const separatePath = (obj, path) => {
+function separatePath(obj, path) {
   const keys = path.match(REG);
 
   if (keys) {
@@ -188,9 +188,9 @@ const separatePath = (obj, path) => {
 
     return [target, key, prevTarget, keys[keys.length - 1]];
   }
-};
+}
 
-const restore = (obj, patchs) => {
+function restore(obj, patchs) {
   let len = patchs.length;
   const delEmptys = new Map();
 
@@ -237,16 +237,16 @@ const restore = (obj, patchs) => {
     prevTarget[key] = clone;
   });
   return obj;
-};
+}
 
 const COMMONACTION = '*';
 
-const match = (layer, action) => {
+function match(layer, action) {
   if (layer.action === COMMONACTION) return true;
   return action === layer.action;
-};
+}
 
-const handleLayer = (action, fn, store, payload, next, restoreProcessState) => {
+function handleLayer(action, fn, store, payload, next, restoreProcessState) {
   try {
     fn.call(store, payload, next, action);
     restoreProcessState();
@@ -260,7 +260,7 @@ const handleLayer = (action, fn, store, payload, next, restoreProcessState) => {
       warn(`${error}\n\n   --- from middleware [${action}] action.`);
     }
   }
-};
+}
 
 class Middleware {
   constructor(store) {
@@ -320,7 +320,7 @@ class Middleware {
 
 }
 
-const applyPatchs = (component, patchs) => {
+function applyPatchs(component, patchs) {
   const desObject = {};
 
   for (let i = 0, len = patchs.length; i < len; i++) {
@@ -332,8 +332,8 @@ const applyPatchs = (component, patchs) => {
   }
 
   component.setData(desObject);
-};
-const updateComponents = (deps, hooks) => {
+}
+function updateComponents(deps, hooks) {
   const len = deps.length;
   if (len <= 0) return;
 
@@ -374,11 +374,11 @@ const updateComponents = (deps, hooks) => {
       }
     }
   }
-};
+}
 
 let GLOBALWORD = 'global';
 
-const assertReducer = (state, action, reducer) => {
+function assertReducer(state, action, reducer) {
   const {
     setter,
     partialState
@@ -397,7 +397,7 @@ const assertReducer = (state, action, reducer) => {
   }
 
   return reducer;
-};
+}
 
 class Store {
   constructor(hooks) {
@@ -406,6 +406,7 @@ class Store {
     this.reducers = [];
     this.depComponents = [];
     this.isDispatching = false;
+    this.version = '0.0.3';
     this.middleware = new Middleware(this);
   }
 
@@ -554,7 +555,7 @@ class Store {
 const nativePage = Page;
 const nativeComponent = Component;
 
-const expandConfig = (config, expandMethods, isPage) => {
+function expandConfig(config, expandMethods, isPage) {
   if (!isEmptyObject(expandMethods)) {
     if (isPage) {
       Object.assign(config, expandMethods);
@@ -563,7 +564,7 @@ const expandConfig = (config, expandMethods, isPage) => {
       Object.assign(config.methods, expandMethods);
     }
   }
-};
+}
 
 function index (mixinInject, hooks) {
   const store = new Store(hooks);
