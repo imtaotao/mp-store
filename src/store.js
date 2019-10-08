@@ -168,7 +168,7 @@ export class Store {
           `but now is return a [${typeof defineObject}]`,
       )
 
-      createState = () => mapObject(defineObject, fn => fn(this.state))
+      createState = () => mapObject(defineObject, fn => fn(store.state))
     }
 
     // get state used by the current component

@@ -145,4 +145,59 @@ describe('dispatch', () => {
     expect(Object.keys(store.state).length).toBe(0)
     expect(store.state.a).toBeUndefined()
   })
+
+  it('component data update', done => {
+    store.add('testAction', {
+      partialState: {
+        name: 'tao',
+      },
+      setter (state, payload) {
+        return { name: payload }
+      },
+    })
+    throw Component.toString()
+    const cmOneId = simulate.load(Component({
+      template: '<div>{{ global.name }}</div>',
+      storeConfig: {
+        usedGlobalState (_store) {
+          throw 'aa' + JSON.stringify(_store.state) + JSON.stringify(store.state)
+          expect(store === _store).toBeTruthy()
+          expect(this === _store).toBeTruthy()
+          return { name: state => state.name }
+        },
+      },
+      methods: {
+        changed () {
+          store.dispatch('testAction', 'taotao')
+        },
+      },
+    }))
+    const cmTwoId = simulate.load(Component({
+      template: '<div>{{ global.name }}</div>',
+      storeConfig: {
+        usedGlobalState (_store) {
+          expect(store === _store).toBeTruthy()
+          expect(this === _store).toBeTruthy()
+          return { name: state => state.name }
+        },
+      },
+      methods: {
+        changed () {
+          store.dispatch('testAction', 'imtaotao')
+        },
+      },
+    }))
+    const parent = document.createElement('parent-wrapper')
+    const cmOne = simulate.render(cmOneId)
+    const cmTwo = simulate.render(cmTwoId)
+    cmOne.attach(parent)
+    cmTwo.attach(parent)
+    setTimeout(() => {
+      // expect(cmOne.instance.data.global.name).toBe('tao')
+      // expect(cmTwo.instance.data.global.name).toBe('tao')
+      // expect(cmOne.dom.innerHTML).toBe('<div>tao</div>')
+      // expect(cmTwo.dom.innerHTML).toBe('<div>tao</div>')
+      done()
+    }, 100)
+  })
 })

@@ -33,13 +33,13 @@ export function isEmptyObject (obj) {
 }
 
 export function mapObject (obj, fn) {
-  const desObject = {}
+  const destObject = {}
   for (const key in obj) {
     if (obj.hasOwnProperty(key)) {
-      desObject[key] = fn(obj[key])
+      destObject[key] = fn(obj[key])
     }
   }
-  return desObject
+  return destObject
 }
 
 export function createWraper (target, before, after) {

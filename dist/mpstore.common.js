@@ -31,15 +31,15 @@ function isEmptyObject(obj) {
   return true;
 }
 function mapObject(obj, fn) {
-  const desObject = {};
+  const destObject = {};
 
   for (const key in obj) {
     if (obj.hasOwnProperty(key)) {
-      desObject[key] = fn(obj[key]);
+      destObject[key] = fn(obj[key]);
     }
   }
 
-  return desObject;
+  return destObject;
 }
 function createWraper(target, before, after) {
   return function (...args) {
@@ -493,7 +493,7 @@ class Store {
       const defineObject = usedGlobalState.call(store, store);
       assert(isPlainObject(defineObject), '[usedGlobalState] must return a plain object,' + `but now is return a [${typeof defineObject}]`);
 
-      createState = () => mapObject(defineObject, fn => fn(this.state));
+      createState = () => mapObject(defineObject, fn => fn(store.state));
     }
 
     if (createState !== null) {
