@@ -33,17 +33,17 @@ describe('mixin', () => {
   it('component is success mixin', () => {
     let i = 0
     createStore(define => {
-      define('a', arg => {
+      define('a', t => {
         i++
-        expect(arg).toBe(1)
+        expect(t).toBe(1)
       })
-      define('b', arg => {
+      define('b', t => {
         i++
-        expect(arg).toBe(2)
+        expect(t).toBe(2)
       })
-      define('c', arg => {
+      define('c', t => {
         i++
-        expect(arg).toBe(3)
+        expect(t).toBe(3)
       })
     })
     const config = {
@@ -65,17 +65,17 @@ describe('mixin', () => {
   it('page is success mixin', () => {
     let i = 0
     createStore(define => {
-      define('a', arg => {
+      define('a', t => {
         i++
-        expect(arg).toBe(1)
+        expect(t).toBe(1)
       })
-      define('b', arg => {
+      define('b', t => {
         i++
-        expect(arg).toBe(2)
+        expect(t).toBe(2)
       })
-      define('c', arg => {
+      define('c', t => {
         i++
-        expect(arg).toBe(3)
+        expect(t).toBe(3)
       })
     })
     const config = {}
