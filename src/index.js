@@ -3,6 +3,8 @@ import Store from './store'
 export { restore } from './diff'
 import { callHook, createWraper, isEmptyObject } from './utils'
 
+export const version = __VERSION__
+
 const nativePage = Page
 const nativeComponent = Component
 

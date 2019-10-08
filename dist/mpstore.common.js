@@ -556,6 +556,7 @@ class Store {
 
 }
 
+const version = '0.0.3';
 const nativePage = Page;
 const nativeComponent = Component;
 
@@ -590,3 +591,4 @@ function index (mixinInject, hooks) {
 
 exports.default = index;
 exports.restore = restore;
+exports.version = version;
