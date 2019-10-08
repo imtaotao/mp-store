@@ -1,5 +1,5 @@
 import { isError } from '../utils'
-import createStore from '../../src/index'
+import { createStore } from '../../src/index'
 
 describe('mixin', () => {
   it('inspect params', () => {

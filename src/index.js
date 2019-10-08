@@ -1,5 +1,5 @@
 import mixin from './mixin'
-import Store from './store'
+import { Store } from './store'
 export { restore } from './diff'
 import { callHook, createWraper, isEmptyObject } from './utils'
 
@@ -19,7 +19,7 @@ function expandConfig (config, expandMethods, isPage) {
   }
 }
 
-export default function (mixinInject, hooks) {
+export function createStore (mixinInject, hooks) {
   const store = new Store(hooks)
   const expandMethods = mixin(mixinInject)
 

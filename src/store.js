@@ -9,7 +9,7 @@ import {
   isPlainObject,
 } from './utils'
 import { diff } from './diff'
-import Middleware, { COMMONACTION } from './middleware'
+import { Middleware, COMMONACTION } from './middleware'
 import { applyPatchs, updateComponents } from './update'
 
 // global state namespace
@@ -46,7 +46,7 @@ function assertReducer (state, action, reducer) {
   return reducer
 }
 
-export default class Store {
+export class Store {
   constructor (hooks) {
     this.state = {}
     this.hooks = hooks

@@ -32,7 +32,7 @@ function handleLayer (
 }
 
 // deal with all middleware
-export default class Middleware {
+export class Middleware {
   constructor (store) {
     this.stack = []
     this.store = store

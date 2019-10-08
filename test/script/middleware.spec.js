@@ -1,5 +1,5 @@
+import { createStore } from '../../src/index'
 import { isError, isRangeTime } from '../utils'
-import createStore from '../../src/index'
 import { COMMONACTION } from '../../src/middleware'
 
 let store

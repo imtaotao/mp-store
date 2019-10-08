@@ -571,7 +571,7 @@ function expandConfig(config, expandMethods, isPage) {
   }
 }
 
-function index (mixinInject, hooks) {
+function createStore(mixinInject, hooks) {
   const store = new Store(hooks);
   const expandMethods = mixin(mixinInject);
   Page = createWraper(nativePage, function (config) {
@@ -589,6 +589,6 @@ function index (mixinInject, hooks) {
   return store;
 }
 
-exports.default = index;
+exports.createStore = createStore;
 exports.restore = restore;
 exports.version = version;
