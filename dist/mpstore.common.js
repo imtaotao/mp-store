@@ -11,8 +11,8 @@ function assert(condition, message) {
 function mergeState(oldState, newState) {
   return Object.freeze(Object.assign({}, oldState, newState));
 }
-function remove(list, item) {
-  const index = list.indexOf(item);
+function remove(list, component) {
+  const index = list.findIndex(item => item.component === component);
 
   if (index > -1) {
     list.splice(index, 1);
@@ -282,12 +282,12 @@ class Middleware {
   }
 
   remove(action, fn) {
-    const idx = this.stack.findIndex(layer => {
+    const index = this.stack.findIndex(layer => {
       return layer.fn === fn && layer.action === action;
     });
 
-    if (idx > -1) {
-      this.stack.splice(idx, 1);
+    if (index > -1) {
+      this.stack.splice(index, 1);
     }
   }
 
@@ -299,14 +299,14 @@ class Middleware {
     };
 
     if (this.stack.length > 0) {
-      let idx = 0;
+      let index = 0;
 
       const next = prevPayload => {
-        let layer = this.stack[idx];
-        idx++;
+        let layer = this.stack[index];
+        index++;
 
         while (layer && !match(layer, action)) {
-          layer = this.stack[idx++];
+          layer = this.stack[index++];
         }
 
         if (layer) {
@@ -493,7 +493,7 @@ class Store {
 
     if (typeof usedGlobalState === 'function') {
       const defineObject = usedGlobalState.call(store, store);
-      assert(isPlainObject(defineObject), '[usedGlobalState] must return a plain object,' + `but now is return a [${typeof defineObject}]`);
+      assert(isPlainObject(defineObject), '[usedGlobalState] must return a plain object, ' + `but now is return a [${typeof defineObject}]`);
 
       createState = () => mapObject(defineObject, fn => fn(store.state));
     }

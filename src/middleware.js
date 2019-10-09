@@ -48,12 +48,12 @@ export class Middleware {
   }
 
   remove (action, fn) {
-    const idx = this.stack.findIndex(layer => {
+    const index = this.stack.findIndex(layer => {
       return layer.fn === fn && layer.action === action
     })
 
-    if (idx > -1) {
-      this.stack.splice(idx, 1)
+    if (index > -1) {
+      this.stack.splice(index, 1)
     }
   }
 
@@ -65,14 +65,14 @@ export class Middleware {
     }
 
     if (this.stack.length > 0) {
-      let idx = 0
+      let index = 0
       const next = prevPayload => {
-        let layer = this.stack[idx]
+        let layer = this.stack[index]
 
-        idx++
+        index++
 
         while (layer && !match(layer, action)) {
-          layer = this.stack[idx++]
+          layer = this.stack[index++]
         }
 
         if (layer) {

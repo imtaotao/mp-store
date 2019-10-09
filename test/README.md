@@ -32,12 +32,12 @@
 + [x] 组件的 data 能否正常，视图能否正常更新
 
 ### component config
-+ [ ] `storeConfig` 配置项会被删除
-+ [ ] `defineReducer` 方法在小程序初始化的时候调用，允许定义 reducer，接受一个参数为 store，上下文为 store
-+ [ ] 没有 `usedGlobalState` 方法当前组件将不会被添加到依赖中
-+ [ ] `usedGlobalState` 返回一个普通对象，对象中每个 value 是一个函数，将接受一个参数为全局 state，否则将不会添加到依赖中
-+ [ ] 依赖添加将在 `onLoad` 和 `attached` 钩子之前，store 移除一样
-+ [ ] 依赖移除将在 `onUnload` 和 `detached` 钩子之后，store 移除一样
++ [x] `storeConfig` 配置项会被删除
++ [x] `defineReducer` 方法在小程序初始化的时候调用，允许定义 reducer，接受一个参数为 store，上下文为 store
++ [x] 没有 `usedGlobalState` 方法当前组件将不会被添加到依赖中
++ [x] `usedGlobalState` 返回一个普通对象，对象中每个 value 是一个函数，将接受一个参数为全局 state，否则将会报错
++ [x] 依赖添加将在 `onLoad` 和 `attached` 钩子之前，store 移除是同样的逻辑
++ [x] 依赖移除将在 `onUnload` 和 `detached` 钩子之后，store 移除是同样的逻辑
 + [ ] `willUpdate` 将在当前组件更新之前调用，返回 false 将阻止更新，接受一个参数 newPartialState
 + [ ] `didUpdate` 将在组件更新完毕之后调用，接受两个参数，为 newPartialState 和 patchs
 

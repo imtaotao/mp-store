@@ -168,7 +168,7 @@ export class Store {
 
       assert(
         isPlainObject(defineObject),
-        '[usedGlobalState] must return a plain object,' +
+        '[usedGlobalState] must return a plain object, ' +
           `but now is return a [${typeof defineObject}]`,
       )
 

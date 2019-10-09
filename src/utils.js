@@ -12,8 +12,9 @@ export function mergeState (oldState, newState) {
   )
 }
 
-export function remove (list, item) {
-  const index = list.indexOf(item)
+// remove component from depsComponent
+export function remove (list, component) {
+  const index = list.findIndex(item => item.component === component)
   if (index > -1) {
     list.splice(index, 1)
   }
