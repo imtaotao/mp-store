@@ -1,21 +1,20 @@
 import { diff } from './diff'
 import { callHook } from './utils'
-import { GLOBALWORD } from './store'
 
 export function applyPatchs (component, patchs) {
-  const desObject = {}
+  const destObject = {}
 
   for (let i = 0, len = patchs.length; i < len; i++) {
     const { value, path } = patchs[i]
-    desObject[path] = value
+    destObject[path] = value
   }
 
-  component.setData(desObject)
+  component.setData(destObject)
 }
 
 // update page and component
 export function updateComponents (store) {
-  const { hooks, depComponents } = store
+  const { hooks, GLOBALWORD, depComponents } = store
   const len = depComponents.length
 
   if (len <= 0) return

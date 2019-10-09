@@ -15,9 +15,6 @@ import { applyPatchs, updateComponents } from './update'
 // Each `store` instance has a unique id
 let storeId = 0
 
-// global state namespace
-export let GLOBALWORD = 'global'
-
 function assertReducer (state, action, reducer) {
   const { setter, partialState } = reducer
 
@@ -56,6 +53,7 @@ export class Store {
     this.reducers = []
     this.id = ++storeId
     this.depComponents = []
+    this.GLOBALWORD = 'global' // global state namespace
     this.isDispatching = false
     this.version = __VERSION__
     this.middleware = new Middleware(this)
@@ -147,7 +145,7 @@ export class Store {
       key && typeof key === 'string',
       'The [namespace] must be a string',
     )
-    GLOBALWORD = key
+    this.GLOBALWORD = key
   }
 
   // insert method
@@ -183,8 +181,8 @@ export class Store {
       const usedState = createState()
       if (isPlainObject(usedState)) {
         data 
-          ? data[GLOBALWORD] = usedState
-          : config.data = { [GLOBALWORD]: usedState }
+          ? data[this.GLOBALWORD] = usedState
+          : config.data = { [this.GLOBALWORD]: usedState }
       }
     }
 
@@ -194,7 +192,7 @@ export class Store {
       // if no used global state word,
       // no need to add dependencies.
       if (shouldAdd !== false && createState !== null) {
-        if (isPlainObject(component.data[GLOBALWORD])) {
+        if (isPlainObject(component.data[this.GLOBALWORD])) {
           // add component to depComponents
           this.depComponents.push({
             isPage,
@@ -205,7 +203,7 @@ export class Store {
           })
 
           // if the global state is changed, need update component
-          const patchs = diff(component.data[GLOBALWORD], createState())
+          const patchs = diff(component.data[this.GLOBALWORD], createState())
           if (patchs.length > 0) {
             applyPatchs(component, patchs)
           }

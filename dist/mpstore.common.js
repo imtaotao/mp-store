@@ -325,21 +325,22 @@ class Middleware {
 }
 
 function applyPatchs(component, patchs) {
-  const desObject = {};
+  const destObject = {};
 
   for (let i = 0, len = patchs.length; i < len; i++) {
     const {
       value,
       path
     } = patchs[i];
-    desObject[path] = value;
+    destObject[path] = value;
   }
 
-  component.setData(desObject);
+  component.setData(destObject);
 }
 function updateComponents(store) {
   const {
     hooks,
+    GLOBALWORD,
     depComponents
   } = store;
   const len = depComponents.length;
@@ -385,7 +386,6 @@ function updateComponents(store) {
 }
 
 let storeId = 0;
-let GLOBALWORD = 'global';
 
 function assertReducer(state, action, reducer) {
   const {
@@ -415,6 +415,7 @@ class Store {
     this.reducers = [];
     this.id = ++storeId;
     this.depComponents = [];
+    this.GLOBALWORD = 'global';
     this.isDispatching = false;
     this.version = '0.0.3';
     this.middleware = new Middleware(this);
@@ -473,7 +474,7 @@ class Store {
 
   setNamespace(key) {
     assert(key && typeof key === 'string', 'The [namespace] must be a string');
-    GLOBALWORD = key;
+    this.GLOBALWORD = key;
   }
 
   _rewirteCfgAndAddDep(config, isPage) {
@@ -506,8 +507,8 @@ class Store {
       const usedState = createState();
 
       if (isPlainObject(usedState)) {
-        data ? data[GLOBALWORD] = usedState : config.data = {
-          [GLOBALWORD]: usedState
+        data ? data[this.GLOBALWORD] = usedState : config.data = {
+          [this.GLOBALWORD]: usedState
         };
       }
     }
@@ -516,7 +517,7 @@ class Store {
       const shouldAdd = callHook(this.hooks, 'addDep', [component, isPage]);
 
       if (shouldAdd !== false && createState !== null) {
-        if (isPlainObject(component.data[GLOBALWORD])) {
+        if (isPlainObject(component.data[this.GLOBALWORD])) {
           this.depComponents.push({
             isPage,
             component,
@@ -524,7 +525,7 @@ class Store {
             willUpdate,
             createState
           });
-          const patchs = diff(component.data[GLOBALWORD], createState());
+          const patchs = diff(component.data[this.GLOBALWORD], createState());
 
           if (patchs.length > 0) {
             applyPatchs(component, patchs);

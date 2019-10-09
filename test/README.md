@@ -1,7 +1,7 @@
 ## 测试用例
 由于小程序官方推荐的测试库 `miniprogram-simulate` 太过于鸡肋，所以，只对 `Componnet` 进行测试，`Page` 一部分测试需要放到小程序的运行时环境中去。很大一部分测试都需要正反测试，错误测试用 `[error]` 前缀标识
 
-### json diff（以下所有测试要分为 diff 逻辑层和视图层验证）
+### json diff
 + [x] path 是否正确
 + [x] diff 后的 value 是否正确
 + [x] new data 中数组减少时是否全部替换
@@ -10,6 +10,7 @@
 + [x] value 为 function 时是否使用旧值
 + [x] Date 类型的 value 是否使用新值
 + [x] 以上所有 diff 测试能否根据 patchs 复原
++ [ ] diff 的所有测试用例都要分为 diff 逻辑层和视图层验证
 
 ### reducer 定义
 + [x] reducer 里面必须定义 `partialState` 字段
@@ -42,10 +43,10 @@
 + [x] `didUpdate` 将在组件更新完毕之后调用，接受三个参数，为 component、 newPartialState 和 patchs， this 为 store
 
 ### setNamespace
-+ [ ] 默认的 namespace 是否正确
-+ [ ] setNamespace 参数检测
-+ [ ] 组件内部 data 上是否成功加上了
-+ [ ] 模板中能否正常使用
++ [x] 默认的 namespace 是否正确
++ [x] setNamespace 参数检测
++ [x] 组件内部 data 上是否成功加上了
++ [x] 模板中能否正常使用
 
 ### mixin
 + [x] 检查参数是否合法，两个参数，第一个为 string，第二个为 function

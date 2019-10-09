@@ -1,88 +1,87 @@
-import { isError } from '../utils'
 import { REPLACE } from '../../src/diff'
 import { createStore } from '../../src/index'
 
 describe('hooks', () => {
-  // it('createBefore', () => {
-  //   let first = true
-  //   const pageCfg = {}
-  //   const componentCfg = {}
-  //   const hooks = {
-  //     createBefore (cfg, isPage) {
-  //       expect(this).toBe(hooks)
-  //       if (first) {
-  //         expect(cfg).toBe(pageCfg)
-  //         expect(isPage).toBeTruthy()
-  //         cfg.a = 1
-  //         first = false
-  //       } else {
-  //         expect(cfg).toBe(componentCfg)
-  //         expect(isPage).toBeFalsy()
-  //         cfg.a = 2
-  //       }
-  //     },
-  //   }
-  //   createStore(null, hooks)
-  //   Page(pageCfg)
-  //   Component(componentCfg)
-  //   expect(pageCfg.a).toBe(1)
-  //   expect(componentCfg.a).toBe(2)
-  // })
+  it('createBefore', () => {
+    let first = true
+    const pageCfg = {}
+    const componentCfg = {}
+    const hooks = {
+      createBefore (cfg, isPage) {
+        expect(this).toBe(hooks)
+        if (first) {
+          expect(cfg).toBe(pageCfg)
+          expect(isPage).toBeTruthy()
+          cfg.a = 1
+          first = false
+        } else {
+          expect(cfg).toBe(componentCfg)
+          expect(isPage).toBeFalsy()
+          cfg.a = 2
+        }
+      },
+    }
+    createStore(null, hooks)
+    Page(pageCfg)
+    Component(componentCfg)
+    expect(pageCfg.a).toBe(1)
+    expect(componentCfg.a).toBe(2)
+  })
 
-  // it('addDep', done => {
-  //   let i = 0
-  //   const hooks = {
-  //     addDep (component, isPage) {
-  //       i++
-  //       expect(arguments.length).toBe(2)
-  //       expect(component).toBe(cm.instance)
-  //       expect(isPage).toBeFalsy()
-  //       expect(store.depComponents.length).toBe(0)
-  //       setTimeout(() => {
-  //         expect(store.depComponents.length).toBe(1)
-  //         expect(store.depComponents[0].component).toBe(component)
-  //         done()
-  //       })
-  //     },
-  //   }
-  //   const store = createStore(null, hooks)
-  //   const id = simulate.load(Component({
-  //     template: '<div></div>',
-  //     storeConfig: {
-  //       usedGlobalState: () => ({}),
-  //     },
-  //   }))
-  //   const cm = simulate.render(id)
-  //   cm.attach(document.createElement('parent-wrapper'))
-  //   expect(store.depComponents.length).toBe(1)
-  //   expect(store.depComponents[0].component).toBe(cm.instance)
-  //   expect(i).toBe(1)
-  // })
+  it('addDep', done => {
+    let i = 0
+    const hooks = {
+      addDep (component, isPage) {
+        i++
+        expect(arguments.length).toBe(2)
+        expect(component).toBe(cm.instance)
+        expect(isPage).toBeFalsy()
+        expect(store.depComponents.length).toBe(0)
+        setTimeout(() => {
+          expect(store.depComponents.length).toBe(1)
+          expect(store.depComponents[0].component).toBe(component)
+          done()
+        })
+      },
+    }
+    const store = createStore(null, hooks)
+    const id = simulate.load(Component({
+      template: '<div></div>',
+      storeConfig: {
+        usedGlobalState: () => ({}),
+      },
+    }))
+    const cm = simulate.render(id)
+    cm.attach(document.createElement('parent-wrapper'))
+    expect(store.depComponents.length).toBe(1)
+    expect(store.depComponents[0].component).toBe(cm.instance)
+    expect(i).toBe(1)
+  })
 
-  // it('addDep will return false', done => {
-  //   let i = 0
-  //   const hooks = {
-  //     addDep () {
-  //       i++
-  //       setTimeout(() => {
-  //         expect(store.depComponents.length).toBe(0)
-  //         done()
-  //       })
-  //       return false
-  //     },
-  //   }
-  //   const store = createStore(null, hooks)
-  //   const id = simulate.load(Component({
-  //     template: '<div></div>',
-  //     storeConfig: {
-  //       usedGlobalState: () => ({}),
-  //     },
-  //   }))
-  //   const cm = simulate.render(id)
-  //   cm.attach(document.createElement('parent-wrapper'))
-  //   expect(i).toBe(1)
-  //   expect(store.depComponents.length).toBe(0)
-  // })
+  it('addDep will return false', done => {
+    let i = 0
+    const hooks = {
+      addDep () {
+        i++
+        setTimeout(() => {
+          expect(store.depComponents.length).toBe(0)
+          done()
+        })
+        return false
+      },
+    }
+    const store = createStore(null, hooks)
+    const id = simulate.load(Component({
+      template: '<div></div>',
+      storeConfig: {
+        usedGlobalState: () => ({}),
+      },
+    }))
+    const cm = simulate.render(id)
+    cm.attach(document.createElement('parent-wrapper'))
+    expect(i).toBe(1)
+    expect(store.depComponents.length).toBe(0)
+  })
 
   it('willUpdate', () => {
     let i = 0
