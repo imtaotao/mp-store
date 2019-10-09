@@ -146,7 +146,11 @@ describe('dispatch', () => {
     expect(store.state.a).toBeUndefined()
   })
 
-  it('component data update', done => {
+  it('component data update', () => {
+    // need to recreate store
+    const store = createStore()
+    let i = 0
+    let j = 0
     store.add('testAction', {
       partialState: {
         name: 'tao',
@@ -155,15 +159,21 @@ describe('dispatch', () => {
         return { name: payload }
       },
     })
-    throw Component.toString()
+    store.use((payload, next) => next(payload + '_'))
+    expect(i).toBe(0)
+    expect(j).toBe(0)
     const cmOneId = simulate.load(Component({
       template: '<div>{{ global.name }}</div>',
       storeConfig: {
         usedGlobalState (_store) {
-          throw 'aa' + JSON.stringify(_store.state) + JSON.stringify(store.state)
           expect(store === _store).toBeTruthy()
           expect(this === _store).toBeTruthy()
-          return { name: state => state.name }
+          return {
+            name (state) {
+              i++
+              return state.name
+            },
+          }
         },
       },
       methods: {
@@ -178,7 +188,12 @@ describe('dispatch', () => {
         usedGlobalState (_store) {
           expect(store === _store).toBeTruthy()
           expect(this === _store).toBeTruthy()
-          return { name: state => state.name }
+          return {
+            name (state) {
+              j++
+              return state.name
+            },
+          }
         },
       },
       methods: {
@@ -187,17 +202,30 @@ describe('dispatch', () => {
         },
       },
     }))
+    expect(i).toBe(1)
+    expect(j).toBe(1)
     const parent = document.createElement('parent-wrapper')
     const cmOne = simulate.render(cmOneId)
     const cmTwo = simulate.render(cmTwoId)
     cmOne.attach(parent)
     cmTwo.attach(parent)
-    setTimeout(() => {
-      // expect(cmOne.instance.data.global.name).toBe('tao')
-      // expect(cmTwo.instance.data.global.name).toBe('tao')
-      // expect(cmOne.dom.innerHTML).toBe('<div>tao</div>')
-      // expect(cmTwo.dom.innerHTML).toBe('<div>tao</div>')
-      done()
-    }, 100)
+    const fn = text => {
+      expect(cmOne.instance.data.global.name).toBe(text)
+      expect(cmTwo.instance.data.global.name).toBe(text)
+      expect(cmOne.dom.innerHTML).toBe(`<div>${text}</div>`)
+      expect(cmTwo.dom.innerHTML).toBe(`<div>${text}</div>`)
+    }
+    fn('tao')
+    // called once when attach.
+    expect(i).toBe(2)
+    expect(j).toBe(2)
+    cmOne.instance.changed()
+    fn('taotao_')
+    expect(i).toBe(3)
+    expect(j).toBe(3)
+    cmTwo.instance.changed()
+    fn('imtaotao_')
+    expect(i).toBe(4)
+    expect(j).toBe(4)
   })
 })

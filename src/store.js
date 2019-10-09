@@ -12,6 +12,9 @@ import { diff } from './diff'
 import { Middleware, COMMONACTION } from './middleware'
 import { applyPatchs, updateComponents } from './update'
 
+// Each `store` instance has a unique id
+let storeId = 0
+
 // global state namespace
 export let GLOBALWORD = 'global'
 
@@ -51,6 +54,7 @@ export class Store {
     this.state = {}
     this.hooks = hooks
     this.reducers = []
+    this.id = ++storeId
     this.depComponents = []
     this.isDispatching = false
     this.version = __VERSION__

@@ -19,6 +19,7 @@
 + [x] `setter` 函数接受两个参数，全局 state 和 payload
 + [x] `setter` 函数应该返回一个对象，将被合并进全局 state
 + [x] 不能添加重复的 reducer(action 相同的)
++ [x] store 的 id 是唯一的
 
 ### dispatch
 + [x] 全局 state 将不可被更改
@@ -28,8 +29,7 @@
 + [x] 更新完毕的回调中可以增加新的 middleware
 + [x] dispatch 的时候能在中间件中再次调用 dispatch
 + [x] dispatch 后，组件更新完毕后调用回调
-+ [ ] 组件的 data 能否正常
-+ [ ] 组件的视图能否正常更新
++ [x] 组件的 data 能否正常，视图能否正常更新
 
 ### component config
 + [ ] `storeConfig` 配置项会被删除

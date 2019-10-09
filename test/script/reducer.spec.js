@@ -124,4 +124,23 @@ describe('reducer', () => {
     }
     expect(isError(fn)).toBeTruthy()
   })
+
+  it('store id is a unique', () => {
+    const prevId = store
+      ? store.id
+      : 0
+    const arr = new Array(parseInt(Math.random() * 100))
+    const inspect = i => {
+      const len = i
+      const current = arr[len]
+      expect(current.id - prevId).toBe(len + 1)
+      while(--i > -1) {
+        expect(arr[i].id + (len - i)).toBe(current.id)
+      }
+    }
+    for (let i = 0; i < arr.length; i++) {
+      arr[i] = createStore()
+      inspect(i)
+    }
+  })
 })

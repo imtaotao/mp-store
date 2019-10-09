@@ -376,6 +376,7 @@ function updateComponents(deps, hooks) {
   }
 }
 
+let storeId = 0;
 let GLOBALWORD = 'global';
 
 function assertReducer(state, action, reducer) {
@@ -404,6 +405,7 @@ class Store {
     this.state = {};
     this.hooks = hooks;
     this.reducers = [];
+    this.id = ++storeId;
     this.depComponents = [];
     this.isDispatching = false;
     this.version = '0.0.3';
