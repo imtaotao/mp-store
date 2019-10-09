@@ -14,13 +14,23 @@ export function applyPatchs (component, patchs) {
 
 // update page and component
 export function updateComponents (store) {
-  const { hooks, GLOBALWORD, depComponents } = store
+  const {
+    hooks,
+    GLOBALWORD,
+    depComponents,
+  } = store
   const len = depComponents.length
 
-  if (len <= 0) return
+  if (len === 0) return
 
   for (let i = 0; i < len; i++) {
-    const { isPage, component, didUpdate, willUpdate, createState } = depComponents[i]
+    const {
+      isPage,
+      component,
+      didUpdate,
+      willUpdate,
+      createState,
+    } = depComponents[i]
 
     if (component.data[GLOBALWORD]) {
       const newPartialState = createState()

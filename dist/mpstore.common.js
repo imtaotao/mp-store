@@ -344,7 +344,7 @@ function updateComponents(store) {
     depComponents
   } = store;
   const len = depComponents.length;
-  if (len <= 0) return;
+  if (len === 0) return;
 
   for (let i = 0; i < len; i++) {
     const {

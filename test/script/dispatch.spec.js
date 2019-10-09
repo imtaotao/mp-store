@@ -228,4 +228,169 @@ describe('dispatch', () => {
     expect(i).toBe(4)
     expect(j).toBe(4)
   })
+
+  it('mutiple component and parent-child component update', () => {
+    const store = createStore()
+    store.add('testAction', {
+      partialState: {
+        a: 1,
+        b: 2,
+      },
+      setter: (state, payload) => payload,
+    })
+    const createComponent = (cfg = {}) => {
+      const id = simulate.load(Component(
+        Object.assign(
+          {
+            storeConfig: {
+              usedGlobalState: () => ({
+                a: state => state.a,
+                b: state => state.b,
+              }),
+            },
+            methods: {
+              changed (payload) {
+                this.store.dispatch('testAction', payload)
+              },
+            }
+          },
+          cfg,
+        )
+      ))
+      const cm = simulate.render(id)
+      cm.attach(document.createElement('parent-wrapper'))
+      return [cm, id]
+    }
+    const [cmOne, oneId] = createComponent({
+      template: '<div>{{ global.a }}+{{ global.b }}</div>',
+    })
+    const [cmTwo, twoId] = createComponent({
+      usingComponents: { cmOne: oneId },
+      template: '<div><cmOne />-{{ global.a }}+{{ global.b }}</div>',
+    })
+    const [cmThree, threeId] = createComponent({
+      usingComponents: { cmTwo: twoId },
+      template: '<div><cmTwo />-{{ global.a }}+{{ global.b }}</div>',
+    })
+    const inspect = (a, b) => {
+      const state = { a, b }
+      const atext = `${a}+${b}`
+      const btext = `${atext}-${a}+${b}`
+      const ctext = `${btext}-${a}+${b}`
+      expect(store.state).toEqual(state)
+      expect(cmOne.dom.textContent).toBe(atext)
+      expect(cmOne.data.global).toEqual(state)
+      expect(cmTwo.dom.textContent).toBe(btext)
+      expect(cmTwo.data.global).toEqual(state)
+      expect(cmThree.dom.textContent).toBe(ctext)
+      expect(cmThree.data.global).toEqual(state)
+    }
+    inspect(1, 2)
+    cmOne.instance.changed({ a: 2 })
+    inspect(2, 2)
+    cmTwo.instance.changed({ a: 1, b: 1})
+    inspect(1, 1)
+    cmTwo.instance.changed({ b: 3 })
+    inspect(1, 3)
+  })
+
+  it('[async] mutiple component and parent-child component update', done => {
+    const store = createStore()
+    store.add('testAction', {
+      partialState: {
+        a: 1,
+        b: 2,
+      },
+      setter: (state, payload) => payload,
+    })
+    store.use((payload, next) => {
+      setTimeout(() => next(payload))
+    })
+    const createComponent = (cfg = {}) => {
+      const id = simulate.load(Component(
+        Object.assign(
+          {
+            storeConfig: {
+              usedGlobalState: () => ({
+                a: state => state.a,
+                b: state => state.b,
+              }),
+            },
+            methods: {
+              changed (payload, cb) {
+                this.store.dispatch('testAction', payload, cb)
+              },
+            }
+          },
+          cfg,
+        )
+      ))
+      const cm = simulate.render(id)
+      cm.attach(document.createElement('parent-wrapper'))
+      return [cm, id]
+    }
+    const [cmOne, oneId] = createComponent({
+      template: '<div>{{ global.a }}+{{ global.b }}</div>',
+    })
+    const [cmTwo, twoId] = createComponent({
+      usingComponents: { cmOne: oneId },
+      template: '<div><cmOne />-{{ global.a }}+{{ global.b }}</div>',
+    })
+    const [cmThree, threeId] = createComponent({
+      usingComponents: { cmTwo: twoId },
+      template: '<div><cmTwo />-{{ global.a }}+{{ global.b }}</div>',
+    })
+    const inspect = (a, b) => {
+      const state = { a, b }
+      const atext = `${a}+${b}`
+      const btext = `${atext}-${a}+${b}`
+      const ctext = `${btext}-${a}+${b}`
+      expect(store.state).toEqual(state)
+      expect(cmOne.dom.textContent).toBe(atext)
+      expect(cmOne.data.global).toEqual(state)
+      expect(cmTwo.dom.textContent).toBe(btext)
+      expect(cmTwo.data.global).toEqual(state)
+      expect(cmThree.dom.textContent).toBe(ctext)
+      expect(cmThree.data.global).toEqual(state)
+    }
+    inspect(1, 2)
+    cmOne.instance.changed({ a: 2 }, () => {
+      inspect(2, 2)
+      cmTwo.instance.changed({ a: 1, b: 1 }, () => {
+        inspect(1, 1)
+        cmTwo.instance.changed({ b: 3 }, () => {
+          inspect(1, 3)
+          done()
+        })
+      })
+    })
+  })
+
+  it('dispatch a function', () => {
+    const store = createStore()
+    store.add('testAction', {
+      partialState: {
+        fn: () => 1,
+      },
+      setter: (state, payload) => ({ fn: payload }) 
+    })
+    const id = simulate.load(Component({
+      template: '<div bindtap="global.fn"></div>',
+      storeConfig: {
+        usedGlobalState: () => ({
+          fn: state => state.fn,
+        }),
+      },
+    }))
+    const newfn = () => 2
+    const cm = simulate.render(id)
+    cm.attach(document.createElement('parent-wrapper'))
+    expect(store.state.fn()).toBe(1)
+    expect(cm.data.global.fn()).toBe(1)
+    store.dispatch('testAction', newfn)
+    expect(store.state.fn).toBe(newfn)
+    expect(store.state.fn()).toBe(2)
+    expect(cm.data.global.fn).toBe(newfn)
+    expect(cm.data.global.fn()).toBe(2)
+  })
 })

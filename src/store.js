@@ -153,7 +153,12 @@ export class Store {
     let createState = null
     const store = this
     const { data, storeConfig = {} } = config
-    const { didUpdate, willUpdate, defineReducer, usedGlobalState } = storeConfig
+    const {
+      didUpdate,
+      willUpdate,
+      defineReducer,
+      usedGlobalState,
+    } = storeConfig
 
     delete config.storeConfig
 
