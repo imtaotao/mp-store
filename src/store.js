@@ -115,7 +115,7 @@ export class Store {
       }
       
       // update components
-      updateComponents(this.depComponents, this.hooks)
+      updateComponents(this)
 
       // restore state
       this.isDispatching = false

@@ -1,4 +1,5 @@
 import { isError } from '../utils'
+import { REPLACE } from '../../src/diff'
 import { createStore } from '../../src/index'
 
 describe('component config', () => {
@@ -147,5 +148,115 @@ describe('component config', () => {
     const cm = simulate.render(id)
     cm.attach(document.createElement('parent-wrapper'))
     cm.detach()
+  })
+
+  it('inspect `willUpdate` behaiver', () => {
+    const store = createStore()
+    let i = 0
+    store.add('testAction', {
+      partialState: {
+        name: 'tao',
+      },
+      setter: (state, payload) => ({ name: payload }),
+    })
+    const cfg = Component({
+      template: '<div>{{ global.name }}</div>',
+      storeConfig: {
+        willUpdate (component, newPartialState) {
+          i++
+          expect(arguments.length).toBe(2)
+          expect(this).toBe(store)
+          expect(component).toBe(cm.instance)
+          expect(component.data.global.name).toBe('tao')
+          expect(store.state.name).toBe('taotao')
+          expect(newPartialState.name).toBe('taotao')
+        },
+        usedGlobalState: () => ({ name: state => state.name }),
+      },
+    })
+    expect(cfg.data.global.name).toBe('tao')
+    const id = simulate.load(cfg)
+    const cm = simulate.render(id)
+    cm.attach(document.createElement('parent-wrapper'))
+    expect(cm.data.global.name).toBe('tao')
+    expect(cm.dom.textContent).toBe('tao')
+    store.dispatch('testAction', 'taotao')
+    expect(cfg.data.global.name).toBe('tao')
+    expect(cm.data.global.name).toBe('taotao')
+    expect(cm.dom.textContent).toBe('taotao')
+    expect(i).toBe(1)
+  })
+
+  it('inspect `willUpdate` behaiver, return false', () => {
+    const store = createStore()
+    store.add('testAction', {
+      partialState: {
+        name: 'tao',
+      },
+      setter: (state, payload) => ({ name: payload }),
+    })
+    const cfg = Component({
+      template: '<div>{{ global.name }}</div>',
+      storeConfig: {
+        willUpdate: () => false,
+        usedGlobalState: () => ({ name: state => state.name }),
+      },
+    })
+    expect(cfg.data.global.name).toBe('tao')
+    const id = simulate.load(cfg)
+    const cm = simulate.render(id)
+    cm.attach(document.createElement('parent-wrapper'))
+    expect(cm.data.global.name).toBe('tao')
+    expect(cm.dom.textContent).toBe('tao')
+    store.dispatch('testAction', 'taotao')
+    expect(cfg.data.global.name).toBe('tao')
+    expect(cm.data.global.name).toBe('tao')
+    expect(cm.dom.textContent).toBe('tao')
+  })
+
+  it('inspect `didUpdate` behaiver', () => {
+    const store = createStore()
+    let i = 0
+    store.add('testAction', {
+      partialState: {
+        name: 'tao',
+      },
+      setter: (state, payload) => ({ name: payload }),
+    })
+    const cfg = Component({
+      template: '<div>{{ global.name }}</div>',
+      storeConfig: {
+        usedGlobalState: () => ({ name: state => state.name }),
+        willUpdate() {
+          expect(i++).toBe(0)
+        },
+        didUpdate (component, newPartialState, patchs) {
+          expect(i++).toBe(1)
+          expect(arguments.length).toBe(3)
+          expect(this).toBe(store)
+          expect(component).toBe(cm.instance)
+          expect(component.data.global.name).toBe('taotao')
+          expect(store.state.name).toBe('taotao')
+          expect(newPartialState.name).toBe('taotao')
+          expect(cm.dom.textContent).toBe('taotao')
+          expect(patchs.length).toBe(1)
+          expect(patchs[0].path).toBe('global.name')
+          expect(patchs[0].type).toBe(REPLACE)
+          expect(patchs[0].value).toBe('taotao')
+          expect(patchs[0].leftValue).toBe('tao')
+        },
+      },
+    })
+    expect(cfg.data.global.name).toBe('tao')
+    const id = simulate.load(cfg)
+    const cm = simulate.render(id)
+    cm.attach(document.createElement('parent-wrapper'))
+    expect(cm.data.global.name).toBe('tao')
+    expect(cm.dom.textContent).toBe('tao')
+    store.dispatch('testAction', 'taotao')
+    expect(cfg.data.global.name).toBe('tao')
+    expect(cm.data.global.name).toBe('taotao')
+    expect(cm.dom.textContent).toBe('taotao')
+    expect(i).toBe(2)
   })
 })

@@ -333,8 +333,12 @@ function applyPatchs(component, patchs) {
 
   component.setData(desObject);
 }
-function updateComponents(deps, hooks) {
-  const len = deps.length;
+function updateComponents(store) {
+  const {
+    hooks,
+    depComponents
+  } = store;
+  const len = depComponents.length;
   if (len <= 0) return;
 
   for (let i = 0; i < len; i++) {
@@ -344,13 +348,13 @@ function updateComponents(deps, hooks) {
       didUpdate,
       willUpdate,
       createState
-    } = deps[i];
+    } = depComponents[i];
 
     if (component.data[GLOBALWORD]) {
       const newPartialState = createState();
 
       if (typeof willUpdate === 'function') {
-        if (willUpdate(newPartialState) === false) {
+        if (willUpdate.call(store, component, newPartialState) === false) {
           continue;
         }
       }
@@ -367,7 +371,7 @@ function updateComponents(deps, hooks) {
         applyPatchs(component, patchs);
 
         if (typeof didUpdate === 'function') {
-          didUpdate(newPartialState, patchs);
+          didUpdate.call(store, component, newPartialState, patchs);
         }
 
         callHook(hooks, 'didUpdate', [component, newPartialState, isPage]);
@@ -443,7 +447,7 @@ class Store {
         warn(`${error}\n\n   --- from [${action}] action.`);
       }
 
-      updateComponents(this.depComponents, this.hooks);
+      updateComponents(this);
       this.isDispatching = false;
       restoreProcessState();
 

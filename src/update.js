@@ -14,19 +14,21 @@ export function applyPatchs (component, patchs) {
 }
 
 // update page and component
-export function updateComponents (deps, hooks) {
-  const len = deps.length
+export function updateComponents (store) {
+  const { hooks, depComponents } = store
+  const len = depComponents.length
+
   if (len <= 0) return
 
   for (let i = 0; i < len; i++) {
-    const { isPage, component, didUpdate, willUpdate, createState } = deps[i]
+    const { isPage, component, didUpdate, willUpdate, createState } = depComponents[i]
 
     if (component.data[GLOBALWORD]) {
       const newPartialState = createState()
 
       // the `willUpdate` function will optimize component
       if (typeof willUpdate === 'function') {
-        if (willUpdate(newPartialState) === false) {
+        if (willUpdate.call(store, component, newPartialState) === false) {
           continue
         }
       }
@@ -46,7 +48,7 @@ export function updateComponents (deps, hooks) {
         applyPatchs(component, patchs)
 
         if (typeof didUpdate === 'function') {
-          didUpdate(newPartialState, patchs)
+          didUpdate.call(store, component, newPartialState, patchs)
         }
         callHook(hooks, 'didUpdate', [component, newPartialState, isPage])
       }
