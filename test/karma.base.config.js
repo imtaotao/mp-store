@@ -3,7 +3,13 @@ const webpack = require('webpack')
 
 const webpackConfig = {
   module: {
-    rules: [],
+    rules: [
+      {
+        test: /\.js$/,
+        loader: 'babel-loader',
+        exclude: /node_modules/
+      },
+    ],
   },
   plugins: [
     new webpack.DefinePlugin({

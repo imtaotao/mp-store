@@ -1,5 +1,6 @@
 import { REPLACE } from '../../src/diff'
 import { createStore } from '../../src/index'
+import { applyPatchs } from '../../src/update'
 
 describe('hooks', () => {
   it('createBefore', () => {
@@ -186,5 +187,35 @@ describe('hooks', () => {
     expect(store.state.a).toBe(2)
     expect(cm.dom.textContent).toBe('2')
     expect(i).toBe(2)
+  })
+
+  it('`applyPatchs`', () => {
+    let i = 0
+    const hooks = {
+      willUpdate (component, newPartialState, patchs, isPage) {
+        i++
+        applyPatchs(component, patchs)
+        return false
+      },
+    }
+    const store = createStore(null, hooks)
+    store.add('testAction', {
+      partialState: { a: 1 },
+      setter: (state, payload) => ({ a: payload }),
+    })
+    const id = simulate.load(Component({
+      template: '<div>{{ global.a }}</div>',
+      storeConfig: {
+        usedGlobalState: () => ({ a: state => state.a }),
+      },
+    }))
+    const cm = simulate.render(id)
+    cm.attach(document.createElement('parent-wrapper'))
+    expect(store.state.a).toBe(1)
+    expect(cm.dom.textContent).toBe('1')
+    store.dispatch('testAction', 2)
+    expect(store.state.a).toBe(2)
+    expect(cm.dom.textContent).toBe('2')
+    expect(i).toBe(1)
   })
 })

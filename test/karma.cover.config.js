@@ -17,5 +17,14 @@ module.exports = function (config) {
     ]),
   })
 
+  // add babel-plugin-istanbul for code instrumentation
+  options.webpack.module.rules[0].options = {
+    plugins: [['istanbul', {
+      include: [
+        'src/',
+      ]
+    }]],
+  }
+
   config.set(options)
 }

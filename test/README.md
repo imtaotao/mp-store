@@ -58,6 +58,7 @@
 + [x] `addDep` 在添加依赖之前调用，返回 false 将会阻止添加进依赖，接受两个参数，一个为组件，一个为是否是 page
 + [x] `willUpdate` 在每个组件更新之前调用，返回 fakse 将阻止当前组件更新，将接受 5 个参数，component, newPartialState, patchs, isPage
 + [x] `didUpdate` 将在每个组件更新之后调用，接受三个参数，component, newPartialState, isPage
++ [x] 顺带单独测试 `applyPatchs` 这个内部方法
 
 ### middleware
 + [x] 如果没有指定 action，则默认为拦截所有 dispatch
