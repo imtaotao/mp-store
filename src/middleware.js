@@ -1,6 +1,6 @@
 import { warn, assert } from './utils'
 
-export const COMMONACTION = '*'
+export const COMMONACTION = () => {}
 
 function match (layer, action) {
   if (layer.action === COMMONACTION) return true

@@ -129,7 +129,10 @@ export class Store {
 
   // add middleware
   use (action, fn) {
-    if (typeof action === 'function') {
+    if (
+      typeof action === 'function' &&
+      action !== COMMONACTION
+    ) {
       fn = action
       action = COMMONACTION
     }

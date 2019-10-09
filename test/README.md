@@ -1,7 +1,7 @@
 ## 测试用例
 由于小程序官方推荐的测试库 `miniprogram-simulate` 太过于鸡肋，所以，只对 `Componnet` 进行测试，`Page` 一部分测试需要放到小程序的运行时环境中去。很大一部分测试都需要正反测试，错误测试用 `[error]` 前缀标识
 
-### json diff
+### json diff（以下所有测试要分为 diff 逻辑层和视图层验证）
 + [x] path 是否正确
 + [x] diff 后的 value 是否正确
 + [x] new data 中数组减少时是否全部替换
@@ -53,10 +53,10 @@
 + [x] 混入的方法在 组件 和 page 里面是否生效
 
 ### hooks
-+ [ ] `createBefore` 在调用组件和 page 原生函数之前调用，接受两个参数，一个为 config，一个为是否是 page
-+ [ ] `addDep` 在添加依赖之前调用，返回 false 将会阻止添加进依赖，接受两个参数，一个为组件，一个为是否是 page
-+ [ ] `willUpdate` 在每个组件更新之前调用，返回 fakse 将阻止当前组件更新，将接受 5 个参数，component, newPartialState, patchs, isPage
-+ [ ] `didUpdate` 将在每个组件更新之后调用，接受三个参数，component, newPartialState, isPage
++ [x] `createBefore` 在调用组件和 page 原生函数之前调用，接受两个参数，一个为 config，一个为是否是 page
++ [x] `addDep` 在添加依赖之前调用，返回 false 将会阻止添加进依赖，接受两个参数，一个为组件，一个为是否是 page
++ [x] `willUpdate` 在每个组件更新之前调用，返回 fakse 将阻止当前组件更新，将接受 5 个参数，component, newPartialState, patchs, isPage
++ [x] `didUpdate` 将在每个组件更新之后调用，接受三个参数，component, newPartialState, isPage
 
 ### middleware
 + [x] 如果没有指定 action，则默认为拦截所有 dispatch

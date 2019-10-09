@@ -239,7 +239,7 @@ function restore(obj, patchs) {
   return obj;
 }
 
-const COMMONACTION = '*';
+const COMMONACTION = () => {};
 
 function match(layer, action) {
   if (layer.action === COMMONACTION) return true;
@@ -458,7 +458,7 @@ class Store {
   }
 
   use(action, fn) {
-    if (typeof action === 'function') {
+    if (typeof action === 'function' && action !== COMMONACTION) {
       fn = action;
       action = COMMONACTION;
     }

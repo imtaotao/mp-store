@@ -32,7 +32,7 @@ module.exports = {
   ],
 
   preprocessors: {
-    'script/*.spec.js': ['webpack', 'dirname', /** 'sourcemap' **/],
+    'script/*.spec.js': ['webpack', 'dirname', 'sourcemap'],
   },
   
   plugins: [
