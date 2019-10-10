@@ -46,17 +46,24 @@ describe('hooks', () => {
       },
     }
     const store = createStore(null, hooks)
+    store.add('testAction', {
+      partialState: { a: 1 },
+      setter: (state, payload) => ({ a: payload })
+    })
     const id = simulate.load(Component({
-      template: '<div></div>',
+      template: '<div>{{ global.a }}</div>',
       storeConfig: {
-        usedGlobalState: () => ({}),
+        usedGlobalState: () => ({ a: state => state.a }),
       },
     }))
     const cm = simulate.render(id)
     cm.attach(document.createElement('parent-wrapper'))
+    expect(cm.dom.textContent).toBe('1')
     expect(store.depComponents.length).toBe(1)
     expect(store.depComponents[0].component).toBe(cm.instance)
     expect(i).toBe(1)
+    store.dispatch('testAction', 2)
+    expect(cm.dom.textContent).toBe('2')
   })
 
   it('addDep will return false', done => {
@@ -72,16 +79,23 @@ describe('hooks', () => {
       },
     }
     const store = createStore(null, hooks)
+    store.add('testAction', {
+      partialState: { a: 1 },
+      setter: (state, payload) => ({ a: payload })
+    })
     const id = simulate.load(Component({
-      template: '<div></div>',
+      template: '<div>{{ global.a }}</div>',
       storeConfig: {
-        usedGlobalState: () => ({}),
+        usedGlobalState: () => ({ a: state => state.a }),
       },
     }))
     const cm = simulate.render(id)
     cm.attach(document.createElement('parent-wrapper'))
+    expect(cm.dom.textContent).toBe('1')
     expect(i).toBe(1)
     expect(store.depComponents.length).toBe(0)
+    store.dispatch('testAction', 2)
+    expect(cm.dom.textContent).toBe('1')
   })
 
   it('willUpdate', () => {
