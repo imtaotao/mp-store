@@ -1,7 +1,7 @@
 ## mp-store
 [![NPM version][npm-image]][npm-url]
 <img src="https://travis-ci.org/imtaotao/mp-store.svg?branch=master">
-
+<a>
   <img src="https://img.shields.io/codecov/c/github/imtaotao/mp-store/master.svg">
 </a>
 <a href="https://shang.qq.com/wpa/qunwpa?idkey=fcb17d938fab0e30e879dd96421d91e24805e0bc1077022ff5ae562b732a2508">

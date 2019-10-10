@@ -11,7 +11,7 @@
     "publish": "npm version major",
     "test": "karma start test/karma.unit.config.js",
     "test:cover": "karma start test/karma.cover.config.js",
-    "codecov": "yarn test:cover && ./node_modules/.bin/codecov -f ./coverage/coverage-final.json"
+    "codecov": "yarn test:cover && node_modules/.bin/codecov -f coverage/coverage-final.json"
   },
   "repository": {
     "type": "git",
