@@ -10,7 +10,7 @@
 需要注意的是，打包后的源码包含部分的 `es6` 的代码，例如 `正则后行断言`、`Map` 数据结构，如果你希望这些代码不影响你的项目，你可能不能使用  `restore` 这个方法
 
 ## [store 的介绍](https://github.com/imtaotao/mp-store/blob/master/docs/store.md)
-## [component 的介绍](https://github.com/imtaotao/mp-store/blob/master/docs/component.md)
+## [storeConfig 的介绍](https://github.com/imtaotao/mp-store/blob/master/docs/component.md)
 ## [middleware 的介绍](https://github.com/imtaotao/mp-store/blob/master/docs/middleware.md)
 ## [mixin 的介绍](https://github.com/imtaotao/mp-store/blob/master/docs/mixin.md)
 ## [hooks 的介绍](https://github.com/imtaotao/mp-store/blob/master/docs/hooks.md)
