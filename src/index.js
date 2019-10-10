@@ -1,5 +1,6 @@
 import mixin from './mixin'
 import { Store } from './store'
+export { restore } from './diff'
 import {
   callHook,
   mixinMethods,
