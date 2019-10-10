@@ -11,6 +11,12 @@ module.exports = function (config) {
         { type: 'text-summary', dir: '../coverage', subdir: '.' },
       ],
     },
+    customLaunchers: {
+      ChromeHeadlessNoSandbox: {
+        base: 'ChromeHeadless',
+        flags: ['--no-sandbox'],
+      }
+    },
     singleRun: true,
     plugins: base.plugins.concat([
       'karma-coverage',
