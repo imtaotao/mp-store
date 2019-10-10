@@ -38,7 +38,7 @@ export const clone = (obj, record = new WeakMap()) => {
   return res
 }
 
-export const isRangeTime = (time, duration, deviation = 10) => {
+export const isRangeTime = (time, duration, deviation = 30) => {
   const result = time - duration
   return result > -deviation && result < deviation
 }
