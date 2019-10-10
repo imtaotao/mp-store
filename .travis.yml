@@ -1,6 +1,11 @@
 language: node_js
+
 node_js:
   - "lts/*"
 script: npm run codecov
+
 before_script:
   - npm install
+
+addons:
+  chrome: stable
