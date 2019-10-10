@@ -1,8 +1,13 @@
 ## mp-store
 [![NPM version][npm-image]][npm-url]
+<a href="https://shang.qq.com/wpa/qunwpa?idkey=fcb17d938fab0e30e879dd96421d91e24805e0bc1077022ff5ae562b732a2508">
+  <img src="https://img.shields.io/badge/QQ群-624921236-ff69b4.svg?maxAge=2592000&style=flat-square">
+</a>
 
-[npm-image]: https://img.shields.io/npm/v/@rustle/mp-store.svg?style=flat-square
-[npm-url]: https://www.npmjs.com/package/@rustle/mp-store
+<a href="https://codecov.io/github/imtaotao/mp-store?branch=master">
+  <img src="https://img.shields.io/codecov/c/github/imtaotao/mp-store/master.svg">
+</a>
+
 
 一个轻量级的微信小程序状态管理库，他将能够平滑的兼容以前的旧项目，并不会有很强的侵入性，所以你可以直接迁移过来。如果你的小程序没有引入 `npm` 包的功能，可以在[这里](https://cdn.jsdelivr.net/gh/imtaotao/mp-store/dist/mpstore.esm.js)下载，然后放到项目中去
 
@@ -28,3 +33,6 @@ App({
   // ...
 })
 ```
+
+[npm-image]: https://img.shields.io/npm/v/@rustle/mp-store.svg?style=flat-square
+[npm-url]: https://www.npmjs.com/package/@rustle/mp-store

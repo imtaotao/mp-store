@@ -4,6 +4,7 @@ src/
 test/
 dev/
 docs/
+coverage/
 dev/mpstore.common.js.mp
 dev/mpstore.esm.js.mp
 
