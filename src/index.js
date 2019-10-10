@@ -1,6 +1,11 @@
 import mixin from './mixin'
 import { Store } from './store'
-import { callHook, createWraper, isEmptyObject } from './utils'
+import {
+  callHook,
+  mixinMethods,
+  createWraper,
+  isEmptyObject,
+} from './utils'
 
 export const version = __VERSION__
 
@@ -10,10 +15,10 @@ const nativeComponent = Component
 function expandConfig (config, expandMethods, isPage) {
   if (!isEmptyObject(expandMethods)) {
     if (isPage) {
-      Object.assign(config, expandMethods)
+      mixinMethods(config, expandMethods)
     } else {
       config.methods = config.methods || {}
-      Object.assign(config.methods, expandMethods)
+      mixinMethods(config.methods, expandMethods)
     }
   }
 }

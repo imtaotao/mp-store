@@ -54,7 +54,8 @@
 ### mixin
 + [x] 检查参数是否合法，两个参数，第一个为 `string`，第二个为 `function`
 + [x] 不能混入重复的方法
-+ [x] 混入的方法在 组件 和 page 里面是否生效
++ [x] 混入的方法在 component 和 page 里面是否生效
++ [x] 如果原组件已经有相同的方法，则不会被混入
 
 ### hooks
 + [x] `createBefore` 在调用组件和 page 原生函数之前调用，接受两个参数，一个为 config，一个为是否是 page

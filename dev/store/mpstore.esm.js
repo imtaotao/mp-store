@@ -58,6 +58,13 @@ function assert(condition, message) {
 function mergeState(oldState, newState) {
   return Object.freeze(Object.assign({}, oldState, newState));
 }
+function mixinMethods(config, methods) {
+  for (var key in methods) {
+    if (!(key in config)) {
+      config[key] = methods[key];
+    }
+  }
+}
 function remove(list, component) {
   var index = list.findIndex(function (item) {
     return item.component === component;
@@ -589,10 +596,10 @@ var nativeComponent = Component;
 function expandConfig(config, expandMethods, isPage) {
   if (!isEmptyObject(expandMethods)) {
     if (isPage) {
-      Object.assign(config, expandMethods);
+      mixinMethods(config, expandMethods);
     } else {
       config.methods = config.methods || {};
-      Object.assign(config.methods, expandMethods);
+      mixinMethods(config.methods, expandMethods);
     }
   }
 }

@@ -88,4 +88,20 @@ describe('mixin', () => {
     config.c(3)
     expect(i).toBe(3)
   })
+
+  it('if origin config hava method', () => {
+    createStore(define => {
+      define('a', () => 0)
+    })
+    const pageCfg = {
+      a: () => 1,
+    }
+    const componentCfg = {
+      a: () => 2,
+    }
+    Page(pageCfg)
+    Component(componentCfg)
+    expect(pageCfg.a()).toBe(1)
+    expect(componentCfg.a()).toBe(2)
+  })
 })

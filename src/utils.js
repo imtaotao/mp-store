@@ -12,6 +12,14 @@ export function mergeState (oldState, newState) {
   )
 }
 
+export function mixinMethods (config, methods) {
+  for (const key in methods) {
+    if (!(key in config)) {
+      config[key] = methods[key]
+    }
+  }
+}
+
 // remove component from depsComponent
 export function remove (list, component) {
   const index = list.findIndex(item => item.component === component)
