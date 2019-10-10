@@ -13,4 +13,4 @@ before_script:
 addons:
   chrome: stable
 
-script: npm run test
+script: npm run test:cover
