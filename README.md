@@ -21,7 +21,7 @@
 ```js
 // 只需要两行代码，你就可以使用 mp-store 了
 // 如果不想使用，也不会对你原有的项目产生影响
-import { createStore } from '@rustle/mp-store'
+import createStore from '@rustle/mp-store'
 const store = createStore()
 
 App({

@@ -49,48 +49,6 @@ function _defineProperty(obj, key, value) {
   return obj;
 }
 
-function _slicedToArray(arr, i) {
-  return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _nonIterableRest();
-}
-
-function _arrayWithHoles(arr) {
-  if (Array.isArray(arr)) return arr;
-}
-
-function _iterableToArrayLimit(arr, i) {
-  if (!(Symbol.iterator in Object(arr) || Object.prototype.toString.call(arr) === "[object Arguments]")) {
-    return;
-  }
-
-  var _arr = [];
-  var _n = true;
-  var _d = false;
-  var _e = undefined;
-
-  try {
-    for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) {
-      _arr.push(_s.value);
-
-      if (i && _arr.length === i) break;
-    }
-  } catch (err) {
-    _d = true;
-    _e = err;
-  } finally {
-    try {
-      if (!_n && _i["return"] != null) _i["return"]();
-    } finally {
-      if (_d) throw _e;
-    }
-  }
-
-  return _arr;
-}
-
-function _nonIterableRest() {
-  throw new TypeError("Invalid attempt to destructure non-iterable instance");
-}
-
 function warn(message) {
   throw new Error("\n\n[MpStore warn]: ".concat(message, "\n\n"));
 }
@@ -269,79 +227,6 @@ function diff(a, b, basePath) {
   var patchs = [];
   walkObject(a, b, basePath, patchs);
   return patchs;
-}
-var REG = /(?<=[\[\].])[^\[\].]+/g;
-
-function separatePath(obj, path) {
-  var keys = path.match(REG);
-
-  if (keys) {
-    var i = -1;
-    var key = null;
-    var target = obj;
-    var prevTarget = null;
-
-    while (i++ < keys.length - 2) {
-      prevTarget = target;
-      key = keys[i];
-      target = target[key];
-    }
-
-    return [target, key, prevTarget, keys[keys.length - 1]];
-  }
-}
-
-function restore(obj, patchs) {
-  var len = patchs.length;
-  var delEmptys = new Map();
-
-  while (--len >= 0) {
-    var _patchs$len = patchs[len],
-        type = _patchs$len.type,
-        path = _patchs$len.path,
-        leftValue = _patchs$len.leftValue;
-    var parseItem = separatePath(obj, path);
-
-    if (parseItem) {
-      var _parseItem = _slicedToArray(parseItem, 4),
-          target = _parseItem[0],
-          key = _parseItem[1],
-          prevTarget = _parseItem[2],
-          lastKey = _parseItem[3];
-
-      switch (type) {
-        case REMOVE:
-          target[lastKey] = leftValue;
-          break;
-
-        case REPLACE:
-          target[lastKey] = leftValue;
-          break;
-
-        case ADD:
-          if (Array.isArray(target) && target === prevTarget[key]) {
-            delEmptys.set(target, {
-              key: key,
-              prevTarget: prevTarget
-            });
-          }
-
-          delete target[lastKey];
-          break;
-      }
-    }
-  }
-
-  delEmptys.forEach(function (_ref, target) {
-    var key = _ref.key,
-        prevTarget = _ref.prevTarget;
-    var clone = new target.constructor();
-    target.forEach(function (item) {
-      return clone.push(item);
-    });
-    prevTarget[key] = clone;
-  });
-  return obj;
 }
 
 var COMMONACTION = function COMMONACTION() {};
@@ -712,7 +597,7 @@ function expandConfig(config, expandMethods, isPage) {
   }
 }
 
-function createStore(mixinInject, hooks) {
+function index (mixinInject, hooks) {
   var store = new Store(hooks);
   var expandMethods = mixin(mixinInject);
   Page = createWraper(nativePage, function (config) {
@@ -730,4 +615,5 @@ function createStore(mixinInject, hooks) {
   return store;
 }
 
-export { createStore, restore, version };
+export default index;
+export { version };

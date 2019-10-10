@@ -1,6 +1,6 @@
 import { isError } from '../utils'
 import { REPLACE } from '../../src/diff'
-import { createStore } from '../../src/index'
+import createStore from '../../src/index'
 
 describe('component config', () => {
   it('delete `storeConfig` option', () => {

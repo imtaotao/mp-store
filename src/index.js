@@ -1,6 +1,5 @@
 import mixin from './mixin'
 import { Store } from './store'
-export { restore } from './diff'
 import { callHook, createWraper, isEmptyObject } from './utils'
 
 export const version = __VERSION__
@@ -19,7 +18,7 @@ function expandConfig (config, expandMethods, isPage) {
   }
 }
 
-export function createStore (mixinInject, hooks) {
+export default function (mixinInject, hooks) {
   const store = new Store(hooks)
   const expandMethods = mixin(mixinInject)
 

@@ -1,4 +1,4 @@
-import { createStore } from '../../src/index'
+import createStore from '../../src/index'
 import { isError, isRangeTime } from '../utils'
 import { COMMONACTION } from '../../src/middleware'
 

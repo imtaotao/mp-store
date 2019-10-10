@@ -127,48 +127,56 @@ describe('json diff', () => {
   it('a restore', () => {
     const patchs = diff(a[0], a[1], root)
     const nv = restore(clone(a[1]), patchs)
+    expect(a[0]).toEqual(nv)
     expect(diff(a[0], nv).length).toBe(0)
   })
 
   it('b restore', () => {
     const patchs = diff(b[0], b[1], root)
     const nv = restore(clone(b[1]), patchs)
+    expect(b[0]).toEqual(nv)
     expect(diff(b[0], nv).length).toBe(0)
   })
   
   it('c restore', () => {
     const patchs = diff(c[0], c[1], root)
     const nv = restore(clone(c[1]), patchs)
+    expect(c[0]).toEqual(nv)
     expect(diff(c[0], nv).length).toBe(0)
   })
 
   it('d restore', () => {
     const patchs = diff(d[0], d[1], root)
     const nv = restore(clone(d[1]), patchs)
+    expect(d[0]).toEqual(nv)
     expect(diff(d[0], nv).length).toBe(0)
   })
 
   it('e restore', () => {
     const patchs = diff(e[0], e[1], root)
     const nv = restore(clone(e[1]), patchs)
+    expect(e[0]).toEqual(nv)
     expect(diff(e[0], nv).length).toBe(0)
   })
   
   it('f restore', () => {
     const patchs = diff(f[0], f[1], root)
     const nv = restore(clone(f[1]), patchs)
+    expect(f[0]).toEqual(nv)
     expect(diff(f[0], nv).length).toBe(0)
   })
 
   it('g restore', () => {
     const patchs = diff(g[0], g[1], root)
     const nv = restore(clone(g[1]), patchs)
+    expect(g[0]).toEqual(nv)
     expect(diff(g[0], nv).length).toBe(0)
   })
 
   it('h restore', () => {
     const patchs = diff(h[0], h[1], root)
     const nv = restore(clone(h[1]), patchs)
+    expect(h[0]).toEqual(nv)
     expect(diff(h[0], nv).length).toBe(0)
   })
 })
