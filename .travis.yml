@@ -1,7 +1,7 @@
 language: node_js
 
 node_js:
-  - 10
+  - "lts/*"
 
 cache:
   directories:
@@ -13,4 +13,6 @@ before_script:
 addons:
   chrome: stable
 
-script: npm run test:cover
+script:
+  - npm run test:cover 
+  - npm run codecov
