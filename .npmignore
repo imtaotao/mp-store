@@ -3,6 +3,7 @@ node_modules/
 src/
 test/
 dev/
+docs/
 dev/mpstore.common.js.mp
 dev/mpstore.esm.js.mp
 
