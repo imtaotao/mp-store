@@ -2,10 +2,15 @@ language: node_js
 
 node_js:
   - "lts/*"
-script: npm run codecov
+
+cache:
+  directories:
+    - node_modules
 
 before_script:
   - npm install
 
 addons:
   chrome: stable
+
+script: npm run codecov
