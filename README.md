@@ -3,7 +3,6 @@
 <a href="https://shang.qq.com/wpa/qunwpa?idkey=fcb17d938fab0e30e879dd96421d91e24805e0bc1077022ff5ae562b732a2508">
   <img src="https://img.shields.io/badge/QQ群-624921236-ff69b4.svg?maxAge=2592000&style=flat-square">
 </a>
-
 <a href="https://codecov.io/github/imtaotao/mp-store?branch=master">
   <img src="https://img.shields.io/codecov/c/github/imtaotao/mp-store/master.svg">
 </a>
