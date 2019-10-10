@@ -42,7 +42,7 @@
 + [x] `usedGlobalState` 返回一个普通对象，对象中每个 `value` 是一个函数，将接受一个参数为全局 `state`，否则将会报错
 + [x] 依赖添加将在 `onLoad` 和 `attached` 钩子之前，`store` 移除是同样的逻辑
 + [x] 依赖移除将在 `onUnload` 和 `detached` 钩子之后，`store` 移除是同样的逻辑
-+ [x] `willUpdate` 将在当前组件更新之前调用，返回 false 将阻止更新，接受两个个参数 为 component 和 newPartialState， `this 为 store`
++ [x] `willUpdate` 将在当前组件更新之前调用，返回 false 将阻止更新，接受两个参数 为 `component、newPartialState`， `this 为 store`
 + [x] `didUpdate` 将在组件更新完毕之后调用，接受三个参数，为 `component、 newPartialState、patchs`， `this 为 store`
 
 ### setNamespace
