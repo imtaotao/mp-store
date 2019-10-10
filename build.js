@@ -12,7 +12,7 @@ const resolve = require('rollup-plugin-node-resolve')
 const libName = 'mpstore'
 const version = require('./package.json').version
 const testLibPath = path.resolve(__dirname, './dev')
-const sdkDir = path.resolve(testLibPath, './store')
+const devStoreDir = path.resolve(testLibPath, './store')
 const entryPath = path.resolve(__dirname, './src/index.js')
 const outputPath = filename => path.resolve(__dirname, './dist', filename)
 
@@ -56,8 +56,9 @@ async function build (cfg, needUglify, sourcemap = false) {
       cleanup(),
       resolve(),
       babel({
-        babelrc: true,
+        babelrc: false,
         exclude: 'node_modules/**',
+        presets: [['@babel/preset-env', { modules: false }]],
       }),
       cmd(),
       createReplacePlugin(),
@@ -80,7 +81,7 @@ async function build (cfg, needUglify, sourcemap = false) {
 console.clear()
 // delete old build files
 rm('./dist')
-rm(sdkDir)
+rm(devStoreDir)
 
 const transferfile = (from, desPath) => {
   const readable = fs.createReadStream(from)
@@ -99,15 +100,15 @@ const buildVersion = sourcemap => {
   Promise.all(builds).then(() => {
     // transfer esm package to dev folder
     if (fs.existsSync(testLibPath)) {
-      if (!fs.existsSync(sdkDir)) {
-        fs.mkdirSync(sdkDir)
+      if (!fs.existsSync(devStoreDir)) {
+        fs.mkdirSync(devStoreDir)
       }
 
-      const sdkPath = esm.output.file
-      const desPath = path.join(sdkDir, `${libName}.esm.js`)
-      transferfile(sdkPath, desPath)
+      const devStorePath = esm.output.file
+      const desPath = path.join(devStoreDir, `${libName}.esm.js`)
+      transferfile(devStorePath, desPath)
       if (sourcemap) {
-        transferfile(sdkPath + '.map', desPath + '.map')
+        transferfile(devStorePath + '.map', desPath + '.map')
       }
     }
   })
