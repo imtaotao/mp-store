@@ -12,6 +12,7 @@ dev/mpstore.esm.js.mp
 .npmignore
 .npmrc
 build.js
+.travis.yml
 yarn.lock
 
 # local env files
