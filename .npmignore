@@ -2,7 +2,7 @@
 node_modules/
 src/
 test/
-dev/
+demo/
 docs/
 coverage/
 dev/mpstore.common.js.mp

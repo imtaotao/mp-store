@@ -51,8 +51,29 @@ Page({
         // restore 方法可以根据 patchs 把 object 恢复到原来的结构，但是是引用关系
         component.setData({ global: restore(component.data.global, patchs) })
       }
-    }
-  }
+    },
+  },
+})
+```
+
+`patch` 有什么用？由于 store 的 state 不可变，这就天然的给我们带来可以回到任一一个状态的机会，而且 `patch` 是新旧两组数据之间的差异集合，这就意味着我们可以根据这组差异来恢复状态，例如以下 demo，用来做“时光旅行”。**后续我们会把时光旅行的功能作为内置的 API 加入进来**
+```js
+import { restore } from '@rustle/mp-store'
+const array = []
+
+Page({
+  storeConfig: {
+    // 每次更新完毕后把 patchs 收集起来
+    didUpdate (component, newPartialState, patchs) {
+      array.push(patchs)
+    },
+  },
+
+  other () {
+    // 回到上个时刻的状态
+    // 你只能对相邻的两组数据来 restore，意思是新旧两组数据 diff 产生的 patch，你也只能根据这两组数据复原
+    this.setData({ global: restore(this.data.global, array[array.length - 1], 'global') })
+  },
 })
 ```
 
@@ -67,8 +88,8 @@ Page({
           name: 'tao',
         },
       })
-    }
-  }
+    },
+  },
 })
 ```
 
@@ -82,7 +103,7 @@ store.add('action', {
   },
   setter (state, payload) {
     return { a: payload }
-  }
+  },
 })
 
 Page({
@@ -94,8 +115,8 @@ Page({
         a: state => state.a,
         b: state => state.b,
       }
-    }
-  }
+    },
+  },
 })
 
 // page.data.global => { a: 1, b: 2 }

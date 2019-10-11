@@ -46,7 +46,7 @@ Page({
 ```js
 Component({
   storeConfig: {
-    usedGlobalState (stor) {
+    usedGlobalState (store) {
       return {
         useInfo: state => ({
           age: state.age,

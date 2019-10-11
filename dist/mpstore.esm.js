@@ -528,14 +528,14 @@ function () {
   function Store(hooks) {
     _classCallCheck(this, Store);
 
-    this.state = {};
     this.hooks = hooks;
     this.reducers = [];
     this.id = ++storeId;
     this.depComponents = [];
     this.GLOBALWORD = 'global';
     this.isDispatching = false;
-    this.version = '0.0.3';
+    this.version = '0.0.4';
+    this.state = Object.freeze({});
     this.middleware = new Middleware(this);
   }
 
@@ -704,7 +704,7 @@ function () {
   return Store;
 }();
 
-var version = '0.0.3';
+var version = '0.0.4';
 var nativePage = Page;
 var nativeComponent = Component;
 

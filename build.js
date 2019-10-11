@@ -11,7 +11,7 @@ const resolve = require('rollup-plugin-node-resolve')
 
 const libName = 'mpstore'
 const version = require('./package.json').version
-const testLibPath = path.resolve(__dirname, './dev')
+const testLibPath = path.resolve(__dirname, './demo')
 const devStoreDir = path.resolve(testLibPath, './store')
 const entryPath = path.resolve(__dirname, './src/index.js')
 const outputPath = filename => path.resolve(__dirname, './dist', filename)

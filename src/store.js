@@ -48,7 +48,6 @@ function assertReducer (state, action, reducer) {
 
 export class Store {
   constructor (hooks) {
-    this.state = {}
     this.hooks = hooks
     this.reducers = []
     this.id = ++storeId
@@ -56,6 +55,7 @@ export class Store {
     this.GLOBALWORD = 'global' // global state namespace
     this.isDispatching = false
     this.version = __VERSION__
+    this.state = Object.freeze({})
     this.middleware = new Middleware(this)
   }
 

@@ -9,6 +9,8 @@ beforeEach(() => {
 
 describe('dispatch', () => {
   it('store state cannot be changed', () => {
+    const one = () => store.state.a = 2
+    expect(isError(one)).toBeTruthy()
     store.add('testAction', {
       partialState: {
         a: 1,
@@ -16,8 +18,8 @@ describe('dispatch', () => {
     })
     expect(Object.keys(store.state).length).toBe(1)
     expect(store.state.a).toBe(1)
-    const fn = () => store.state.a = 2
-    expect(isError(fn)).toBeTruthy()
+    const two = () => store.state.a = 2
+    expect(isError(two)).toBeTruthy()
   })
 
   it('error when `action` does not exist', () => {
