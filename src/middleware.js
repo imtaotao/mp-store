@@ -24,7 +24,7 @@ function handleLayer (
 
     // if the error hook exist, don't throw error
     if (hooks && typeof hooks['middlewareError'] === 'function') {
-      hooks['middlewareError'](action, payload, err)
+      hooks['middlewareError'](action, payload, error)
     } else {
       warn(`${error}\n\n   --- from middleware [${action}] action.`)
     }

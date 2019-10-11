@@ -1,3 +1,4 @@
+import { isError } from '../utils'
 import { REPLACE } from '../../src/diff'
 import createStore from '../../src/index'
 import { applyPatchs } from '../../src/update'
@@ -201,6 +202,42 @@ describe('hooks', () => {
     expect(store.state.a).toBe(2)
     expect(cm.dom.textContent).toBe('2')
     expect(i).toBe(2)
+  })
+
+  it('middlewareError', () => {
+    let i = 0
+    const hooks = {
+      middlewareError (action, payload, error) {
+        i++
+        expect(arguments.length).toBe(3)
+        expect(action).toBe('testAction')
+        expect(payload).toBe(2)
+        expect(error).toBe('middlewareError')
+      },
+    }
+    const store = createStore(null, hooks)
+    store.add('testAction', {
+      partialState: { a: 1 },
+      setter: (state, payload) => ({ a: payload }),
+    })
+    store.use('testAction', () => {
+      throw 'middlewareError'
+    })
+    store.dispatch('testAction', 2)
+    expect(i).toBe(1)
+  })
+
+  it('[error] middlewareError', () => {
+    const store = createStore()
+    store.add('testAction', {
+      partialState: { a: 1 },
+      setter: (state, payload) => ({ a: payload }),
+    })
+    store.use('testAction', () => {
+      throw 'middlewareError'
+    })
+    const fn = () => store.dispatch('testAction', 2)
+    expect(isError(fn)).toBeTruthy()
   })
 
   it('`applyPatchs`', () => {

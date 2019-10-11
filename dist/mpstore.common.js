@@ -371,7 +371,7 @@ function handleLayer(action, fn, store, payload, next, restoreProcessState) {
     restoreProcessState();
 
     if (hooks && typeof hooks['middlewareError'] === 'function') {
-      hooks['middlewareError'](action, payload, err);
+      hooks['middlewareError'](action, payload, error);
     } else {
       warn("".concat(error, "\n\n   --- from middleware [").concat(action, "] action."));
     }
@@ -655,7 +655,7 @@ function () {
         var shouldAdd = callHook(_this3.hooks, 'addDep', [component, isPage]);
 
         if (shouldAdd !== false && createState !== null) {
-          if (isPlainObject(component.data[_this3.GLOBALWORD])) {
+          if (component.data && isPlainObject(component.data[_this3.GLOBALWORD])) {
             _this3.depComponents.push({
               isPage: isPage,
               component: component,
@@ -664,7 +664,7 @@ function () {
               createState: createState
             });
 
-            var patchs = diff(component.data[_this3.GLOBALWORD], createState());
+            var patchs = diff(component.data[_this3.GLOBALWORD], createState(), _this3.GLOBALWORD);
 
             if (patchs.length > 0) {
               applyPatchs(component, patchs);
@@ -678,7 +678,7 @@ function () {
           addDep(this);
           this.store = store;
         });
-        config.onUnload = createWraper(config.onLoad, null, function () {
+        config.onUnload = createWraper(config.onUnload, null, function () {
           this.store = null;
           remove(store.depComponents, this);
         });

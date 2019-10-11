@@ -197,7 +197,7 @@ export class Store {
       // if no used global state word,
       // no need to add dependencies.
       if (shouldAdd !== false && createState !== null) {
-        if (isPlainObject(component.data[this.GLOBALWORD])) {
+        if (component.data && isPlainObject(component.data[this.GLOBALWORD])) {
           // add component to depComponents
           this.depComponents.push({
             isPage,
@@ -208,7 +208,7 @@ export class Store {
           })
 
           // if the global state is changed, need update component
-          const patchs = diff(component.data[this.GLOBALWORD], createState())
+          const patchs = diff(component.data[this.GLOBALWORD], createState(), this.GLOBALWORD)
           if (patchs.length > 0) {
             applyPatchs(component, patchs)
           }
@@ -227,7 +227,7 @@ export class Store {
       )
       
       config.onUnload = createWraper(
-        config.onLoad,
+        config.onUnload,
         null,
         function () {
           // clear cache

@@ -61,7 +61,7 @@ describe('component config', () => {
     expect(store.state.a).toBe(2)
   })
 
-  it('`component add to deps`', () => {
+  it('component add to deps', () => {
     const store = createStore()
     const cfg = Component({
       data: {},
@@ -72,7 +72,7 @@ describe('component config', () => {
             a: state => 1,
           }
         },
-      }
+      },
     })
     expect(cfg.data.global.a).toBe(1)
     const id = simulate.load(cfg)
@@ -83,7 +83,7 @@ describe('component config', () => {
     expect(store.depComponents[0].component).toBe(cm.instance)
   })
 
-  it('[error] `component add to deps`', () => {
+  it('[error] component add to deps', () => {
     const store = createStore()
     const cfg = Component({
       data: {},
@@ -96,7 +96,43 @@ describe('component config', () => {
     cm.attach(document.createElement('parent-wrapper'))
     expect(store.depComponents.length).toBe(0)
   })
+  
+  it('page add to deps', () => {
+    const store = createStore()
+    const instance = {}
+    const cfg = Page({
+      data: {},
+      template: '<div></div>',
+      storeConfig: {
+        usedGlobalState () {
+          return {
+            a: state => 1,
+          }
+        },
+      },
+      onLoad (options) {
+        expect(options).toBe(2)
+        expect(this).toBe(instance)
+      },
+    })
+    expect(cfg.data.global.a).toBe(1)
+    instance.data = cfg.data
+    cfg.onLoad.call(instance, 2)
+    expect(store.depComponents.length).toBe(1)
+    expect(store.depComponents[0].component).toBe(instance)
+  })
 
+  it('[error] page add to deps', () => {
+    const store = createStore()
+    const cfg = Page({
+      data: {},
+      storeConfig: {},
+      template: '<div></div>',
+    })
+    expect('global' in cfg.data).toBeFalsy()
+    expect(store.depComponents.length).toBe(0)
+  })
+ 
   it('inspect `usedGlobalState` method return object', () => {
     const store = createStore()
     const common = res => Component({
@@ -121,7 +157,7 @@ describe('component config', () => {
     expect(cfg.data.a).toBeUndefined()
   })
 
-  it('inspect time of add dep and store', done => {
+  it('inspect time of add dep and store for component', done => {
     const store = createStore()
     const cfg = Component({
       template: '<div></div>',
@@ -148,6 +184,35 @@ describe('component config', () => {
     const cm = simulate.render(id)
     cm.attach(document.createElement('parent-wrapper'))
     cm.detach()
+  })
+
+  it('inspect time of add dep and store for page', done => {
+    const store = createStore()
+    const instance = {}
+    const cfg = Page({
+      template: '<div></div>',
+      storeConfig: {
+        usedGlobalState: () => ({ a: state => 1 }),
+      },
+      onLoad () {
+        expect(store.depComponents.length).toBe(1)
+        expect(store.depComponents[0].component).toBe(this)
+        expect(this.store).toBe(store)
+      },
+      onUnload () {
+        expect(store.depComponents.length).toBe(1)
+        expect(store.depComponents[0].component).toBe(this)
+        expect(this.store).toBe(store)
+        setTimeout(() => {
+          expect(store.depComponents.length).toBe(0)
+          expect(this.store).toBeNull()
+          done()
+        })
+      },
+    })
+    instance.data = cfg.data
+    cfg.onLoad.call(instance)
+    cfg.onUnload.call(instance)
   })
 
   it('inspect `willUpdate` behaiver', () => {
@@ -257,6 +322,60 @@ describe('component config', () => {
     expect(cfg.data.global.name).toBe('tao')
     expect(cm.data.global.name).toBe('taotao')
     expect(cm.dom.textContent).toBe('taotao')
+    expect(i).toBe(2)
+  })
+
+  it('component init value is changed', () => {
+    const store = createStore()
+    let i = 0
+    store.add('testAction', {
+      partialState: {
+        name: 'tao',
+      },
+      setter: (state, payload) => ({ name: payload }),
+    })
+    const cfgOne = Component({
+      template: '<div>{{ global.name }}</div>',
+      storeConfig: {
+        usedGlobalState: () => ({ name: state => state.name }),
+        willUpdate() {
+          i++
+        },
+        didUpdate () {
+          i++
+        },
+      },
+    })
+    const cfgTwo = Component({
+      template: '<div>{{ global.name }}</div>',
+      storeConfig: {
+        usedGlobalState: () => ({ name: state => state.name }),
+        willUpdate() {
+          i++
+        },
+        didUpdate () {
+          i++
+        },
+      },
+    })
+    expect(cfgOne.data.global.name).toBe('tao')
+    expect(cfgTwo.data.global.name).toBe('tao')
+    const oneId = simulate.load(cfgOne)
+    const cmOne = simulate.render(oneId)
+    const twoId = simulate.load(cfgTwo)
+    const cmTwo = simulate.render(twoId)
+    cmOne.attach(document.createElement('parent-wrapper'))
+    cmOne.attach(document.createElement('parent-wrapper'))
+    expect(cmOne.data.global.name).toBe('tao')
+    expect(cmOne.dom.textContent).toBe('tao')
+    store.dispatch('testAction', 'imtaotao')
+    expect(cmOne.data.global.name).toBe('imtaotao')
+    expect(cmOne.dom.textContent).toBe('imtaotao')
+    expect(i).toBe(2)
+    cmTwo.attach(document.createElement('parent-wrapper'))
+    expect(cmTwo.data.global.name).toBe('imtaotao')
+    expect(cmTwo.dom.textContent).toBe('imtaotao')
+    expect(cfgTwo.data.global.name).toBe('tao')
     expect(i).toBe(2)
   })
 })

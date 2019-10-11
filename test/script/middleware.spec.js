@@ -66,6 +66,7 @@ describe('middleware', () => {
         expect(payload).toBe(20)
       }
     })
+    expect(COMMONACTION()).toBeUndefined()
     store.dispatch('testActionOne', 1)
     store.dispatch('testActionTwo', 2)
     expect(i).toBe(2)

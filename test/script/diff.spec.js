@@ -179,4 +179,17 @@ describe('json diff', () => {
     expect(h[0]).toEqual(nv)
     expect(diff(h[0], nv).length).toBe(0)
   })
+
+  it('restore method', () => {
+    const one = {
+      a: 1,
+    }
+    const two = {
+      a: 2,
+    }
+    const patchs = diff(one, two)
+    expect(restore(clone(two), patchs)).toEqual(one)
+    patchs[0].path = ''
+    expect(restore(clone(two), patchs)).toEqual(two)
+  })
 })

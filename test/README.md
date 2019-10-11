@@ -10,6 +10,7 @@
 + [x] value 为 function 时是否使用旧值
 + [x] Date 类型的 value 是否使用新值
 + [x] 以上所有 diff 测试能否根据 patchs 复原
++ [x] restore 中 patch 的 path 不符合要求
 + [ ] diff 的所有测试用例都要分为 diff 逻辑层和视图层验证
 
 ### reducer 定义
@@ -44,6 +45,7 @@
 + [x] 依赖移除将在 `onUnload` 和 `detached` 钩子之后，`store` 移除是同样的逻辑
 + [x] `willUpdate` 将在当前组件更新之前调用，返回 false 将阻止更新，接受两个参数 为 `component、newPartialState`， `this 为 store`
 + [x] `didUpdate` 将在组件更新完毕之后调用，接受三个参数，为 `component、 newPartialState、patchs`， `this 为 store`
++ [x] 组件生成时的值与最开始存储的值不一致时，能否正常更新为新的值，这时的更新不会调用钩子
 
 ### setNamespace
 + [x] 默认的 `namespace` 是否正确
@@ -62,6 +64,7 @@
 + [x] `addDep` 在添加依赖之前调用，返回 `false` 将会阻止添加进依赖，接受两个参数，一个为组件，一个为是否是 page
 + [x] `willUpdate` 在每个组件更新之前调用，返回 `fakse` 将阻止当前组件更新，将接受 5 个参数，`component、newPartialState、patchs、isPage`
 + [x] `didUpdate` 将在每个组件更新之后调用，接受三个参数，`component、newPartialState、isPage`
++ [x] `middlewareError` 将会捕捉中间件调用的时发出的错误，接受三个参数，`action、payload、error`
 + [x] 顺带单独测试 `applyPatchs` 这个内部方法
 
 ### middleware
