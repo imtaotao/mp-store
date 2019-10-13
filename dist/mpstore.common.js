@@ -281,9 +281,9 @@ function diff(a, b, basePath) {
   walkObject(a, b, basePath, patchs);
   return patchs;
 }
-var REG = /(?<=[\[\].])[^\[\].]+/g;
 
 function separatePath(obj, path) {
+  var REG = /(?<=[\[\].])[^\[\].]+/g;
   var keys = path.match(REG);
 
   if (keys) {
@@ -538,7 +538,7 @@ function () {
     this.depComponents = [];
     this.GLOBALWORD = 'global';
     this.isDispatching = false;
-    this.version = '0.0.4';
+    this.version = '0.0.5';
     this.state = Object.freeze({});
     this.middleware = new Middleware(this);
   }
@@ -708,7 +708,7 @@ function () {
   return Store;
 }();
 
-var version = '0.0.4';
+var version = '0.0.5';
 var nativePage = Page;
 var nativeComponent = Component;
 

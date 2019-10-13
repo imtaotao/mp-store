@@ -100,10 +100,9 @@ export function diff (a, b, basePath) {
   return patchs
 }
 
-const REG = /(?<=[\[\].])[^\[\].]+/g
-
 // return target object
 function separatePath (obj, path) {
+  const REG = /(?<=[\[\].])[^\[\].]+/g
   const keys = path.match(REG)
 
   if (keys) {
