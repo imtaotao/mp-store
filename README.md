@@ -4,10 +4,10 @@
 [![NPM version](https://img.shields.io/npm/v/@rustle/mp-store.svg?style=flat-square)](https://www.npmjs.com/package/@rustle/mp-store)
 [![QQ group](https://img.shields.io/badge/QQ群-624921236-ff69b4.svg?maxAge=2592000&style=flat-square)](https://shang.qq.com/wpa/qunwpa?idkey=fcb17d938fab0e30e879dd96421d91e24805e0bc1077022ff5ae562b732a2508)
 
+```
+npm install @rustle/mp-store
+```
 一个轻量级的微信小程序状态管理库，他将能够平滑的兼容以前的旧项目，并不会有很强的侵入性，所以你可以直接迁移过来。如果你的小程序没有引入 `npm` 包的功能，可以在[这里](https://cdn.jsdelivr.net/gh/imtaotao/mp-store/dist/mpstore.esm.js)下载，然后放到项目中去.
-
-
-需要注意的是，打包后的源码包含部分的 `es6` 的代码，例如 `正则后行断言`、`Map` 数据结构，如果你希望这些代码不影响你的项目，你可能不能使用  `restore` 这个方法
 
 ## [store 的介绍](https://github.com/imtaotao/mp-store/blob/master/docs/store.md)
 ## [storeConfig 的介绍](https://github.com/imtaotao/mp-store/blob/master/docs/component.md)

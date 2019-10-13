@@ -100,25 +100,29 @@ export function diff (a, b, basePath) {
   return patchs
 }
 
+const REG = /[^\[\].]+(?=[\[\].])/g
+
 // return target object
 function separatePath (obj, path) {
-  const REG = /(?<=[\[\].])[^\[\].]+/g
   const keys = path.match(REG)
 
-  if (keys) {
-    let i = -1
-    let key = null
-    let target = obj
-    let prevTarget = null
-
-    while (i++ < keys.length - 2) {
-      prevTarget = target
-      key = keys[i]
-      target = target[key]
-    }
-
-    return [target, key, prevTarget, keys[keys.length -1]]
+  // delete first key
+  if (keys && keys.shift() && keys.length === 0) {
+    return
   }
+
+  let i = -1
+  let key = null
+  let target = obj
+  let prevTarget = null
+
+  while (i++ < keys.length - 2) {
+    prevTarget = target
+    key = keys[i]
+    target = target[key]
+  }
+
+  return [target, key, prevTarget, keys[keys.length -1]]
 }
 
 export function restore (obj, patchs) {
@@ -127,7 +131,8 @@ export function restore (obj, patchs) {
 
   while (--len >= 0) {
     const { type, path, leftValue } = patchs[len]
-    const parseItem = separatePath(obj, path)
+    // use es5 reg
+    const parseItem = separatePath(obj, '_' + path + '.')
 
     if (parseItem) {
       const [target, key, prevTarget, lastKey] = parseItem

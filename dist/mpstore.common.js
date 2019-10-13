@@ -281,25 +281,27 @@ function diff(a, b, basePath) {
   walkObject(a, b, basePath, patchs);
   return patchs;
 }
+var REG = /[^\[\].]+(?=[\[\].])/g;
 
 function separatePath(obj, path) {
-  var REG = /(?<=[\[\].])[^\[\].]+/g;
   var keys = path.match(REG);
 
-  if (keys) {
-    var i = -1;
-    var key = null;
-    var target = obj;
-    var prevTarget = null;
-
-    while (i++ < keys.length - 2) {
-      prevTarget = target;
-      key = keys[i];
-      target = target[key];
-    }
-
-    return [target, key, prevTarget, keys[keys.length - 1]];
+  if (keys && keys.shift() && keys.length === 0) {
+    return;
   }
+
+  var i = -1;
+  var key = null;
+  var target = obj;
+  var prevTarget = null;
+
+  while (i++ < keys.length - 2) {
+    prevTarget = target;
+    key = keys[i];
+    target = target[key];
+  }
+
+  return [target, key, prevTarget, keys[keys.length - 1]];
 }
 
 function restore(obj, patchs) {
@@ -311,7 +313,7 @@ function restore(obj, patchs) {
         type = _patchs$len.type,
         path = _patchs$len.path,
         leftValue = _patchs$len.leftValue;
-    var parseItem = separatePath(obj, path);
+    var parseItem = separatePath(obj, '_' + path + '.');
 
     if (parseItem) {
       var _parseItem = _slicedToArray(parseItem, 4),
@@ -538,7 +540,7 @@ function () {
     this.depComponents = [];
     this.GLOBALWORD = 'global';
     this.isDispatching = false;
-    this.version = '0.0.5';
+    this.version = '0.0.6';
     this.state = Object.freeze({});
     this.middleware = new Middleware(this);
   }
@@ -708,7 +710,7 @@ function () {
   return Store;
 }();
 
-var version = '0.0.5';
+var version = '0.0.6';
 var nativePage = Page;
 var nativeComponent = Component;
 
