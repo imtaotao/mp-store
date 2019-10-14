@@ -107,22 +107,20 @@ function separatePath (obj, path) {
   const keys = path.match(REG)
 
   // delete first key
-  if (keys && keys.shift() && keys.length === 0) {
-    return
+  if (keys && keys.shift() && keys.length > 0) {
+    let i = -1
+    let key = null
+    let target = obj
+    let prevTarget = null
+
+    while (i++ < keys.length - 2) {
+      prevTarget = target
+      key = keys[i]
+      target = target[key]
+    }
+
+    return [target, key, prevTarget, keys[keys.length -1]]
   }
-
-  let i = -1
-  let key = null
-  let target = obj
-  let prevTarget = null
-
-  while (i++ < keys.length - 2) {
-    prevTarget = target
-    key = keys[i]
-    target = target[key]
-  }
-
-  return [target, key, prevTarget, keys[keys.length -1]]
 }
 
 export function restore (obj, patchs) {

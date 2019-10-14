@@ -13,6 +13,10 @@ before_script:
 addons:
   chrome: stable
 
+branches:
+  only:
+    - master
+
 script:
   - npm run test:cover 
   - npm run codecov
