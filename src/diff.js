@@ -125,12 +125,12 @@ function separatePath (obj, path) {
 
 export function restore (obj, patchs) {
   let len = patchs.length
-  const delEmptys = new Map()
+  const deleteEmptys = new Map()
 
   while (--len >= 0) {
     const { type, path, leftValue } = patchs[len]
     // use es5 reg
-    const parseItem = separatePath(obj, '_' + path + '.')
+    const parseItem = separatePath(obj, path + '.')
 
     if (parseItem) {
       const [target, key, prevTarget, lastKey] = parseItem
@@ -145,7 +145,7 @@ export function restore (obj, patchs) {
           break
         case ADD :
           if (Array.isArray(target) && target === prevTarget[key]) {
-            delEmptys.set(target, { key, prevTarget })
+            deleteEmptys.set(target, { key, prevTarget })
           }
           delete target[lastKey]
           break
@@ -153,7 +153,7 @@ export function restore (obj, patchs) {
     }
   }
 
-  delEmptys.forEach(({ key, prevTarget }, target) => {
+  deleteEmptys.forEach(({ key, prevTarget }, target) => {
     const clone = new target.constructor()
     // filter empty item
     target.forEach(item => clone.push(item))

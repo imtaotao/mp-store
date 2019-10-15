@@ -174,6 +174,29 @@ function isPlainObject(obj) {
 
   return proto === baseProto;
 }
+function clone(value) {
+  var record = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : new WeakMap();
+
+  if (value === null || value === undefined) {
+    return value;
+  }
+
+  var primitiveType = _typeof(value);
+
+  if (primitiveType === 'string' || primitiveType === 'number' || primitiveType === 'boolean' || primitiveType === 'function' || value instanceof Date) {
+    return value;
+  }
+
+  if (record.has(value)) return record.get(value);
+  var result = typeof value.constructor !== 'function' ? Object.create(null) : new value.constructor();
+  record.set(value, result);
+
+  for (var key in value) {
+    result[key] = clone(value[key], record);
+  }
+
+  return result;
+}
 
 function mixin (inject) {
   var expandMethods = Object.create(null);
@@ -272,7 +295,7 @@ function walkObject(a, b, base, patchs) {
   }
 }
 
-function diff(a, b, basePath) {
+function diff$1(a, b, basePath) {
   var patchs = [];
   walkObject(a, b, basePath, patchs);
   return patchs;
@@ -282,34 +305,32 @@ var REG = /[^\[\].]+(?=[\[\].])/g;
 function separatePath(obj, path) {
   var keys = path.match(REG);
 
-  if (keys && keys.shift() && keys.length === 0) {
-    return;
+  if (keys && keys.shift() && keys.length > 0) {
+    var i = -1;
+    var key = null;
+    var target = obj;
+    var prevTarget = null;
+
+    while (i++ < keys.length - 2) {
+      prevTarget = target;
+      key = keys[i];
+      target = target[key];
+    }
+
+    return [target, key, prevTarget, keys[keys.length - 1]];
   }
-
-  var i = -1;
-  var key = null;
-  var target = obj;
-  var prevTarget = null;
-
-  while (i++ < keys.length - 2) {
-    prevTarget = target;
-    key = keys[i];
-    target = target[key];
-  }
-
-  return [target, key, prevTarget, keys[keys.length - 1]];
 }
 
 function restore(obj, patchs) {
   var len = patchs.length;
-  var delEmptys = new Map();
+  var deleteEmptys = new Map();
 
   while (--len >= 0) {
     var _patchs$len = patchs[len],
         type = _patchs$len.type,
         path = _patchs$len.path,
         leftValue = _patchs$len.leftValue;
-    var parseItem = separatePath(obj, '_' + path + '.');
+    var parseItem = separatePath(obj, path + '.');
 
     if (parseItem) {
       var _parseItem = _slicedToArray(parseItem, 4),
@@ -329,7 +350,7 @@ function restore(obj, patchs) {
 
         case ADD:
           if (Array.isArray(target) && target === prevTarget[key]) {
-            delEmptys.set(target, {
+            deleteEmptys.set(target, {
               key: key,
               prevTarget: prevTarget
             });
@@ -341,7 +362,7 @@ function restore(obj, patchs) {
     }
   }
 
-  delEmptys.forEach(function (_ref, target) {
+  deleteEmptys.forEach(function (_ref, target) {
     var key = _ref.key,
         prevTarget = _ref.prevTarget;
     var clone = new target.constructor();
@@ -352,6 +373,137 @@ function restore(obj, patchs) {
   });
   return obj;
 }
+
+function applyPatchs(component, patchs) {
+  var destObject = {};
+
+  for (var i = 0, len = patchs.length; i < len; i++) {
+    var _patchs$i = patchs[i],
+        value = _patchs$i.value,
+        path = _patchs$i.path;
+    destObject[path] = value;
+  }
+
+  component.setData(destObject);
+}
+function updateComponents(store) {
+  var hooks = store.hooks,
+      GLOBALWORD = store.GLOBALWORD,
+      depComponents = store.depComponents;
+  var len = depComponents.length;
+  if (len === 0) return;
+
+  for (var i = 0; i < len; i++) {
+    var _depComponents$i = depComponents[i],
+        isPage = _depComponents$i.isPage,
+        component = _depComponents$i.component,
+        didUpdate = _depComponents$i.didUpdate,
+        willUpdate = _depComponents$i.willUpdate,
+        createState = _depComponents$i.createState;
+
+    if (component.data[GLOBALWORD]) {
+      var newPartialState = createState();
+
+      if (typeof willUpdate === 'function') {
+        if (willUpdate.call(store, component, newPartialState) === false) {
+          continue;
+        }
+      }
+
+      var patchs = diff$1(component.data[GLOBALWORD], newPartialState, GLOBALWORD);
+
+      if (patchs.length > 0) {
+        var params = [component, newPartialState, patchs, isPage];
+
+        if (callHook(hooks, 'willUpdate', params) === false) {
+          continue;
+        }
+
+        applyPatchs(component, patchs);
+
+        if (component.timeTravel) {
+          component.timeTravel.push(patchs);
+        }
+
+        if (typeof didUpdate === 'function') {
+          didUpdate.call(store, component, newPartialState, patchs);
+        }
+
+        callHook(hooks, 'didUpdate', [component, newPartialState, isPage]);
+      }
+    }
+  }
+}
+
+var TimeTravel =
+/*#__PURE__*/
+function () {
+  function TimeTravel(component, GLOBALWORD, limit) {
+    _classCallCheck(this, TimeTravel);
+
+    this.history = [];
+    this.limit = limit;
+    this.component = component;
+    this.GLOBALWORD = GLOBALWORD;
+    this.length = this.history.length;
+    this.current = this.history.length;
+  }
+
+  _createClass(TimeTravel, [{
+    key: "push",
+    value: function push(patchs) {
+      if (this.limit > 0) {
+        this.history.push(patchs);
+        this.length = this.history.length;
+      }
+    }
+  }, {
+    key: "go",
+    value: function go(n) {
+      if (this.limit > 0) {
+        var index = this.current + n;
+        assert(index >= 0 && index < this.history.length, '[Index] is not within the allowed range.');
+        var component = this.component;
+        var data = clone(component.data);
+
+        while (index-- >= 0) {
+          var patchs = clone(this.history[index]);
+          data = restore(data, patchs);
+        }
+
+        var endPatchs = diff(component.data, data, this.GLOBALWORD);
+
+        if (endPatchs.length > 0) {
+          applyPatchs(component, endPatchs);
+        }
+
+        this.current = index;
+      }
+    }
+  }, {
+    key: "forward",
+    value: function forward() {
+      this.go(1);
+    }
+  }, {
+    key: "back",
+    value: function back() {
+      this.go(-1);
+    }
+  }, {
+    key: "start",
+    value: function start() {
+      this.go(-this.current);
+    }
+  }, {
+    key: "end",
+    value: function end() {
+      this.go(this.history.length - this.current);
+    }
+  }]);
+
+  return TimeTravel;
+}();
 
 var COMMONACTION = function COMMONACTION() {};
 
@@ -446,63 +598,6 @@ function () {
   return Middleware;
 }();
 
-function applyPatchs(component, patchs) {
-  var destObject = {};
-
-  for (var i = 0, len = patchs.length; i < len; i++) {
-    var _patchs$i = patchs[i],
-        value = _patchs$i.value,
-        path = _patchs$i.path;
-    destObject[path] = value;
-  }
-
-  component.setData(destObject);
-}
-function updateComponents(store) {
-  var hooks = store.hooks,
-      GLOBALWORD = store.GLOBALWORD,
-      depComponents = store.depComponents;
-  var len = depComponents.length;
-  if (len === 0) return;
-
-  for (var i = 0; i < len; i++) {
-    var _depComponents$i = depComponents[i],
-        isPage = _depComponents$i.isPage,
-        component = _depComponents$i.component,
-        didUpdate = _depComponents$i.didUpdate,
-        willUpdate = _depComponents$i.willUpdate,
-        createState = _depComponents$i.createState;
-
-    if (component.data[GLOBALWORD]) {
-      var newPartialState = createState();
-
-      if (typeof willUpdate === 'function') {
-        if (willUpdate.call(store, component, newPartialState) === false) {
-          continue;
-        }
-      }
-
-      var patchs = diff(component.data[GLOBALWORD], newPartialState, GLOBALWORD);
-
-      if (patchs.length > 0) {
-        var params = [component, newPartialState, patchs, isPage];
-
-        if (callHook(hooks, 'willUpdate', params) === false) {
-          continue;
-        }
-
-        applyPatchs(component, patchs);
-
-        if (typeof didUpdate === 'function') {
-          didUpdate.call(store, component, newPartialState, patchs);
-        }
-
-        callHook(hooks, 'didUpdate', [component, newPartialState, isPage]);
-      }
-    }
-  }
-}
-
 var storeId = 0;
 
 function assertReducer(state, action, reducer) {
@@ -536,7 +631,7 @@ function () {
     this.depComponents = [];
     this.GLOBALWORD = 'global';
     this.isDispatching = false;
-    this.version = '0.0.6';
+    this.version = '0.0.7';
     this.state = Object.freeze({});
     this.middleware = new Middleware(this);
   }
@@ -623,6 +718,8 @@ function () {
       var didUpdate = storeConfig.didUpdate,
           willUpdate = storeConfig.willUpdate,
           defineReducer = storeConfig.defineReducer,
+          _storeConfig$timeTrav = storeConfig.timeTravel,
+          timeTravel = _storeConfig$timeTrav === void 0 ? 0 : _storeConfig$timeTrav,
           usedGlobalState = storeConfig.usedGlobalState;
       delete config.storeConfig;
 
@@ -654,6 +751,8 @@ function () {
 
         if (shouldAdd !== false && createState !== null) {
           if (component.data && isPlainObject(component.data[_this3.GLOBALWORD])) {
+            component.timeTravel = new TimeTravel(component, _this3.GLOBALWORD, timeTravel);
+
             _this3.depComponents.push({
               isPage: isPage,
               component: component,
@@ -662,7 +761,7 @@ function () {
               createState: createState
             });
 
-            var patchs = diff(component.data[_this3.GLOBALWORD], createState(), _this3.GLOBALWORD);
+            var patchs = diff$1(component.data[_this3.GLOBALWORD], createState(), _this3.GLOBALWORD);
 
             if (patchs.length > 0) {
               applyPatchs(component, patchs);
@@ -678,6 +777,7 @@ function () {
         });
         config.onUnload = createWraper(config.onUnload, null, function () {
           this.store = null;
+          this.timeTravel = null;
           remove(store.depComponents, this);
         });
       } else {
@@ -697,6 +797,7 @@ function () {
         }));
         set('detached', createWraper(get('detached'), null, function () {
           this.store = null;
+          this.timeTravel = null;
           remove(store.depComponents, this);
         }));
       }
@@ -706,7 +807,7 @@ function () {
   return Store;
 }();
 
-var version = '0.0.6';
+var version = '0.0.7';
 var nativePage = Page;
 var nativeComponent = Component;
 

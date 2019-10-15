@@ -201,7 +201,7 @@ export class Store {
       if (shouldAdd !== false && createState !== null) {
         if (component.data && isPlainObject(component.data[this.GLOBALWORD])) {
           // time travel can record diff patchs
-          component.timeTravel = new TimeTravel(component, timeTravel)
+          component.timeTravel = new TimeTravel(component, this.GLOBALWORD, timeTravel)
 
           // add component to depComponents
           this.depComponents.push({
