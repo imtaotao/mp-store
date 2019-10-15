@@ -9,6 +9,7 @@ import {
   isPlainObject,
 } from './utils'
 import { diff } from './diff'
+import TimeTravel from './time-travel'
 import { Middleware, COMMONACTION } from './middleware'
 import { applyPatchs, updateComponents } from './update'
 
@@ -157,6 +158,7 @@ export class Store {
       didUpdate,
       willUpdate,
       defineReducer,
+      timeTravel = 0,
       usedGlobalState,
     } = storeConfig
 
@@ -198,6 +200,9 @@ export class Store {
       // no need to add dependencies.
       if (shouldAdd !== false && createState !== null) {
         if (component.data && isPlainObject(component.data[this.GLOBALWORD])) {
+          // time travel can record diff patchs
+          component.timeTravel = new TimeTravel(component, timeTravel)
+
           // add component to depComponents
           this.depComponents.push({
             isPage,
@@ -232,6 +237,7 @@ export class Store {
         function () {
           // clear cache
           this.store = null
+          this.timeTravel = null
           remove(store.depComponents, this)
         },
       )
@@ -254,6 +260,7 @@ export class Store {
         null,
         function () {
           this.store = null
+          this.timeTravel = null
           remove(store.depComponents, this)
         },
       ))

@@ -83,3 +83,34 @@ export function isPlainObject (obj) {
   }
   return proto === baseProto
 }
+
+export function clone (value, record = new WeakMap) {
+  if (value === null || value === undefined) {
+    return value
+  }
+  const primitiveType = typeof value
+
+  if (
+    primitiveType === 'string' ||
+    primitiveType === 'number' ||
+    primitiveType === 'boolean' ||
+    primitiveType === 'function' ||
+    value instanceof Date
+  ) {
+    return value
+  }
+
+  if (record.has(value)) return record.get(value)
+
+  const result = typeof value.constructor !== 'function'
+    ? Object.create(null) 
+    : new value.constructor()
+
+  record.set(value, result)
+
+  for (const key in value) {
+    result[key] = clone(value[key], record)
+  }
+
+  return result
+}

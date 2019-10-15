@@ -56,6 +56,10 @@ export function updateComponents (store) {
         // update component
         applyPatchs(component, patchs)
 
+        if (component.timeTravel) {
+          component.timeTravel.push(patchs)
+        }
+
         if (typeof didUpdate === 'function') {
           didUpdate.call(store, component, newPartialState, patchs)
         }

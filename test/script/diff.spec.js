@@ -15,7 +15,8 @@ import {
   REMOVE,
   REPLACE,
 } from '../../src/diff'
-import { clone, expectPatch } from '../utils'
+import { clone} from '../../src/utils'
+import { expectPatch } from '../utils'
 
 const root = '/'
 
