@@ -1,12 +1,13 @@
 import mixin from './mixin'
 import { Store } from './store'
-export { restore } from './diff'
 import {
   callHook,
   mixinMethods,
   createWraper,
   isEmptyObject,
 } from './utils'
+export { clone } from './utils'
+export { diff, restore } from './diff'
 
 export const version = __VERSION__
 

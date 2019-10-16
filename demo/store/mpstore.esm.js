@@ -430,6 +430,7 @@ function updateComponents(store) {
         }
 
         callHook(hooks, 'didUpdate', [component, newPartialState, isPage]);
+        component.timeTravel.push(patchs);
       }
     }
   }
@@ -841,4 +842,4 @@ function index (mixinInject, hooks) {
 }
 
 export default index;
-export { restore, version };
+export { clone, diff$1 as diff, restore, version };

@@ -63,7 +63,11 @@ export function updateComponents (store) {
         if (typeof didUpdate === 'function') {
           didUpdate.call(store, component, newPartialState, patchs)
         }
+        
         callHook(hooks, 'didUpdate', [component, newPartialState, isPage])
+
+        // record patchs, allow playback view
+        component.timeTravel.push(patchs)
       }
     }
   }

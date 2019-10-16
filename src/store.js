@@ -158,7 +158,7 @@ export class Store {
       didUpdate,
       willUpdate,
       defineReducer,
-      timeTravel = 0,
+      timeTravel = 0, // default not open time travel function
       usedGlobalState,
     } = storeConfig
 
