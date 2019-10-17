@@ -1,5 +1,5 @@
-export function warn (message, noError) {
-  message = `\n\n[MpStore warn]: ${message}\n\n`
+export function warning (message, noError) {
+  message = `\n\n[MpStore warning]: ${message}\n\n`
   if (noError) {
     console.warn(message)
     return
@@ -8,7 +8,7 @@ export function warn (message, noError) {
 }
 
 export function assert (condition, message) {
-  if (!condition) warn(message)
+  if (!condition) warning(message)
 }
 
 export function isPrimitive (value) {

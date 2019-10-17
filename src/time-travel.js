@@ -1,6 +1,6 @@
 import { applyPatchs } from './update'
 import { diff, restore } from './diff'
-import { warn, clone, assert } from './utils'
+import { warning, clone, assert } from './utils'
 
 export default class TimeTravel {
   constructor (component, GLOBALWORD, limit) {
@@ -58,7 +58,7 @@ export default class TimeTravel {
 
         const range = n + current
         if (range < 0 || range > history.length) {
-          warn('[Index] is not within the allowed range.', true)
+          warning('[Index] is not within the allowed range.', true)
           return
         }
 
@@ -94,11 +94,11 @@ export default class TimeTravel {
     this.go(-1)
   }
 
-  start () {
+  toStart () {
     this.go(-this.current)
   }
 
-  end () {
+  toEnd () {
     this.go(this.history.length - this.current)
   }
 }

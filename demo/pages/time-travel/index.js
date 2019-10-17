@@ -30,11 +30,11 @@ Page({
     this.timeTravel.back()
   },
 
-  start () {
-    this.timeTravel.start()
+  toStart () {
+    this.timeTravel.toStart()
   },
 
-  end () {
-    this.timeTravel.end()
+  toEnd () {
+    this.timeTravel.toEnd()
   },
 })

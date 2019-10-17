@@ -10,14 +10,14 @@
 
 	<view
 	 class="btn"
-	 bindtap="start"
+	 bindtap="toStart"
 	>
 		start
 	</view>
 
 	<view
 	 class="btn"
-	 bindtap="end"
+	 bindtap="toEnd"
 	>
 		end
 	</view>

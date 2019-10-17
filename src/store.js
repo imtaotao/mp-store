@@ -144,7 +144,7 @@ export class Store {
   }
 
   // insert method
-  _rewirteCfgAndAddDep (config, isPage) {
+  rewirteCfgAndAddDep (config, isPage) {
     let createState = null
     const store = this
     const GLOBALWORD = this.GLOBALWORD

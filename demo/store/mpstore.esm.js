@@ -91,8 +91,8 @@ function _nonIterableRest() {
   throw new TypeError("Invalid attempt to destructure non-iterable instance");
 }
 
-function warn(message, noError) {
-  message = "\n\n[MpStore warn]: ".concat(message, "\n\n");
+function warning(message, noError) {
+  message = "\n\n[MpStore warning]: ".concat(message, "\n\n");
 
   if (noError) {
     console.warn(message);
@@ -102,7 +102,7 @@ function warn(message, noError) {
   throw new Error(message);
 }
 function assert(condition, message) {
-  if (!condition) warn(message);
+  if (!condition) warning(message);
 }
 function isPrimitive(value) {
   return typeof value === 'string' || typeof value === 'number' || _typeof(value) === 'symbol' || typeof value === 'boolean';
@@ -505,7 +505,7 @@ function () {
           var range = n + current;
 
           if (range < 0 || range > history.length) {
-            warn('[Index] is not within the allowed range.', true);
+            warning('[Index] is not within the allowed range.', true);
             return;
           }
 
@@ -544,13 +544,13 @@ function () {
       this.go(-1);
     }
   }, {
-    key: "start",
-    value: function start() {
+    key: "toStart",
+    value: function toStart() {
       this.go(-this.current);
     }
   }, {
-    key: "end",
-    value: function end() {
+    key: "toEnd",
+    value: function toEnd() {
       this.go(this.history.length - this.current);
     }
   }]);
@@ -576,7 +576,7 @@ function handleLayer(action, fn, store, payload, next, restoreProcessState) {
     if (hooks && typeof hooks['middlewareError'] === 'function') {
       hooks['middlewareError'](action, payload, error);
     } else {
-      warn("".concat(error, "\n\n   --- from middleware [").concat(action, "] action."));
+      warning("".concat(error, "\n\n   --- from middleware [").concat(action, "] action."));
     }
   }
 }
@@ -756,8 +756,8 @@ function () {
       this.GLOBALWORD = key;
     }
   }, {
-    key: "_rewirteCfgAndAddDep",
-    value: function _rewirteCfgAndAddDep(config, isPage) {
+    key: "rewirteCfgAndAddDep",
+    value: function rewirteCfgAndAddDep(config, isPage) {
       var _this3 = this;
 
       var createState = null;
@@ -875,14 +875,12 @@ function index (mixinInject, hooks) {
   Page = createWraper(nativePage, function (config) {
     callHook(hooks, 'createBefore', [config, true]);
     expandConfig(config, expandMethods, true);
-
-    store._rewirteCfgAndAddDep(config, true);
+    store.rewirteCfgAndAddDep(config, true);
   });
   Component = createWraper(nativeComponent, function (config) {
     callHook(hooks, 'createBefore', [config, false]);
     expandConfig(config, expandMethods, false);
-
-    store._rewirteCfgAndAddDep(config, false);
+    store.rewirteCfgAndAddDep(config, false);
   });
   return store;
 }

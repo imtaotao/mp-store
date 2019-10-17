@@ -1,4 +1,4 @@
-import { warn, assert } from './utils'
+import { warning, assert } from './utils'
 
 export const COMMONACTION = () => {}
 
@@ -26,7 +26,7 @@ function handleLayer (
     if (hooks && typeof hooks['middlewareError'] === 'function') {
       hooks['middlewareError'](action, payload, error)
     } else {
-      warn(`${error}\n\n   --- from middleware [${action}] action.`)
+      warning(`${error}\n\n   --- from middleware [${action}] action.`)
     }
   }
 }
