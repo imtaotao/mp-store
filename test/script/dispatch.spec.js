@@ -14,12 +14,20 @@ describe('dispatch', () => {
     store.add('testAction', {
       partialState: {
         a: 1,
+        arr: [{
+          n: '',
+        }],
       },
     })
-    expect(Object.keys(store.state).length).toBe(1)
+    expect(Object.keys(store.state).length).toBe(2)
     expect(store.state.a).toBe(1)
+    expect(store.state.arr.length).toBe(1)
     const two = () => store.state.a = 2
+    const three = () => store.state.arr.push(1)
+    const four = () => store.state.arr[0].n = 1
     expect(isError(two)).toBeTruthy()
+    expect(isError(three)).toBeTruthy()
+    expect(isError(four)).toBeTruthy()
   })
 
   it('error when `action` does not exist', () => {

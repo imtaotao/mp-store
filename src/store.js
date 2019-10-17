@@ -231,8 +231,6 @@ export class Store {
         null,
         function () {
           // clear cache
-          this.store = null
-          this.timeTravel = null
           remove(store.depComponents, this)
         },
       )
@@ -254,8 +252,6 @@ export class Store {
         get('detached'),
         null,
         function () {
-          this.store = null
-          this.timeTravel = null
           remove(store.depComponents, this)
         },
       ))

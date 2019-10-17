@@ -175,7 +175,7 @@ describe('component config', () => {
         expect(this.store).toBe(store)
         setTimeout(() => {
           expect(store.depComponents.length).toBe(0)
-          expect(this.store).toBeNull()
+          expect(this.store).toBe(store)
           done()
         })
       },
@@ -205,7 +205,7 @@ describe('component config', () => {
         expect(this.store).toBe(store)
         setTimeout(() => {
           expect(store.depComponents.length).toBe(0)
-          expect(this.store).toBeNull()
+          expect(this.store).toBe(store)
           done()
         })
       },
