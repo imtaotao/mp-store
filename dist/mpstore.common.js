@@ -485,9 +485,7 @@ function () {
         var extraCount = length - limit;
 
         if (extraCount >= 0) {
-          while (~extraCount--) {
-            this.history.shift();
-          }
+          this.history.splice(0, extraCount + 1);
         }
 
         this.history.push(patchs);
@@ -833,8 +831,6 @@ function () {
           this.store = store;
         });
         config.onUnload = createWraper(config.onUnload, null, function () {
-          this.store = null;
-          this.timeTravel = null;
           remove(store.depComponents, this);
         });
       } else {
@@ -853,8 +849,6 @@ function () {
           this.store = store;
         }));
         set('detached', createWraper(get('detached'), null, function () {
-          this.store = null;
-          this.timeTravel = null;
           remove(store.depComponents, this);
         }));
       }

@@ -26,11 +26,9 @@ export default class TimeTravel {
 
     if (limit > 0) {
       // if exceed the limit, should to remove the extra item
-      let extraCount = length - limit
+      const extraCount = length - limit
       if (extraCount >= 0) {
-        while (~extraCount--) {
-          this.history.shift()
-        }
+        this.history.splice(0, extraCount + 1)
       }
 
       this.history.push(patchs)

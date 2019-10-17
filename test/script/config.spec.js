@@ -1,6 +1,7 @@
 import { isError } from '../utils'
 import { REPLACE } from '../../src/diff'
 import createStore from '../../src/index'
+import TimeTravel from '../../src/time-travel'
 
 describe('component config', () => {
   it('delete `storeConfig` option', () => {
@@ -168,14 +169,19 @@ describe('component config', () => {
         expect(store.depComponents.length).toBe(1)
         expect(store.depComponents[0].component).toBe(this)
         expect(this.store).toBe(store)
+        expect(this.timeTravel instanceof TimeTravel).toBeTruthy()
+        expect(this.timeTravel.component).toBe(this)
       },
       detached () {
         expect(store.depComponents.length).toBe(1)
         expect(store.depComponents[0].component).toBe(this)
         expect(this.store).toBe(store)
+        expect(this.timeTravel instanceof TimeTravel).toBeTruthy()
         setTimeout(() => {
           expect(store.depComponents.length).toBe(0)
           expect(this.store).toBe(store)
+          expect(this.timeTravel instanceof TimeTravel).toBeTruthy()
+          expect(this.timeTravel.component).toBe(this)
           done()
         })
       },
@@ -198,14 +204,19 @@ describe('component config', () => {
         expect(store.depComponents.length).toBe(1)
         expect(store.depComponents[0].component).toBe(this)
         expect(this.store).toBe(store)
+        expect(this.timeTravel instanceof TimeTravel).toBeTruthy()
+        expect(this.timeTravel.component).toBe(this)
       },
       onUnload () {
         expect(store.depComponents.length).toBe(1)
         expect(store.depComponents[0].component).toBe(this)
         expect(this.store).toBe(store)
+        expect(this.timeTravel instanceof TimeTravel).toBeTruthy()
         setTimeout(() => {
           expect(store.depComponents.length).toBe(0)
           expect(this.store).toBe(store)
+          expect(this.timeTravel instanceof TimeTravel).toBeTruthy()
+          expect(this.timeTravel.component).toBe(this)
           done()
         })
       },

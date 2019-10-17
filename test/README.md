@@ -41,8 +41,8 @@
 + [x] `defineReducer` 方法在小程序初始化的时候调用，允许定义 `reducer`，接受一个参数为 `store`，上下文为 `store`
 + [x] 没有 `usedGlobalState` 方法当前组件将不会被添加到依赖中
 + [x] `usedGlobalState` 返回一个普通对象，对象中每个 `value` 是一个函数，将接受一个参数为全局 `state`，否则将会报错
-+ [x] 依赖添加将在 `onLoad` 和 `attached` 钩子之前，`store` 移除是同样的逻辑
-+ [x] 依赖移除将在 `onUnload` 和 `detached` 钩子之后，`store` 移除是同样的逻辑
++ [x] 依赖添加将在 `onLoad` 和 `attached` 钩子之前，`store` 添加是同样的逻辑，`timeTravel` 添加是同样的逻辑
++ [x] 依赖移除将在 `onUnload` 和 `detached` 钩子之后，`store` 不会被移除，`timeTravel` 不会被移除
 + [x] `willUpdate` 将在当前组件更新之前调用，返回 false 将阻止更新，接受两个参数 为 `component、newPartialState`， `this 为 store`
 + [x] `didUpdate` 将在组件更新完毕之后调用，接受三个参数，为 `component、 newPartialState、patchs`， `this 为 store`
 + [x] 组件生成时的值与最开始存储的值不一致时，能否正常更新为新的值，这时的更新不会调用钩子
