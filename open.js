@@ -3,7 +3,7 @@ const path = require('path')
 const automator = require('miniprogram-automator')
 
 const opts = {
-  projectPath: path.resolve(__dirname, './dev'),
+  projectPath: path.resolve(__dirname, './demo'),
 }
 
 // wechat devtool's position, if no alter default install postion, you can ignore.

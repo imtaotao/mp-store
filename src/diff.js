@@ -46,7 +46,7 @@ function diffValues (left, right, path, patchs) {
 function walkArray (a, b, base, patchs) {
   if (a.length <= b.length) {
     let len = a.length
-    while (--len >= 0) {
+    while (~--len) {
       if (a[len] !== b[len]) {
         const path = `${base}[${len}]`
         diffValues(a[len], b[len], path, patchs)
@@ -62,7 +62,7 @@ function walkArray (a, b, base, patchs) {
     }
   } else {
     // if new list less than old list,
-    // no need diff, direct replac is fine.
+    // no need diff, direct replace is fine.
     patchs.push(new Patch(REPLACE, base, b, a))
   }
 }
@@ -127,7 +127,7 @@ export function restore (obj, patchs) {
   let len = patchs.length
   const deleteEmptys = new Map()
 
-  while (--len >= 0) {
+  while (~--len) {
     const { type, path, leftValue } = patchs[len]
     // use es5 reg
     const parseItem = separatePath(obj, path + '.')

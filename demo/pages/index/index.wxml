@@ -1,9 +1,16 @@
 <!--index.wxml-->
 <view class="container">
-  <view bindtap="jump">跳转到子页面</view>
-  <view class="usermotto">
-    <text class="user-motto">{{ motto }} {{ global[1] }}</text>
-  </view>
+	<text class="tips">
+    功能模块演示
+  </text>
 
-  <One />
+	<view
+	 wx:key="{{ index }}"
+	 wx:for="{{ modules }}"
+	 data-url="{{ item[1] }}"
+	 bindtap="jumpToChildModule"
+	>
+		{{ item[0] }}
+	</view>
 </view>
+

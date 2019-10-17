@@ -1,0 +1,39 @@
+<view class="container">
+	time travel {{ global.index }}
+
+	<view
+	 class="btn red"
+	 bindtap="changed"
+	>
+		change state
+	</view>
+
+	<view
+	 class="btn"
+	 bindtap="start"
+	>
+		start
+	</view>
+
+	<view
+	 class="btn"
+	 bindtap="end"
+	>
+		end
+	</view>
+
+	<view
+	 class="btn"
+	 bindtap="back"
+	>
+		back
+	</view>
+
+	<view
+	 class="btn"
+	 bindtap="forward"
+	>
+		forward
+	</view>
+</view>
+

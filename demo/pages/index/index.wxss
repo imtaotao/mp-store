@@ -1,3 +1,5 @@
-.usermotto {
-  margin-top: 200px;
+.tips {
+  top: 0;
+  left: 20rpx;
+  position: fixed;
 }

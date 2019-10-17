@@ -1,7 +1,7 @@
 import { diff } from './diff'
 import { callHook } from './utils'
 
-export function applyPatchs (component, patchs) {
+export function applyPatchs (component, patchs, GLOBALWORD) {
   const destObject = {}
 
   for (let i = 0, len = patchs.length; i < len; i++) {
@@ -54,11 +54,7 @@ export function updateComponents (store) {
         }
 
         // update component
-        applyPatchs(component, patchs)
-
-        if (component.timeTravel) {
-          component.timeTravel.push(patchs)
-        }
+        applyPatchs(component, patchs, GLOBALWORD)
 
         if (typeof didUpdate === 'function') {
           didUpdate.call(store, component, newPartialState, patchs)
@@ -67,7 +63,9 @@ export function updateComponents (store) {
         callHook(hooks, 'didUpdate', [component, newPartialState, isPage])
 
         // record patchs, allow playback view
-        component.timeTravel.push(patchs)
+        if (component.timeTravel) {
+          component.timeTravel.push(patchs)
+        }
       }
     }
   }

@@ -1,5 +1,4 @@
 import {
-  warn,
   assert,
   remove,
   callHook,
@@ -105,20 +104,15 @@ export class Store {
         )
 
         this.state = mergeState(this.state, newPartialState)
-      } catch (error) {
-        // if call setter function throw an error,
+      } finally {
         // the `isDispatching` need restore.
-        this.isDispatching = false
+         this.isDispatching = false
+        // restore state
         restoreProcessState()
-        warn(`${error}\n\n   --- from [${action}] action.`)
       }
-      
+
       // update components
       updateComponents(this)
-
-      // restore state
-      this.isDispatching = false
-      restoreProcessState()
 
       if (typeof callback === 'function') {
         callback()
@@ -153,13 +147,14 @@ export class Store {
   _rewirteCfgAndAddDep (config, isPage) {
     let createState = null
     const store = this
+    const GLOBALWORD = this.GLOBALWORD
     const { data, storeConfig = {} } = config
     const {
       didUpdate,
       willUpdate,
       defineReducer,
-      timeTravel = 0, // default not open time travel function
       usedGlobalState,
+      timeTravelLimit = 0, // default not open time travel function
     } = storeConfig
 
     delete config.storeConfig
@@ -188,8 +183,8 @@ export class Store {
       const usedState = createState()
       if (isPlainObject(usedState)) {
         data 
-          ? data[this.GLOBALWORD] = usedState
-          : config.data = { [this.GLOBALWORD]: usedState }
+          ? data[GLOBALWORD] = usedState
+          : config.data = { [GLOBALWORD]: usedState }
       }
     }
 
@@ -199,9 +194,9 @@ export class Store {
       // if no used global state word,
       // no need to add dependencies.
       if (shouldAdd !== false && createState !== null) {
-        if (component.data && isPlainObject(component.data[this.GLOBALWORD])) {
+        if (component.data && isPlainObject(component.data[GLOBALWORD])) {
           // time travel can record diff patchs
-          component.timeTravel = new TimeTravel(component, this.GLOBALWORD, timeTravel)
+          component.timeTravel = new TimeTravel(component, GLOBALWORD, timeTravelLimit)
 
           // add component to depComponents
           this.depComponents.push({
@@ -213,9 +208,9 @@ export class Store {
           })
 
           // if the global state is changed, need update component
-          const patchs = diff(component.data[this.GLOBALWORD], createState(), this.GLOBALWORD)
+          const patchs = diff(component.data[GLOBALWORD], createState(), GLOBALWORD)
           if (patchs.length > 0) {
-            applyPatchs(component, patchs)
+            applyPatchs(component, patchs, GLOBALWORD)
           }
         }
       }

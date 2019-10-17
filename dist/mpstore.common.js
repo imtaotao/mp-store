@@ -95,14 +95,38 @@ function _nonIterableRest() {
   throw new TypeError("Invalid attempt to destructure non-iterable instance");
 }
 
-function warn(message) {
-  throw new Error("\n\n[MpStore warn]: ".concat(message, "\n\n"));
+function warn(message, noError) {
+  message = "\n\n[MpStore warn]: ".concat(message, "\n\n");
+
+  if (noError) {
+    console.warn(message);
+    return;
+  }
+
+  throw new Error(message);
 }
 function assert(condition, message) {
   if (!condition) warn(message);
 }
+function isPrimitive(value) {
+  return typeof value === 'string' || typeof value === 'number' || _typeof(value) === 'symbol' || typeof value === 'boolean';
+}
+function deepFreeze(state) {
+  var names = Object.getOwnPropertyNames(state);
+  var len = names.length;
+
+  while (~len--) {
+    var value = state[names[len]];
+
+    if (_typeof(value) === 'object' && value !== null) {
+      deepFreeze(value);
+    }
+  }
+
+  return Object.freeze(state);
+}
 function mergeState(oldState, newState) {
-  return Object.freeze(Object.assign({}, oldState, newState));
+  return deepFreeze(Object.assign({}, oldState, newState));
 }
 function mixinMethods(config, methods) {
   for (var key in methods) {
@@ -181,13 +205,7 @@ function isPlainObject(obj) {
 function clone(value) {
   var record = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : new WeakMap();
 
-  if (value === null || value === undefined) {
-    return value;
-  }
-
-  var primitiveType = _typeof(value);
-
-  if (primitiveType === 'string' || primitiveType === 'number' || primitiveType === 'boolean' || primitiveType === 'function' || value instanceof Date) {
+  if (value === null || value === undefined || isPrimitive(value) || typeof value === 'function' || value instanceof Date) {
     return value;
   }
 
@@ -258,7 +276,7 @@ function walkArray(a, b, base, patchs) {
   if (a.length <= b.length) {
     var len = a.length;
 
-    while (--len >= 0) {
+    while (~--len) {
       if (a[len] !== b[len]) {
         var path = "".concat(base, "[").concat(len, "]");
         diffValues(a[len], b[len], path, patchs);
@@ -299,7 +317,7 @@ function walkObject(a, b, base, patchs) {
   }
 }
 
-function diff$1(a, b, basePath) {
+function diff(a, b, basePath) {
   var patchs = [];
   walkObject(a, b, basePath, patchs);
   return patchs;
@@ -329,7 +347,7 @@ function restore(obj, patchs) {
   var len = patchs.length;
   var deleteEmptys = new Map();
 
-  while (--len >= 0) {
+  while (~--len) {
     var _patchs$len = patchs[len],
         type = _patchs$len.type,
         path = _patchs$len.path,
@@ -378,7 +396,7 @@ function restore(obj, patchs) {
   return obj;
 }
 
-function applyPatchs(component, patchs) {
+function applyPatchs(component, patchs, GLOBALWORD) {
   var destObject = {};
 
   for (var i = 0, len = patchs.length; i < len; i++) {
@@ -414,7 +432,7 @@ function updateComponents(store) {
         }
       }
 
-      var patchs = diff$1(component.data[GLOBALWORD], newPartialState, GLOBALWORD);
+      var patchs = diff(component.data[GLOBALWORD], newPartialState, GLOBALWORD);
 
       if (patchs.length > 0) {
         var params = [component, newPartialState, patchs, isPage];
@@ -425,16 +443,15 @@ function updateComponents(store) {
 
         applyPatchs(component, patchs);
 
-        if (component.timeTravel) {
-          component.timeTravel.push(patchs);
-        }
-
         if (typeof didUpdate === 'function') {
           didUpdate.call(store, component, newPartialState, patchs);
         }
 
         callHook(hooks, 'didUpdate', [component, newPartialState, isPage]);
-        component.timeTravel.push(patchs);
+
+        if (component.timeTravel) {
+          component.timeTravel.push(patchs);
+        }
       }
     }
   }
@@ -452,37 +469,74 @@ function () {
     this.GLOBALWORD = GLOBALWORD;
     this.length = this.history.length;
     this.current = this.history.length;
+    this.finallyState = component.data[GLOBALWORD];
   }
 
   _createClass(TimeTravel, [{
     key: "push",
     value: function push(patchs) {
-      if (this.limit > 0) {
+      var limit = this.limit,
+          history = this.history,
+          GLOBALWORD = this.GLOBALWORD,
+          length = this.history.length,
+          data = this.component.data;
+
+      if (limit > 0) {
+        var extraCount = length - limit;
+
+        if (extraCount >= 0) {
+          while (~extraCount--) {
+            this.history.shift();
+          }
+        }
+
         this.history.push(patchs);
-        this.length = this.history.length;
+        this.length = history.length;
+        this.current = history.length;
+        this.finallyState = clone(data[GLOBALWORD]);
       }
     }
   }, {
     key: "go",
     value: function go(n) {
       if (this.limit > 0) {
-        var index = this.current + n;
-        assert(index >= 0 && index < this.history.length, '[Index] is not within the allowed range.');
-        var component = this.component;
-        var data = clone(component.data);
+        if (n !== 0) {
+          var current = this.current,
+              history = this.history,
+              component = this.component,
+              GLOBALWORD = this.GLOBALWORD,
+              finallyState = this.finallyState;
+          var backtrack = Math.abs(n);
+          assert(GLOBALWORD in component.data, 'You can\'t use [timeTravel] because it only works for [global state]');
+          var range = n + current;
 
-        while (index-- >= 0) {
-          var patchs = clone(this.history[index]);
-          data = restore(data, patchs);
+          if (range < 0 || range > history.length) {
+            warn('[Index] is not within the allowed range.', true);
+            return;
+          }
+
+          var index = 0;
+          var data = clone(component.data[GLOBALWORD]);
+
+          while (index++ < backtrack) {
+            var id = current + Math.sign(n) * index;
+
+            if (id < history.length) {
+              var patchs = clone(history[id]);
+              data = restore(data, patchs);
+            } else {
+              data = finallyState;
+            }
+          }
+
+          var endPatchs = diff(component.data[GLOBALWORD], data, GLOBALWORD);
+
+          if (endPatchs.length > 0) {
+            applyPatchs(component, endPatchs);
+          }
+
+          this.current += n;
         }
-
-        var endPatchs = diff(component.data, data, this.GLOBALWORD);
-
-        if (endPatchs.length > 0) {
-          applyPatchs(component, endPatchs);
-        }
-
-        this.current = index;
       }
     }
   }, {
@@ -674,15 +728,12 @@ function () {
           var newPartialState = reducer.setter(_this.state, desPayload);
           assert(isPlainObject(newPartialState), 'setter function should be return a plain object.');
           _this.state = mergeState(_this.state, newPartialState);
-        } catch (error) {
+        } finally {
           _this.isDispatching = false;
           restoreProcessState();
-          warn("".concat(error, "\n\n   --- from [").concat(action, "] action."));
         }
 
         updateComponents(_this);
-        _this.isDispatching = false;
-        restoreProcessState();
 
         if (typeof callback === 'function') {
           callback();
@@ -717,15 +768,16 @@ function () {
 
       var createState = null;
       var store = this;
+      var GLOBALWORD = this.GLOBALWORD;
       var data = config.data,
           _config$storeConfig = config.storeConfig,
           storeConfig = _config$storeConfig === void 0 ? {} : _config$storeConfig;
       var didUpdate = storeConfig.didUpdate,
           willUpdate = storeConfig.willUpdate,
           defineReducer = storeConfig.defineReducer,
-          _storeConfig$timeTrav = storeConfig.timeTravel,
-          timeTravel = _storeConfig$timeTrav === void 0 ? 0 : _storeConfig$timeTrav,
-          usedGlobalState = storeConfig.usedGlobalState;
+          usedGlobalState = storeConfig.usedGlobalState,
+          _storeConfig$timeTrav = storeConfig.timeTravelLimit,
+          timeTravelLimit = _storeConfig$timeTrav === void 0 ? 0 : _storeConfig$timeTrav;
       delete config.storeConfig;
 
       if (typeof defineReducer === 'function') {
@@ -747,7 +799,7 @@ function () {
         var usedState = createState();
 
         if (isPlainObject(usedState)) {
-          data ? data[this.GLOBALWORD] = usedState : config.data = _defineProperty({}, this.GLOBALWORD, usedState);
+          data ? data[GLOBALWORD] = usedState : config.data = _defineProperty({}, GLOBALWORD, usedState);
         }
       }
 
@@ -755,8 +807,8 @@ function () {
         var shouldAdd = callHook(_this3.hooks, 'addDep', [component, isPage]);
 
         if (shouldAdd !== false && createState !== null) {
-          if (component.data && isPlainObject(component.data[_this3.GLOBALWORD])) {
-            component.timeTravel = new TimeTravel(component, _this3.GLOBALWORD, timeTravel);
+          if (component.data && isPlainObject(component.data[GLOBALWORD])) {
+            component.timeTravel = new TimeTravel(component, GLOBALWORD, timeTravelLimit);
 
             _this3.depComponents.push({
               isPage: isPage,
@@ -766,7 +818,7 @@ function () {
               createState: createState
             });
 
-            var patchs = diff$1(component.data[_this3.GLOBALWORD], createState(), _this3.GLOBALWORD);
+            var patchs = diff(component.data[GLOBALWORD], createState(), GLOBALWORD);
 
             if (patchs.length > 0) {
               applyPatchs(component, patchs);
@@ -847,6 +899,6 @@ function index (mixinInject, hooks) {
 
 exports.clone = clone;
 exports.default = index;
-exports.diff = diff$1;
+exports.diff = diff;
 exports.restore = restore;
 exports.version = version;

@@ -1,15 +1,39 @@
-export function warn (message) {
-  throw new Error(`\n\n[MpStore warn]: ${message}\n\n`)
+export function warn (message, noError) {
+  message = `\n\n[MpStore warn]: ${message}\n\n`
+  if (noError) {
+    console.warn(message)
+    return
+  }
+  throw new Error(message)
 }
 
 export function assert (condition, message) {
   if (!condition) warn(message)
 }
 
-export function mergeState (oldState, newState) {
-  return Object.freeze(
-    Object.assign({}, oldState, newState)
+export function isPrimitive (value) {
+  return (
+    typeof value === 'string' ||
+    typeof value === 'number' ||
+    typeof value === 'symbol' ||
+    typeof value === 'boolean'
   )
+}
+
+export function deepFreeze (state) {
+  const names = Object.getOwnPropertyNames(state)
+  let len = names.length
+  while (~len--) {
+    const value = state[names[len]]
+    if (typeof value === 'object' && value !== null) {
+      deepFreeze(value)
+    }
+  }
+  return Object.freeze(state)
+}
+
+export function mergeState (oldState, newState) {
+  return deepFreeze(Object.assign({}, oldState, newState))
 }
 
 export function mixinMethods (config, methods) {
@@ -85,16 +109,11 @@ export function isPlainObject (obj) {
 }
 
 export function clone (value, record = new WeakMap) {
-  if (value === null || value === undefined) {
-    return value
-  }
-  const primitiveType = typeof value
-
   if (
-    primitiveType === 'string' ||
-    primitiveType === 'number' ||
-    primitiveType === 'boolean' ||
-    primitiveType === 'function' ||
+    value === null ||
+    value === undefined ||
+    isPrimitive(value) ||
+    typeof value === 'function' ||
     value instanceof Date
   ) {
     return value

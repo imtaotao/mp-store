@@ -1,0 +1,11 @@
+.btn {
+  color: #fff;
+  padding: 10rpx;
+  margin-top: 20rpx;
+  background: #3ab7a8;
+  border-radius: 4rpx;
+}
+
+.red {
+  background: #ee1e65;
+}

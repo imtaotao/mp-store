@@ -1,7 +1,7 @@
 {
   "pages": [
     "pages/index/index",
-    "pages/logs/logs"
+    "pages/time-travel/index"
   ],
   "window": {
     "backgroundTextStyle": "light",
