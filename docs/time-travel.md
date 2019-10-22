@@ -1,6 +1,6 @@
 ## 这是关于 time travel 相关的使用介绍
 
-mpstore 可以保存每次 `dispatch` 后的 `patchs`，这样就可以根据这些 `patchs` 信息来恢复状态， mpstore 会为每个组件都创建这个历史记录的堆栈。每个组件都会被注入一股 `timeTravel` 对象，用来操作这些 `patchs`，你可以以 router 的概念来理解。以下是 api 介绍和 demo
+mpstore 可以保存每次 `dispatch` 后的 `patchs`，这样就可以根据这些 `patchs` 信息来恢复状态， mpstore 会为每个组件都创建这个历史记录的堆栈。每个组件都会被注入一股 `timeTravel` 对象，用来操作这些 `patchs`，所以你可以在组件和 page 中通过 `this.timeTravel` 拿到 `timeTravel` 对象。以下是 api 介绍和 demo
 
 ## 如何启动 time travel
 + 必须指定一个堆栈记录数 `travelLimit`，默认为 0，也就是不做记录

@@ -9,7 +9,6 @@ store 会把原生的 `Page`、`Component` 函数包装一层，来做一层拦�
 + `store 的 state 是不可变的，所以你不能这样操作 this.store.state.xx = 1`
 + `store 会把用到的全局状态放到所用到的 data 中去，默认的命名空间是 global，所以你可以这样在组件中拿到当前所用到的全局状态 this.data.global，如果与原有的项目有冲突，你可以在 App 初始化之前调用 setNamespace 方法更改为其他的名字`
 + `store 会在 onLoad 和 attached 被调用之前被注入进实例中，依赖的收集也是在这个时间进行的`
-+ `store 会在 onUnload 和 detached 被调用之后被移除，依赖的移除也是在这个时间进行，如果你的组件被销毁后，仍然强行引用着（也就是说如果你有内存泄漏的情况，常见的副作用导致的有网络请求，定时器等），你将无法获取到 store，也无法对这个组件进行全局状态的更新，因为都已经被移除和删掉了`
 + `store 会被注入到 page 和 component 示例中，所以你可以通过 this.store 来拿到 store`
 
 ```js
