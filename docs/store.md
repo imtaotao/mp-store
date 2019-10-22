@@ -98,23 +98,23 @@ store 默认会在组件的 data 中添加 `global` 来接受用到的全局状�
 #### use(action: string | Function, layer?: Function) : Function
 `use` 方法用来添加中间件，中间件的详细文档在[这里](./middleware.md)可以看到。如果只传了一个参数，则默认拦截所有的 `action`，use 方法会返回一个 remove 函数，用来注销掉当前添加的中间件
 ```js
-// 将会拦截 `changed` 这个 action
-// 中间件的添加顺序为执行顺序，所以你必须调用 next，否则，后面添加的中间件将不会执行
-const remove = store.use('changed', (payload, next) => {
-  payload++
-  next(payload)
-})
+  // 将会拦截 `changed` 这个 action
+  // 中间件的添加顺序为执行顺序，所以你必须调用 next，否则，后面添加的中间件将不会执行
+  const remove = store.use('changed', (payload, next) => {
+    payload++
+    next(payload)
+  })
 ```
 
 下面这种语法将会拦截所有的 `action`
 ```js
-const remove = store.use((payload, next, action) => {
-  if (action === 'changed') {
-    payload++
-    next(payload)
-  }
-})
+  const remove = store.use((payload, next, action) => {
+    if (action === 'changed') {
+      payload++
+      next(payload)
+    }
+  })
 
-// 注销掉中间件
-remove()
+  // 注销掉中间件
+  remove()
 ```

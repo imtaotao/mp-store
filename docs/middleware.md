@@ -10,53 +10,53 @@ store 的设计是一个纯逻辑层，他不会处理异步相关的逻辑，�
   
 保存一个用户信息
 ```js
-store.use('SAVEUSERINFOR', (payload, next) => {
-  // 模拟发送异步请求，接口返回最新的用户信息数据
-  ajax.post(payload).then(res => {
-    next(res.data)
+  store.use('SAVEUSERINFOR', (payload, next) => {
+    // 模拟发送异步请求，接口返回最新的用户信息数据
+    ajax.post(payload).then(res => {
+      next(res.data)
+    })
   })
-})
 ```
 
 在组件中
 ```js
-Page({
-  storeConfig: {
-    // 定义了关于用户信息的数据
-    defineReducer (store) {
-      store.add('SAVEUSERINFOR', {
-        partialState: {
-          age: 25,
-          userId: 0,
-          name: 'tao',
-        },
-        setter: (state, payload) => payload,
-      })
+  Page({
+    storeConfig: {
+      // 定义了关于用户信息的数据
+      defineReducer (store) {
+        store.add('SAVEUSERINFOR', {
+          partialState: {
+            age: 25,
+            userId: 0,
+            name: 'tao',
+          },
+          setter: (state, payload) => payload,
+        })
+      },
     },
-  },
 
-  // 假定用户点击后发起请求
-  click () {
-    this.store.dispatch('SAVEUSERINFOR', 'xxx')
-  },
-})
+    // 假定用户点击后发起请求
+    click () {
+      this.store.dispatch('SAVEUSERINFOR', 'xxx')
+    },
+  })
 ```
 
 在另一个 component 中
 ```js
-Component({
-  storeConfig: {
-    useState (store) {
-      return {
-        useInfo: state => ({
-          age: state.age,
-          name: state.name,
-          userId: state.userId,
-        }),
-      }
+  Component({
+    storeConfig: {
+      useState (store) {
+        return {
+          useInfo: state => ({
+            age: state.age,
+            name: state.name,
+            userId: state.userId,
+          }),
+        }
+      },
     },
-  },
-})
+  })
 ```
 
 上面模拟的业务场景中，发生了以下几步操作：
