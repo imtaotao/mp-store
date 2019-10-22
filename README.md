@@ -12,6 +12,7 @@ npm install @rustle/mp-store
 ## [store 的介绍](https://github.com/imtaotao/mp-store/blob/master/docs/store.md)
 ## [storeConfig 的介绍](https://github.com/imtaotao/mp-store/blob/master/docs/component.md)
 ## [middleware 的介绍](https://github.com/imtaotao/mp-store/blob/master/docs/middleware.md)
+## [time travel 的介绍](https://github.com/imtaotao/mp-store/blob/master/docs/time-travel.md)
 ## [mixin 的介绍](https://github.com/imtaotao/mp-store/blob/master/docs/mixin.md)
 ## [hooks 的介绍](https://github.com/imtaotao/mp-store/blob/master/docs/hooks.md)
 ## [data diff 的原理](https://github.com/imtaotao/mp-store/blob/master/docs/diff.md)
