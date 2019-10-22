@@ -1,7 +1,7 @@
 // this is a demo for time travel
 Page({
   storeConfig: {
-    timeTravelLimit: 5,
+    travelLimit: 5,
     defineReducer (store) {
       store.add('TIMETRAVEL', {
         partialState: {

@@ -15,8 +15,8 @@ import {
   REMOVE,
   REPLACE,
 } from '../../src/diff'
-import { clone} from '../../src/utils'
-import { expectPatch } from '../utils'
+import { clone } from '../../src/utils'
+import { isError, expectPatch } from '../utils'
 
 const root = '/'
 
@@ -182,15 +182,29 @@ describe('json diff', () => {
   })
 
   it('restore method', () => {
-    const one = {
-      a: 1,
-    }
-    const two = {
-      a: 2,
-    }
+    const one = { a: 1 }
+    const two = { a: 2 }
     const patchs = diff(one, two)
     expect(restore(clone(two), patchs)).toEqual(one)
     patchs[0].path = ''
     expect(restore(clone(two), patchs)).toEqual(two)
+  })
+
+  it('deepClone', () => {
+    const one = { a: 1 }
+    one.b = one
+    const two = Object.create(null)
+    two.a = 1
+    two.b = two
+    expect(isError(() => JSON.stringify(one))).toBeTruthy()
+    expect(isError(() => JSON.stringify(two))).toBeTruthy()
+    const copyOne = clone(one)
+    const copyTwo = clone(two)
+    expect(copyOne === one).toBeFalsy()
+    expect(copyTwo === two).toBeFalsy()
+    expect(copyOne.a).toBe(1)
+    expect(copyTwo.a).toBe(1)
+    expect(copyOne.b).toBe(copyOne)
+    expect(copyTwo.b).toBe(copyTwo)
   })
 })

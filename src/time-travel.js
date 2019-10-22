@@ -40,23 +40,24 @@ export default class TimeTravel {
   }
 
   go (n) {
+    const {
+      current,
+      history,
+      component,
+      GLOBALWORD,
+      finallyState,
+    } = this
+
+    assert(
+      GLOBALWORD in component.data,
+      'You can\'t use [timeTravel] because it only works for [global state]',
+    )
+
     if (this.limit > 0) {
       if (n !== 0) {
-        const {
-          current,
-          history,
-          component,
-          GLOBALWORD,
-          finallyState,
-        } = this
+        const range = n + current
         const backtrack = Math.abs(n)
 
-        assert(
-          GLOBALWORD in component.data,
-          'You can\'t use [timeTravel] because it only works for [global state]',
-        )
-
-        const range = n + current
         if (range < 0 || range > history.length) {
           warning(`Index [${range}] is not within the allowed range.`, true)
           return

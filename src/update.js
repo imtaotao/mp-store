@@ -1,7 +1,7 @@
 import { diff } from './diff'
 import { callHook } from './utils'
 
-export function applyPatchs (component, patchs, GLOBALWORD) {
+export function applyPatchs (component, patchs) {
   const destObject = {}
 
   for (let i = 0, len = patchs.length; i < len; i++) {

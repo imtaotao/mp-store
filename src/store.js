@@ -87,7 +87,7 @@ export class Store {
 
     assert(
       reducer,
-      `The "${action}" does not exist. ` +
+      `The [${action}] action does not exist. ` +
         'Maybe you have not defined.'
     )
 
@@ -154,8 +154,13 @@ export class Store {
       didUpdate,
       willUpdate,
       defineReducer,
-      timeTravelLimit = 0, // default not open time travel function
+      travelLimit = 0, // default not open time travel function
     } = storeConfig
+
+    assert(
+      typeof travelLimit === 'number',
+      `[travelLimit] must be a number, but now is [${typeof travelLimit}].`
+    )
 
     delete config.storeConfig
 
@@ -196,7 +201,7 @@ export class Store {
       if (shouldAdd !== false && createState !== null) {
         if (component.data && isPlainObject(component.data[GLOBALWORD])) {
           // time travel can record diff patchs
-          component.timeTravel = new TimeTravel(component, GLOBALWORD, timeTravelLimit)
+          component.timeTravel = new TimeTravel(component, GLOBALWORD, travelLimit)
 
           // add component to depComponents
           this.depComponents.push({

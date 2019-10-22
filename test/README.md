@@ -11,6 +11,7 @@
 + [x] Date 类型的 value 是否使用新值
 + [x] 以上所有 diff 测试能否根据 patchs 复原
 + [x] restore 中 patch 的 path 不符合要求
++ [x] 测试 deepClone 方法
 + [ ] diff 的所有测试用例都要分为 diff 逻辑层和视图层验证
 
 ### reducer 定义
@@ -77,3 +78,19 @@
 + [x] 中间件函数接受三个个参数，第一个为上一个中间件传递的 `payload`，第二个为 `next（function）`，第三个为当前的 `action`
 + [x] 中间件如果没有调用 `next` 将不会更新
 + [x] 中间件调用的顺序与添加的顺序保持一致
+
+### time travel
++ [x] 检测 `go` 方法
++ [x] 检测 `back` 方法
++ [x] 检测 `forward` 方法
++ [x] 检测 `toStart` 方法
++ [x] 检测 `toEnd` 方法
++ [x] `travelLimit` 默认为 0
++ [x] `travelLimit` 必须是一个数字
++ [x] `travelLimit` 超出范围将不起作用
++ [x] `travelLimit` 超出最大栈记录不起作用
++ [x] 只对全局状态的更改才会被记录
++ [x] 如果没有使用全局状态，调用 `travelLimit` 的方法会报错
++ [x] 只对当前组件起作用
++ [x] 有新的全局状态改变将指针将重新指向最末端
++ [x] `history` 记录时，超过了指定的范围将丢弃前面的 `patchs`
