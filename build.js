@@ -24,6 +24,14 @@ const esm = {
   },
 }
 
+const es6m = {
+  input: entryPath,
+  output: {
+    file: outputPath(`${libName}.es6m.js`),
+    format: 'es',
+  },
+}
+
 const cjs = {
   input: entryPath,
   output: {
@@ -47,7 +55,7 @@ const createReplacePlugin = () => {
   })
 }
 
-async function build (cfg, needUglify, sourcemap = false) {
+async function build (cfg, needUglify, sourcemap = false, needBabel = true) {
   cfg.output.sourcemap = sourcemap
 
   const buildCfg = {
@@ -55,14 +63,20 @@ async function build (cfg, needUglify, sourcemap = false) {
     plugins: [
       cleanup(),
       resolve(),
+      cmd(),
+      createReplacePlugin(),
+    ]
+  }
+
+  if (needBabel) {
+    buildCfg.plugins.splice(
+      2, 0,
       babel({
         babelrc: false,
         exclude: 'node_modules/**',
         presets: [['@babel/preset-env', { modules: false }]],
       }),
-      cmd(),
-      createReplacePlugin(),
-    ]
+    )
   }
 
   if (needUglify) {
@@ -92,7 +106,10 @@ const buildVersion = sourcemap => {
   const builds = [
     build(esm, false, sourcemap),
     build(cjs, false, sourcemap),
+    // build es6 version
+    build(es6m, false, sourcemap, false)
   ]
+
   if (!sourcemap) {
     builds.push(build(uglifyCjs, true, sourcemap))
   }
