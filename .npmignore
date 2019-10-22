@@ -5,8 +5,10 @@ test/
 demo/
 docs/
 coverage/
-dev/mpstore.common.js.mp
-dev/mpstore.esm.js.mp
+dist/mpstore.common.js.mp
+dist/mpstore.esm.js.mp
+dist/mpstore.es6m.js
+dist/mpstore.es6m.js.mp
 open.js
 
 .gitignore
