@@ -7,7 +7,7 @@ describe('namespace', () => {
     const id = simulate.load(Component({
       template: '<div>{{ global.a }}</div>',
       storeConfig: {
-        usedGlobalState: () => ({ a: state => 1 }),
+        useState: () => ({ a: state => 1 }),
       },
     }))
     const cm = simulate.render(id)
@@ -25,7 +25,7 @@ describe('namespace', () => {
     const id = simulate.load(Component({
       template: '<div>{{ globalTest.a }}</div>',
       storeConfig: {
-        usedGlobalState: () => ({ a: state => 1 }),
+        useState: () => ({ a: state => 1 }),
       },
     }))
     const cm = simulate.render(id)
@@ -41,7 +41,7 @@ describe('namespace', () => {
     const id = simulate.load(Component({
       template: '<div>{{ globalTest.a }}</div>',
       storeConfig: {
-        usedGlobalState: () => ({ a: state => 1 }),
+        useState: () => ({ a: state => 1 }),
       },
     }))
     const cm = simulate.render(id)

@@ -175,7 +175,7 @@ describe('dispatch', () => {
     const cmOneId = simulate.load(Component({
       template: '<div>{{ global.name }}</div>',
       storeConfig: {
-        usedGlobalState (_store) {
+        useState (_store) {
           expect(store === _store).toBeTruthy()
           expect(this === _store).toBeTruthy()
           return {
@@ -195,7 +195,7 @@ describe('dispatch', () => {
     const cmTwoId = simulate.load(Component({
       template: '<div>{{ global.name }}</div>',
       storeConfig: {
-        usedGlobalState (_store) {
+        useState (_store) {
           expect(store === _store).toBeTruthy()
           expect(this === _store).toBeTruthy()
           return {
@@ -253,7 +253,7 @@ describe('dispatch', () => {
         Object.assign(
           {
             storeConfig: {
-              usedGlobalState: () => ({
+              useState: () => ({
                 a: state => state.a,
                 b: state => state.b,
               }),
@@ -321,7 +321,7 @@ describe('dispatch', () => {
         Object.assign(
           {
             storeConfig: {
-              usedGlobalState: () => ({
+              useState: () => ({
                 a: state => state.a,
                 b: state => state.b,
               }),
@@ -387,7 +387,7 @@ describe('dispatch', () => {
     const id = simulate.load(Component({
       template: '<div bindtap="global.fn"></div>',
       storeConfig: {
-        usedGlobalState: () => ({
+        useState: () => ({
           fn: state => state.fn,
         }),
       },

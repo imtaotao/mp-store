@@ -54,7 +54,7 @@ describe('hooks', () => {
     const id = simulate.load(Component({
       template: '<div>{{ global.a }}</div>',
       storeConfig: {
-        usedGlobalState: () => ({ a: state => state.a }),
+        useState: () => ({ a: state => state.a }),
       },
     }))
     const cm = simulate.render(id)
@@ -87,7 +87,7 @@ describe('hooks', () => {
     const id = simulate.load(Component({
       template: '<div>{{ global.a }}</div>',
       storeConfig: {
-        usedGlobalState: () => ({ a: state => state.a }),
+        useState: () => ({ a: state => state.a }),
       },
     }))
     const cm = simulate.render(id)
@@ -123,7 +123,7 @@ describe('hooks', () => {
     const id = simulate.load(Component({
       template: '<div>{{ global.a }}</div>',
       storeConfig: {
-        usedGlobalState: () => ({ a: state => state.a }),
+        useState: () => ({ a: state => state.a }),
       },
     }))
     const cm = simulate.render(id)
@@ -152,7 +152,7 @@ describe('hooks', () => {
     const id = simulate.load(Component({
       template: '<div>{{ global.a }}</div>',
       storeConfig: {
-        usedGlobalState: () => ({ a: state => state.a }),
+        useState: () => ({ a: state => state.a }),
       },
     }))
     const cm = simulate.render(id)
@@ -191,7 +191,7 @@ describe('hooks', () => {
     const id = simulate.load(Component({
       template: '<div>{{ global.a }}</div>',
       storeConfig: {
-        usedGlobalState: () => ({ a: state => state.a }),
+        useState: () => ({ a: state => state.a }),
       },
     }))
     const cm = simulate.render(id)
@@ -257,7 +257,7 @@ describe('hooks', () => {
     const id = simulate.load(Component({
       template: '<div>{{ global.a }}</div>',
       storeConfig: {
-        usedGlobalState: () => ({ a: state => state.a }),
+        useState: () => ({ a: state => state.a }),
       },
     }))
     const cm = simulate.render(id)

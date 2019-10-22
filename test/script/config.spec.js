@@ -68,7 +68,7 @@ describe('component config', () => {
       data: {},
       template: '<div></div>',
       storeConfig: {
-        usedGlobalState () {
+        useState () {
           return {
             a: state => 1,
           }
@@ -105,7 +105,7 @@ describe('component config', () => {
       data: {},
       template: '<div></div>',
       storeConfig: {
-        usedGlobalState () {
+        useState () {
           return {
             a: state => 1,
           }
@@ -134,12 +134,12 @@ describe('component config', () => {
     expect(store.depComponents.length).toBe(0)
   })
  
-  it('inspect `usedGlobalState` method return object', () => {
+  it('inspect `useState` method return object', () => {
     const store = createStore()
     const common = res => Component({
       template: '<div></div>',
       storeConfig: {
-        usedGlobalState: () => res,
+        useState: () => res,
       },
     })
     const one = () => common(null)
@@ -163,7 +163,7 @@ describe('component config', () => {
     const cfg = Component({
       template: '<div></div>',
       storeConfig: {
-        usedGlobalState: () => ({ a: state => 1 }),
+        useState: () => ({ a: state => 1 }),
       },
       attached () {
         expect(store.depComponents.length).toBe(1)
@@ -198,7 +198,7 @@ describe('component config', () => {
     const cfg = Page({
       template: '<div></div>',
       storeConfig: {
-        usedGlobalState: () => ({ a: state => 1 }),
+        useState: () => ({ a: state => 1 }),
       },
       onLoad () {
         expect(store.depComponents.length).toBe(1)
@@ -247,7 +247,7 @@ describe('component config', () => {
           expect(store.state.name).toBe('taotao')
           expect(newPartialState.name).toBe('taotao')
         },
-        usedGlobalState: () => ({ name: state => state.name }),
+        useState: () => ({ name: state => state.name }),
       },
     })
     expect(cfg.data.global.name).toBe('tao')
@@ -275,7 +275,7 @@ describe('component config', () => {
       template: '<div>{{ global.name }}</div>',
       storeConfig: {
         willUpdate: () => false,
-        usedGlobalState: () => ({ name: state => state.name }),
+        useState: () => ({ name: state => state.name }),
       },
     })
     expect(cfg.data.global.name).toBe('tao')
@@ -302,7 +302,7 @@ describe('component config', () => {
     const cfg = Component({
       template: '<div>{{ global.name }}</div>',
       storeConfig: {
-        usedGlobalState: () => ({ name: state => state.name }),
+        useState: () => ({ name: state => state.name }),
         willUpdate() {
           expect(i++).toBe(0)
         },
@@ -348,7 +348,7 @@ describe('component config', () => {
     const cfgOne = Component({
       template: '<div>{{ global.name }}</div>',
       storeConfig: {
-        usedGlobalState: () => ({ name: state => state.name }),
+        useState: () => ({ name: state => state.name }),
         willUpdate() {
           i++
         },
@@ -360,7 +360,7 @@ describe('component config', () => {
     const cfgTwo = Component({
       template: '<div>{{ global.name }}</div>',
       storeConfig: {
-        usedGlobalState: () => ({ name: state => state.name }),
+        useState: () => ({ name: state => state.name }),
         willUpdate() {
           i++
         },

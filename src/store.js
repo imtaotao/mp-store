@@ -150,10 +150,10 @@ export class Store {
     const GLOBALWORD = this.GLOBALWORD
     const { data, storeConfig = {} } = config
     const {
+      useState,
       didUpdate,
       willUpdate,
       defineReducer,
-      usedGlobalState,
       timeTravelLimit = 0, // default not open time travel function
     } = storeConfig
 
@@ -166,12 +166,12 @@ export class Store {
     }
 
     // get the global state words used
-    if (typeof usedGlobalState === 'function') {
-      const defineObject = usedGlobalState.call(store, store)
+    if (typeof useState === 'function') {
+      const defineObject = useState.call(store, store)
 
       assert(
         isPlainObject(defineObject),
-        '[usedGlobalState] must return a plain object, ' +
+        '[useState] must return a plain object, ' +
           `but now is return a [${typeof defineObject}]`,
       )
 
@@ -180,11 +180,11 @@ export class Store {
 
     // get state used by the current component
     if (createState !== null) {
-      const usedState = createState()
-      if (isPlainObject(usedState)) {
+      const useState = createState()
+      if (isPlainObject(useState)) {
         data 
-          ? data[GLOBALWORD] = usedState
-          : config.data = { [GLOBALWORD]: usedState }
+          ? data[GLOBALWORD] = useState
+          : config.data = { [GLOBALWORD]: useState }
       }
     }
 

@@ -22,7 +22,7 @@ Page({
 + `willUpdate`
 + `didUpdate`
 + `defineReducer`
-+ `usedGlobalState`
++ `useState`
 
 ### willUpdate(component: Cm, newPartialState: Object) ?: false
 与全局钩子的 `willUpdate` 一样，返回 `false` 将会阻止当前组件更新，不同的是，这个钩子只对当前组件起作用，而且性能更好，因为会在 `data diff` 之前调用，而全局的 `willUpdata` 钩子会在 `data diff` 之后调用
@@ -93,8 +93,8 @@ Page({
 })
 ```
 
-### usedGlobalState(store: Store) : Object
-`usedGlobalState` 是最为重要的一个钩子，他定义了当前组件需要使用的全局状态，如果 `usedGlobalState` 钩子未被定义，当前组件将不会被依赖，也不会注入 `glabal`，你将不会有 `this.data.global`。`usedGlobalState` 必须返回一个 `object`，这个 `object` 定义着当前组件需要使用的数据，他会被缓存这，用来参与 `data diff` 的过程。这意味着，每次组件更新时，都会用到这个 `object` 来生成全新的数据 
+### useState(store: Store) : Object
+`useState` 是最为重要的一个钩子，他定义了当前组件需要使用的全局状态，如果 `useState` 钩子未被定义，当前组件将不会被依赖，也不会注入 `glabal`，你将不会有 `this.data.global`。`useState` 必须返回一个 `object`，这个 `object` 定义着当前组件需要使用的数据，他会被缓存这，用来参与 `data diff` 的过程。这意味着，每次组件更新时，都会用到这个 `object` 来生成全新的数据 
 ```js
 store.add('action', {
   partialState: {
@@ -108,7 +108,7 @@ store.add('action', {
 
 Page({
   storeConfig: {
-    usedGlobalState (store) {
+    useState (store) {
       // key 就是会被注入到 global 中的关键字
       // value 为一个 function，返回的值会被放入到 global 中
       return {
@@ -122,7 +122,7 @@ Page({
 // page.data.global => { a: 1, b: 2 }
 
 // dispatch 时将会调用 setter 函数，从而更新 store.state，
-// 然后调用 usedGlobalState 中第一的函数，得到组件所用的全新的数据
+// 然后调用 useState 中第一的函数，得到组件所用的全新的数据
 // 对新旧两组数据进行 diff，然后才会更新组件
 store.dispatch('action', 2)
 

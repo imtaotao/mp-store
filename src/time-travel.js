@@ -58,7 +58,7 @@ export default class TimeTravel {
 
         const range = n + current
         if (range < 0 || range > history.length) {
-          warning('[Index] is not within the allowed range.', true)
+          warning(`Index [${range}] is not within the allowed range.`, true)
           return
         }
 

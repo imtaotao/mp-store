@@ -60,7 +60,7 @@ store.add('action', {
 
 Page({
   storeConfig: {
-    usedGlobalState: () => ({
+    useState: () => ({
       name: state => state.name,
     }),
   },

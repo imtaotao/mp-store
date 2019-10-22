@@ -13,7 +13,7 @@ Page({
       })
     },
 
-    usedGlobalState: () => ({
+    useState: () => ({
       index: state => state.index,
     }),
   },

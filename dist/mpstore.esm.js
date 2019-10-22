@@ -505,7 +505,7 @@ function () {
           var range = n + current;
 
           if (range < 0 || range > history.length) {
-            warning('[Index] is not within the allowed range.', true);
+            warning("Index [".concat(range, "] is not within the allowed range."), true);
             return;
           }
 
@@ -766,10 +766,10 @@ function () {
       var data = config.data,
           _config$storeConfig = config.storeConfig,
           storeConfig = _config$storeConfig === void 0 ? {} : _config$storeConfig;
-      var didUpdate = storeConfig.didUpdate,
+      var useState = storeConfig.useState,
+          didUpdate = storeConfig.didUpdate,
           willUpdate = storeConfig.willUpdate,
           defineReducer = storeConfig.defineReducer,
-          usedGlobalState = storeConfig.usedGlobalState,
           _storeConfig$timeTrav = storeConfig.timeTravelLimit,
           timeTravelLimit = _storeConfig$timeTrav === void 0 ? 0 : _storeConfig$timeTrav;
       delete config.storeConfig;
@@ -778,9 +778,9 @@ function () {
         defineReducer.call(store, store);
       }
 
-      if (typeof usedGlobalState === 'function') {
-        var defineObject = usedGlobalState.call(store, store);
-        assert(isPlainObject(defineObject), '[usedGlobalState] must return a plain object, ' + "but now is return a [".concat(_typeof(defineObject), "]"));
+      if (typeof useState === 'function') {
+        var defineObject = useState.call(store, store);
+        assert(isPlainObject(defineObject), '[useState] must return a plain object, ' + "but now is return a [".concat(_typeof(defineObject), "]"));
 
         createState = function createState() {
           return mapObject(defineObject, function (fn) {
@@ -790,10 +790,10 @@ function () {
       }
 
       if (createState !== null) {
-        var usedState = createState();
+        var _useState = createState();
 
-        if (isPlainObject(usedState)) {
-          data ? data[GLOBALWORD] = usedState : config.data = _defineProperty({}, GLOBALWORD, usedState);
+        if (isPlainObject(_useState)) {
+          data ? data[GLOBALWORD] = _useState : config.data = _defineProperty({}, GLOBALWORD, _useState);
         }
       }
 
