@@ -1,6 +1,6 @@
 ## 这是关于 time travel 相关的使用介绍
 
-mpstore 可以保存每次 `dispatch` 后的 `patchs`，这样就可以根据这些 `patchs` 信息来恢复状态， mpstore 会为每个组件都创建这个历史记录的堆栈。每个组件都会被注入一股 `timeTravel` 对象，用来操作这些 `patchs`，所以你可以在组件和 page 中通过 `this.timeTravel` 拿到 `timeTravel` 对象。以下是 api 介绍和 demo
+mpstore 可以保存每次 `dispatch` 后的 `patchs`，这样就可以根据这些 `patchs` 信息来恢复状态， mpstore 会为每个组件都创建这个历史记录的堆栈。每个组件都会被注入一个 `timeTravel` 对象，用来操作这些 `patchs`，所以你可以在组件和 page 中通过 `this.timeTravel` 拿到 `timeTravel` 对象。以下是 api 介绍和 demo
 
 ## 如何启动 time travel
 + 必须指定一个堆栈记录数 `travelLimit`，默认为 0，也就是不做记录
@@ -12,11 +12,11 @@ mpstore 可以保存每次 `dispatch` 后的 `patchs`，这样就可以根据这
 `timeTravel.length` 记录着当前堆栈保存的 `patchs` 的个数
 
 ### current
-`timeTravel.current` 指向当前状态所在的 index，每次 `dispatch` 时都会重新只想最末端
+`timeTravel.current` 指向当前状态所在的 index，每次 `dispatch` 时都会重新指向最末端
 
 ## API
 ### go(n: number) : void
-go 方法将让当前的下标往前或者往后 n 个位置
+go 方法将让当前的下标往前或者往后移动 n 个位置
 ```js
   Page({
     storeConfig: {
@@ -37,13 +37,13 @@ go 方法将让当前的下标往前或者往后 n 个位置
     },
 
     onload () {
-      console.log(this.data.a) // 1
+      console.log(this.data.global.a) // 1
       this.store.dispatch('action', 2)
-      console.log(this.data.a) // 2
+      console.log(this.data.global.a) // 2
 
       // 回退到上一个状态
       this.timeTravel.go(-1)
-      console.log(this.data.a) // 2
+      console.log(this.data.global.a) // 2
     },
   })
 ```
@@ -55,7 +55,7 @@ go 方法将让当前的下标往前或者往后 n 个位置
 `forward` 是 `go(-1)` 的简写，调用 `forward` 与调用 `go(-1)` 的效果是一样的
 
 ### toStart() : void
-`toStart` 将会直接回退到最开始的状态，也就是只想 history 堆栈的第一个 patchs 记录的状态
+`toStart` 将会直接回退到最开始的状态，也就是只想 history 堆栈的第一个 patchs 记录的状态<br>
 源码如下
 ```js
   toStart () {
@@ -64,7 +64,7 @@ go 方法将让当前的下标往前或者往后 n 个位置
 ```
 
 ### toEnd() : void
-`toStart` 将会直接回退到最末端的状态，也就是只想 history 堆栈的最后一个 patchs 记录的状态
+`toStart` 将会直接回退到最末端的状态，也就是只想 history 堆栈的最后一个 patchs 记录的状态<br>
 源码如下
 ```js
   toEnd () {
@@ -86,7 +86,8 @@ go 方法将让当前的下标往前或者往后 n 个位置
     },
 
     onload () {
-      // 回退到上一个状态，这将会产生一条 warning，因为此时的 history 堆栈记录的 patchs 为 0 个
+      // 回退到上一个状态
+      // 但这并不会有任何作用，并且将会产生一条 warning，因为此时的 history 堆栈记录的 patchs 为 0 个
       this.timeTravel.go(-1)
     },
   })
