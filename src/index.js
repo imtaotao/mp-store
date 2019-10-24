@@ -1,11 +1,11 @@
-import mixin from './mixin'
-import { Store } from './store'
 import {
   callHook,
   mixinMethods,
   createWraper,
   isEmptyObject,
 } from './utils'
+import mixin from './mixin'
+import { Store } from './store'
 export { clone } from './utils'
 export { diff, restore } from './diff'
 
