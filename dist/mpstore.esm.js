@@ -685,7 +685,7 @@ function () {
     this.depComponents = [];
     this.GLOBALWORD = 'global';
     this.isDispatching = false;
-    this.version = '0.0.8';
+    this.version = '0.0.9';
     this.state = Object.freeze({});
     this.middleware = new Middleware(this);
   }
@@ -702,7 +702,10 @@ function () {
 
       reducer.action = action;
       this.reducers.push(reducer);
-      this.state = mergeState(this.state, partialState);
+
+      if (!isEmptyObject(partialState)) {
+        this.state = mergeState(this.state, partialState);
+      }
     }
   }, {
     key: "dispatch",
@@ -722,7 +725,10 @@ function () {
         try {
           var newPartialState = reducer.setter(_this.state, desPayload);
           assert(isPlainObject(newPartialState), 'setter function should be return a plain object.');
-          _this.state = mergeState(_this.state, newPartialState);
+
+          if (!isEmptyObject(newPartialState)) {
+            _this.state = mergeState(_this.state, newPartialState);
+          }
         } finally {
           _this.isDispatching = false;
           restoreProcessState();
@@ -785,9 +791,9 @@ function () {
         assert(isPlainObject(defineObject), '[useState] must return a plain object, ' + "but now is return a [".concat(_typeof(defineObject), "]"));
 
         createState = function createState() {
-          return mapObject(defineObject, function (fn) {
+          return clone(mapObject(defineObject, function (fn) {
             return fn(store.state);
-          });
+          }));
         };
       }
 
@@ -856,7 +862,7 @@ function () {
   return Store;
 }();
 
-var version = '0.0.8';
+var version = '0.0.9';
 var nativePage = Page;
 var nativeComponent = Component;
 

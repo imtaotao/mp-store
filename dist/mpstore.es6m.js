@@ -504,7 +504,7 @@ class Store {
     this.depComponents = [];
     this.GLOBALWORD = 'global';
     this.isDispatching = false;
-    this.version = '0.0.8';
+    this.version = '0.0.9';
     this.state = Object.freeze({});
     this.middleware = new Middleware(this);
   }
@@ -516,7 +516,9 @@ class Store {
     const { partialState } = assertReducer(this.state, action, reducer);
     reducer.action = action;
     this.reducers.push(reducer);
-    this.state = mergeState(this.state, partialState);
+    if (!isEmptyObject(partialState)) {
+      this.state = mergeState(this.state, partialState);
+    }
   }
   dispatch (action, payload, callback) {
     const { reducers, isDispatching } = this;
@@ -539,7 +541,9 @@ class Store {
           isPlainObject(newPartialState),
           'setter function should be return a plain object.',
         );
-        this.state = mergeState(this.state, newPartialState);
+        if (!isEmptyObject(newPartialState)) {
+          this.state = mergeState(this.state, newPartialState);
+        }
       } finally {
          this.isDispatching = false;
         restoreProcessState();
@@ -595,7 +599,7 @@ class Store {
         '[useState] must return a plain object, ' +
           `but now is return a [${typeof defineObject}]`,
       );
-      createState = () => mapObject(defineObject, fn => fn(store.state));
+      createState = () => clone(mapObject(defineObject, fn => fn(store.state)));
     }
     if (createState !== null) {
       const useState = createState();
@@ -661,7 +665,7 @@ class Store {
   }
 }
 
-const version = '0.0.8';
+const version = '0.0.9';
 const nativePage = Page;
 const nativeComponent = Component;
 function expandConfig (config, expandMethods, isPage) {

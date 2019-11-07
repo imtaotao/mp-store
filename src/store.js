@@ -1,4 +1,5 @@
 import {
+  clone,
   assert,
   remove,
   callHook,
@@ -6,6 +7,7 @@ import {
   mergeState,
   createWraper,
   isPlainObject,
+  isEmptyObject,
 } from './utils'
 import { diff } from './diff'
 import TimeTravel from './time-travel'
@@ -69,7 +71,9 @@ export class Store {
 
     reducer.action = action
     this.reducers.push(reducer)
-    this.state = mergeState(this.state, partialState)
+    if (!isEmptyObject(partialState)) {
+      this.state = mergeState(this.state, partialState)
+    }
   }
 
   dispatch (action, payload, callback) {
@@ -102,8 +106,10 @@ export class Store {
           isPlainObject(newPartialState),
           'setter function should be return a plain object.',
         )
-
-        this.state = mergeState(this.state, newPartialState)
+        
+        if (!isEmptyObject(newPartialState)) {
+          this.state = mergeState(this.state, newPartialState)
+        }
       } finally {
         // the `isDispatching` need restore.
          this.isDispatching = false
@@ -179,8 +185,9 @@ export class Store {
         '[useState] must return a plain object, ' +
           `but now is return a [${typeof defineObject}]`,
       )
-
-      createState = () => mapObject(defineObject, fn => fn(store.state))
+      
+      // need deep clone, otherwise the `data.global` on the back of the component cannot be changed.
+      createState = () => clone(mapObject(defineObject, fn => fn(store.state)))
     }
 
     // get state used by the current component

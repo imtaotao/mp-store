@@ -29,6 +29,3 @@ App({
   // ...
 })
 ```
-
-[npm-image]: https://img.shields.io/npm/v/@rustle/mp-store.svg?style=flat-square
-[npm-url]: https://www.npmjs.com/package/@rustle/mp-store

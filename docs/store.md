@@ -117,3 +117,13 @@ store 默认会在组件的 data 中添加 `global` 来接受用到的全局状�
   // 注销掉中间件
   remove()
 ```
+
+### 数据不可变
+整个 store 拥有一个唯一的 state，这个全局 state 是不可变的，所以在 store 中，数据的转换都是通过深拷贝来进行的，这带来了一定的性能消耗，但为了数据不被污染，牺牲一定的性能是值得的，为此，mpstore 暴露出来了一个 `clone` 方法。需要注意的是，这个方法会深拷贝数据，并允许拷贝循环引用的数据结构
+```js
+import createStore, { clone } from '@ruslte/mp-store'
+
+const newData = clone({
+  ...
+})
+```
