@@ -257,22 +257,35 @@ function restore (obj, patchs) {
   return obj
 }
 
-function applyPatchs (component, patchs) {
+function applyPatchs (component, patchs, callback) {
   const destObject = {};
   for (let i = 0, len = patchs.length; i < len; i++) {
     const { value, path } = patchs[i];
     destObject[path] = value;
   }
-  component.setData(destObject);
+  component.setData(destObject, callback);
 }
-function updateComponents (store) {
+function updateComponents (store, callback) {
+  let total = 0;
   const {
     hooks,
     GLOBALWORD,
     depComponents,
   } = store;
   const len = depComponents.length;
-  if (len === 0) return
+  if (len === 0) {
+    if (typeof callback === 'function') {
+      callback();
+    }
+    return
+  }
+  const renderedCallback = () => {
+    if (++total === len) {
+      if (typeof callback === 'function') {
+        callback();
+      }
+    }
+  };
   for (let i = 0; i < len; i++) {
     const {
       isPage,
@@ -285,6 +298,7 @@ function updateComponents (store) {
       const newPartialState = createState();
       if (typeof willUpdate === 'function') {
         if (willUpdate.call(store, component, newPartialState) === false) {
+          renderedCallback();
           continue
         }
       }
@@ -292,9 +306,10 @@ function updateComponents (store) {
       if (patchs.length > 0) {
         const params = [component, newPartialState, patchs, isPage];
         if (callHook(hooks, 'willUpdate', params) === false) {
+          renderedCallback();
           continue
         }
-        applyPatchs(component, patchs);
+        applyPatchs(component, patchs, renderedCallback);
         if (typeof didUpdate === 'function') {
           didUpdate.call(store, component, newPartialState, patchs);
         }
@@ -302,7 +317,11 @@ function updateComponents (store) {
         if (component.timeTravel) {
           component.timeTravel.push(patchs);
         }
+      } else {
+        renderedCallback();
       }
+    } else {
+      renderedCallback();
     }
   }
 }
@@ -504,7 +523,7 @@ class Store {
     this.depComponents = [];
     this.GLOBALWORD = 'global';
     this.isDispatching = false;
-    this.version = '0.0.9';
+    this.version = '0.0.10';
     this.state = Object.freeze({});
     this.middleware = new Middleware(this);
   }
@@ -548,10 +567,7 @@ class Store {
          this.isDispatching = false;
         restoreProcessState();
       }
-      updateComponents(this);
-      if (typeof callback === 'function') {
-        callback();
-      }
+      updateComponents(this, callback);
     });
   }
   use (action, fn) {
@@ -623,7 +639,7 @@ class Store {
           });
           const patchs = diff(component.data[GLOBALWORD], createState(), GLOBALWORD);
           if (patchs.length > 0) {
-            applyPatchs(component, patchs);
+            applyPatchs(component, patchs, GLOBALWORD);
           }
         }
       }
@@ -665,7 +681,7 @@ class Store {
   }
 }
 
-const version = '0.0.9';
+const version = '0.0.10';
 const nativePage = Page;
 const nativeComponent = Component;
 function expandConfig (config, expandMethods, isPage) {

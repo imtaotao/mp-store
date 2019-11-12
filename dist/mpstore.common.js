@@ -396,7 +396,7 @@ function restore(obj, patchs) {
   return obj;
 }
 
-function applyPatchs(component, patchs) {
+function applyPatchs(component, patchs, callback) {
   var destObject = {};
 
   for (var i = 0, len = patchs.length; i < len; i++) {
@@ -406,14 +406,30 @@ function applyPatchs(component, patchs) {
     destObject[path] = value;
   }
 
-  component.setData(destObject);
+  component.setData(destObject, callback);
 }
-function updateComponents(store) {
+function updateComponents(store, callback) {
+  var total = 0;
   var hooks = store.hooks,
       GLOBALWORD = store.GLOBALWORD,
       depComponents = store.depComponents;
   var len = depComponents.length;
-  if (len === 0) return;
+
+  if (len === 0) {
+    if (typeof callback === 'function') {
+      callback();
+    }
+
+    return;
+  }
+
+  var renderedCallback = function renderedCallback() {
+    if (++total === len) {
+      if (typeof callback === 'function') {
+        callback();
+      }
+    }
+  };
 
   for (var i = 0; i < len; i++) {
     var _depComponents$i = depComponents[i],
@@ -428,6 +444,7 @@ function updateComponents(store) {
 
       if (typeof willUpdate === 'function') {
         if (willUpdate.call(store, component, newPartialState) === false) {
+          renderedCallback();
           continue;
         }
       }
@@ -438,10 +455,11 @@ function updateComponents(store) {
         var params = [component, newPartialState, patchs, isPage];
 
         if (callHook(hooks, 'willUpdate', params) === false) {
+          renderedCallback();
           continue;
         }
 
-        applyPatchs(component, patchs);
+        applyPatchs(component, patchs, renderedCallback);
 
         if (typeof didUpdate === 'function') {
           didUpdate.call(store, component, newPartialState, patchs);
@@ -452,7 +470,11 @@ function updateComponents(store) {
         if (component.timeTravel) {
           component.timeTravel.push(patchs);
         }
+      } else {
+        renderedCallback();
       }
+    } else {
+      renderedCallback();
     }
   }
 }
@@ -689,7 +711,7 @@ function () {
     this.depComponents = [];
     this.GLOBALWORD = 'global';
     this.isDispatching = false;
-    this.version = '0.0.9';
+    this.version = '0.0.10';
     this.state = Object.freeze({});
     this.middleware = new Middleware(this);
   }
@@ -738,11 +760,7 @@ function () {
           restoreProcessState();
         }
 
-        updateComponents(_this);
-
-        if (typeof callback === 'function') {
-          callback();
-        }
+        updateComponents(_this, callback);
       });
     }
   }, {
@@ -827,7 +845,7 @@ function () {
             var patchs = diff(component.data[GLOBALWORD], createState(), GLOBALWORD);
 
             if (patchs.length > 0) {
-              applyPatchs(component, patchs);
+              applyPatchs(component, patchs, GLOBALWORD);
             }
           }
         }
@@ -866,7 +884,7 @@ function () {
   return Store;
 }();
 
-var version = '0.0.9';
+var version = '0.0.10';
 var nativePage = Page;
 var nativeComponent = Component;
 
