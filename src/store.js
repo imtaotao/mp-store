@@ -118,11 +118,7 @@ export class Store {
       }
 
       // update components
-      updateComponents(this)
-
-      if (typeof callback === 'function') {
-        callback()
-      }
+      updateComponents(this, callback)
     })
   }
 

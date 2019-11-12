@@ -1,7 +1,7 @@
 import { diff } from './diff'
 import { callHook } from './utils'
 
-export function applyPatchs (component, patchs) {
+export function applyPatchs (component, patchs, callback) {
   const destObject = {}
 
   for (let i = 0, len = patchs.length; i < len; i++) {
@@ -9,11 +9,12 @@ export function applyPatchs (component, patchs) {
     destObject[path] = value
   }
 
-  component.setData(destObject)
+  component.setData(destObject, callback)
 }
 
 // update page and component
-export function updateComponents (store) {
+export function updateComponents (store, callback) {
+  let total = 0
   const {
     hooks,
     GLOBALWORD,
@@ -21,7 +22,21 @@ export function updateComponents (store) {
   } = store
   const len = depComponents.length
 
-  if (len === 0) return
+  if (len === 0) {
+    if (typeof callback === 'function') {
+      callback()
+    }
+    return
+  }
+
+  // call `callback`, when all component views are rendered
+  const renderedCallback = () => {
+    if (++total === len) {
+      if (typeof callback === 'function') {
+        callback()
+      }
+    }
+  }
 
   for (let i = 0; i < len; i++) {
     const {
@@ -38,6 +53,7 @@ export function updateComponents (store) {
       // the `willUpdate` function will optimize component
       if (typeof willUpdate === 'function') {
         if (willUpdate.call(store, component, newPartialState) === false) {
+          renderedCallback()
           continue
         }
       }
@@ -50,11 +66,12 @@ export function updateComponents (store) {
         // call global hooks
         const params = [component, newPartialState, patchs, isPage]
         if (callHook(hooks, 'willUpdate', params) === false) {
+          renderedCallback()
           continue
         }
 
         // update component
-        applyPatchs(component, patchs, GLOBALWORD)
+        applyPatchs(component, patchs, renderedCallback)
 
         if (typeof didUpdate === 'function') {
           didUpdate.call(store, component, newPartialState, patchs)
@@ -66,7 +83,11 @@ export function updateComponents (store) {
         if (component.timeTravel) {
           component.timeTravel.push(patchs)
         }
+      } else {
+        renderedCallback()
       }
+    } else {
+      renderedCallback()
     }
   }
 }

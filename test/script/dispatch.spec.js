@@ -156,6 +156,58 @@ describe('dispatch', () => {
     expect(store.state.a).toBeUndefined()
   })
 
+  it('dispatch `callback` after the component and view is updated', done => {
+    const store = createStore()
+    store.add('testAction', {
+      partialState: {
+        a: 1,
+        b: 2,
+      },
+      setter: (state, payload) => ({ a: payload }) 
+    })
+    const oneId = simulate.load(Component({
+      template: '<div>{{ global.a }}</div>',
+      storeConfig: {
+        useState: () => ({
+          a: state => state.a,
+        }),
+      },
+    }))
+    const twoId = simulate.load(Component({
+      template: '<div>{{ global.b }}</div>',
+      storeConfig: {
+        useState: () => ({
+          b: state => state.b,
+        }),
+      },
+    }))
+    const threeId = simulate.load(Component({
+      template: '<div>{{ global.b }}</div>',
+      storeConfig: {
+        useState: () => ({
+          a: state => state.a,
+        }),
+      },
+    }))
+    const cmOne = simulate.render(oneId)
+    cmOne.attach(document.createElement('parent-wrapper'))
+    const cmTwo = simulate.render(twoId)
+    cmTwo.attach(document.createElement('parent-wrapper'))
+    const cmThree = simulate.render(threeId)
+    cmThree.attach(document.createElement('parent-wrapper'))
+    // if delete component global data
+    cmThree.data[store.GLOBALWORD] = null
+    expect(cmOne.dom.textContent).toBe('1')
+    expect(cmOne.data.global.a).toBe(1)
+    expect(store.state.a).toBe(1)
+    store.dispatch('testAction', 2, () => {
+      expect(cmOne.dom.textContent).toBe('2')
+      expect(cmOne.data.global.a).toBe(2)
+      expect(store.state.a).toBe(2)
+      done()
+    })
+  })
+
   it('component data update', () => {
     // need to recreate store
     const store = createStore()

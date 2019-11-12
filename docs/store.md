@@ -60,7 +60,7 @@ const store = createStore(() => {}, {})
   store.dispatch('action', 'imtaotao')
 ```
 
-`callback` 方法会在 `store.state` 改变后，所有依赖的组件更新后调用，因为**中间件中可能会处理异步行为**，所以这个 `callback` 的存在是必要的
+`callback` 方法会在 `store.state` 改变后，所有依赖的组件更新后（包括视图）调用，因为**中间件中可能会处理异步行为**，所以这个 `callback` 的存在是必要的
 ```js
   store.add('action', {
     partialState: {

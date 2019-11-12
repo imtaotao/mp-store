@@ -79,7 +79,7 @@ export default class TimeTravel {
 
         const endPatchs = diff(component.data[GLOBALWORD], data, GLOBALWORD)
         if (endPatchs.length > 0) {
-          applyPatchs(component, endPatchs, GLOBALWORD)
+          applyPatchs(component, endPatchs)
         }
 
         this.current += n
