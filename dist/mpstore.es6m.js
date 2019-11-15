@@ -38,6 +38,11 @@ function mixinMethods (config, methods) {
     }
   }
 }
+function inspectStateNamespace(partialState, state, sendWarn) {
+  for (const key in partialState) {
+    assert(!state.hasOwnProperty(key), sendWarn(key));
+  }
+}
 function remove (list, component) {
   const index = list.findIndex(item => item.component === component);
   if (index > -1) {
@@ -489,8 +494,8 @@ class Middleware {
 }
 
 let storeId = 0;
-function assertReducer (state, action, reducer) {
-  const { setter, partialState } = reducer;
+function filterReducer (state, action, reducer) {
+  const { setter, namespace, partialState } = reducer;
   assert(
     'partialState' in reducer,
     `You must defined [partialState].` +
@@ -501,16 +506,56 @@ function assertReducer (state, action, reducer) {
     `The [partialState] must be an object.` +
       `\n\n --- from [${action}] action.`,
   );
-  for (const key in partialState) {
+  if ('namespace' in reducer) {
     assert(
-      !state.hasOwnProperty(key),
-      `The [${key}] already exists in global state, ` +
-        `Please don't repeat defined. \n\n --- from [${action}] action.`
+      typeof namespace === 'string',
+      'The module namespace must be a string.' +
+        `\n\n --- from [${action}] action.`,
     );
+    const moduleFlag = '__mpModule';
+    const module = state[namespace];
+    if (namespace in state) {
+      if (!(isPlainObject(module) && module[moduleFlag])) {
+        warning(
+          `The module [${namespace}] in the global state, you can't defined [${namespace}] module` +
+            `\n\n --- from [${action}] action.`
+        );
+      }
+    }
+    if (module) {
+      inspectStateNamespace(partialState, module, key => {
+        return `The [${key}] already exists in [${namespace}] module, ` +
+          `Please don't repeat defined. \n\n --- from [${action}] action.`
+      });
+      reducer.partialState = {
+        [namespace]: Object.assign(
+          {},
+          module,
+          partialState,
+        )
+      };
+    } else {
+      reducer.partialState = {
+        [namespace]: Object.assign(
+          partialState,
+          {
+            [moduleFlag]: true,
+          },
+        ),
+      };
+    }
+  } else {
+    inspectStateNamespace(partialState, state, key => {
+      return `The [${key}] already exists in global state, ` +
+        `Please don't repeat defined. \n\n --- from [${action}] action.`
+    });
   }
   if (typeof setter !== 'function') {
     reducer.setter = () => {
-      throw `Can\'t changed [${action}] action value. Have you defined a setter?`
+      warning(
+        `Can\'t changed [${action}] action value. Have you defined a setter?` +
+          `\n\n --- from [${action}] action.`
+      );
     };
   }
   return reducer
@@ -532,7 +577,7 @@ class Store {
       !this.reducers.find(v => v.action === action),
       `Can't repeat defined [${action}] action.`,
     );
-    const { partialState } = assertReducer(this.state, action, reducer);
+    const { partialState } = filterReducer(this.state, action, reducer);
     reducer.action = action;
     this.reducers.push(reducer);
     if (!isEmptyObject(partialState)) {
@@ -552,16 +597,40 @@ class Store {
       `The [${action}] action does not exist. ` +
         'Maybe you have not defined.'
     );
-    this.middleware.process(action, payload, (desPayload, restoreProcessState) => {
+    this.middleware.process(action, payload, (destPayload, restoreProcessState) => {
       this.isDispatching = true;
       try {
-        const newPartialState = reducer.setter(this.state, desPayload);
+        let newPartialState;
+        const namespace = reducer.namespace;
+        const isModuleDispatch = typeof namespace === 'string';
+        if (isModuleDispatch) {
+          const module = this.getModule(namespace, true);
+          newPartialState = reducer.setter(module, destPayload, this.state);
+        } else {
+          newPartialState = reducer.setter(this.state, destPayload);
+        }
         assert(
           isPlainObject(newPartialState),
           'setter function should be return a plain object.',
         );
         if (!isEmptyObject(newPartialState)) {
-          this.state = mergeState(this.state, newPartialState);
+          if (isModuleDispatch) {
+            this.state = mergeState(
+              this.state,
+              {
+                [namespace]: Object.assign(
+                  {},
+                  this.getModule(namespace),
+                  newPartialState,
+                ),
+              },
+            );
+          } else {
+            this.state = mergeState(
+              this.state,
+              newPartialState,
+            );
+          }
         }
       } finally {
          this.isDispatching = false;
@@ -588,6 +657,13 @@ class Store {
     );
     this.GLOBALWORD = key;
   }
+  getModule (namespace, needInspect) {
+    const module = this.state[namespace];
+    if (needInspect && !(isPlainObject(module) && module.__mpModule)) {
+      warning(`The [${namespace}] module is not exist.`);
+    }
+    return module
+  }
   rewirteCfgAndAddDep (config, isPage) {
     let createState = null;
     const store = this;
@@ -609,13 +685,25 @@ class Store {
       defineReducer.call(store, store);
     }
     if (typeof useState === 'function') {
-      const defineObject = useState.call(store, store);
+      let namespace = null;
+      let defineObject = null;
+      const useConfig = useState.call(store, store);
+      if (Array.isArray(useConfig)) {
+        namespace = useConfig[0];
+        defineObject = useConfig[1];
+      } else {
+        defineObject = useConfig;
+      }
       assert(
         isPlainObject(defineObject),
         '[useState] must return a plain object, ' +
           `but now is return a [${typeof defineObject}]`,
       );
-      createState = () => clone(mapObject(defineObject, fn => fn(store.state)));
+      createState = () => clone(mapObject(defineObject, fn => {
+        return namespace === null
+          ? fn(store.state)
+          : fn(this.getModule(namespace, true), store.state)
+      }));
     }
     if (createState !== null) {
       const useState = createState();

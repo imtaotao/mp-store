@@ -135,6 +135,11 @@ function mixinMethods(config, methods) {
     }
   }
 }
+function inspectStateNamespace(partialState, state, sendWarn) {
+  for (var key in partialState) {
+    assert(!state.hasOwnProperty(key), sendWarn(key));
+  }
+}
 function remove(list, component) {
   var index = list.findIndex(function (item) {
     return item.component === component;
@@ -680,19 +685,41 @@ function () {
 
 var storeId = 0;
 
-function assertReducer(state, action, reducer) {
+function filterReducer(state, action, reducer) {
   var setter = reducer.setter,
+      namespace = reducer.namespace,
       partialState = reducer.partialState;
   assert('partialState' in reducer, "You must defined [partialState]." + "\n\n --- from [".concat(action, "] action."));
   assert(isPlainObject(partialState), "The [partialState] must be an object." + "\n\n --- from [".concat(action, "] action."));
 
-  for (var key in partialState) {
-    assert(!state.hasOwnProperty(key), "The [".concat(key, "] already exists in global state, ") + "Please don't repeat defined. \n\n --- from [".concat(action, "] action."));
+  if ('namespace' in reducer) {
+    assert(typeof namespace === 'string', 'The module namespace must be a string.' + "\n\n --- from [".concat(action, "] action."));
+    var moduleFlag = '__mpModule';
+    var module = state[namespace];
+
+    if (namespace in state) {
+      if (!(isPlainObject(module) && module[moduleFlag])) {
+        warning("The module [".concat(namespace, "] in the global state, you can't defined [").concat(namespace, "] module") + "\n\n --- from [".concat(action, "] action."));
+      }
+    }
+
+    if (module) {
+      inspectStateNamespace(partialState, module, function (key) {
+        return "The [".concat(key, "] already exists in [").concat(namespace, "] module, ") + "Please don't repeat defined. \n\n --- from [".concat(action, "] action.");
+      });
+      reducer.partialState = _defineProperty({}, namespace, Object.assign({}, module, partialState));
+    } else {
+      reducer.partialState = _defineProperty({}, namespace, Object.assign(partialState, _defineProperty({}, moduleFlag, true)));
+    }
+  } else {
+    inspectStateNamespace(partialState, state, function (key) {
+      return "The [".concat(key, "] already exists in global state, ") + "Please don't repeat defined. \n\n --- from [".concat(action, "] action.");
+    });
   }
 
   if (typeof setter !== 'function') {
     reducer.setter = function () {
-      throw "Can't changed [".concat(action, "] action value. Have you defined a setter?");
+      warning("Can't changed [".concat(action, "] action value. Have you defined a setter?") + "\n\n --- from [".concat(action, "] action."));
     };
   }
 
@@ -723,8 +750,8 @@ function () {
         return v.action === action;
       }), "Can't repeat defined [".concat(action, "] action."));
 
-      var _assertReducer = assertReducer(this.state, action, reducer),
-          partialState = _assertReducer.partialState;
+      var _filterReducer = filterReducer(this.state, action, reducer),
+          partialState = _filterReducer.partialState;
 
       reducer.action = action;
       this.reducers.push(reducer);
@@ -745,15 +772,30 @@ function () {
         return v.action === action;
       });
       assert(reducer, "The [".concat(action, "] action does not exist. ") + 'Maybe you have not defined.');
-      this.middleware.process(action, payload, function (desPayload, restoreProcessState) {
+      this.middleware.process(action, payload, function (destPayload, restoreProcessState) {
         _this.isDispatching = true;
 
         try {
-          var newPartialState = reducer.setter(_this.state, desPayload);
+          var newPartialState;
+          var namespace = reducer.namespace;
+          var isModuleDispatch = typeof namespace === 'string';
+
+          if (isModuleDispatch) {
+            var module = _this.getModule(namespace, true);
+
+            newPartialState = reducer.setter(module, destPayload, _this.state);
+          } else {
+            newPartialState = reducer.setter(_this.state, destPayload);
+          }
+
           assert(isPlainObject(newPartialState), 'setter function should be return a plain object.');
 
           if (!isEmptyObject(newPartialState)) {
-            _this.state = mergeState(_this.state, newPartialState);
+            if (isModuleDispatch) {
+              _this.state = mergeState(_this.state, _defineProperty({}, namespace, Object.assign({}, _this.getModule(namespace), newPartialState)));
+            } else {
+              _this.state = mergeState(_this.state, newPartialState);
+            }
           }
         } finally {
           _this.isDispatching = false;
@@ -785,6 +827,17 @@ function () {
       this.GLOBALWORD = key;
     }
   }, {
+    key: "getModule",
+    value: function getModule(namespace, needInspect) {
+      var module = this.state[namespace];
+
+      if (needInspect && !(isPlainObject(module) && module.__mpModule)) {
+        warning("The [".concat(namespace, "] module is not exist."));
+      }
+
+      return module;
+    }
+  }, {
     key: "rewirteCfgAndAddDep",
     value: function rewirteCfgAndAddDep(config, isPage) {
       var _this3 = this;
@@ -809,12 +862,22 @@ function () {
       }
 
       if (typeof useState === 'function') {
-        var defineObject = useState.call(store, store);
+        var namespace = null;
+        var defineObject = null;
+        var useConfig = useState.call(store, store);
+
+        if (Array.isArray(useConfig)) {
+          namespace = useConfig[0];
+          defineObject = useConfig[1];
+        } else {
+          defineObject = useConfig;
+        }
+
         assert(isPlainObject(defineObject), '[useState] must return a plain object, ' + "but now is return a [".concat(_typeof(defineObject), "]"));
 
         createState = function createState() {
           return clone(mapObject(defineObject, function (fn) {
-            return fn(store.state);
+            return namespace === null ? fn(store.state) : fn(_this3.getModule(namespace, true), store.state);
           }));
         };
       }

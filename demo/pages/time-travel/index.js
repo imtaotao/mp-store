@@ -6,6 +6,10 @@ Page({
       store.add('TIMETRAVEL', {
         partialState: {
           index: 0,
+          tao: {
+            aa: 111,
+            __mpModule: true,
+          }
         },
         setter (state, payload) {
           return { index: payload }

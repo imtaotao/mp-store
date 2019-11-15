@@ -1,6 +1,7 @@
 {
   "pages": [
     "pages/index/index",
+    "pages/module/index",
     "pages/time-travel/index"
   ],
   "window": {

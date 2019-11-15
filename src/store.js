@@ -2,12 +2,14 @@ import {
   clone,
   assert,
   remove,
+  warning,
   callHook,
   mapObject,
   mergeState,
   createWraper,
   isPlainObject,
   isEmptyObject,
+  inspectStateNamespace,
 } from './utils'
 import { diff } from './diff'
 import TimeTravel from './time-travel'
@@ -17,8 +19,8 @@ import { applyPatchs, updateComponents } from './update'
 // Each `store` instance has a unique id
 let storeId = 0
 
-function assertReducer (state, action, reducer) {
-  const { setter, partialState } = reducer
+function filterReducer (state, action, reducer) {
+  const { setter, namespace, partialState } = reducer
 
   assert(
     'partialState' in reducer,
@@ -32,17 +34,65 @@ function assertReducer (state, action, reducer) {
       `\n\n --- from [${action}] action.`,
   )
 
-  for (const key in partialState) {
+  // in fact, the `namespace` is `moudle`
+  if ('namespace' in reducer) {
     assert(
-      !state.hasOwnProperty(key),
-      `The [${key}] already exists in global state, ` +
-        `Please don't repeat defined. \n\n --- from [${action}] action.`
+      typeof namespace === 'string',
+      'The module namespace must be a string.' +
+        `\n\n --- from [${action}] action.`,
     )
+
+    const moduleFlag = '__mpModule'
+    const module = state[namespace]
+    
+    // if the namespace is already in global state
+    if (namespace in state) {
+      if (!(isPlainObject(module) && module[moduleFlag])) {
+        warning(
+          `The module [${namespace}] in the global state, you can't defined [${namespace}] module` +
+            `\n\n --- from [${action}] action.`
+        )
+      }
+    }
+    
+    // create module
+    if (module) {
+      inspectStateNamespace(partialState, module, key => {
+        return `The [${key}] already exists in [${namespace}] module, ` +
+          `Please don't repeat defined. \n\n --- from [${action}] action.`
+      })
+
+      reducer.partialState = {
+        [namespace]: Object.assign(
+          {},
+          module,
+          partialState,
+        )
+      }
+    } else {
+      reducer.partialState = {
+        [namespace]: Object.assign(
+          partialState,
+          {
+            [moduleFlag]: true,
+          },
+        ),
+      }
+    }
+  } else {
+    // inspect all state key 
+    inspectStateNamespace(partialState, state, key => {
+      return `The [${key}] already exists in global state, ` +
+        `Please don't repeat defined. \n\n --- from [${action}] action.`
+    })
   }
 
   if (typeof setter !== 'function') {
     reducer.setter = () => {
-      throw `Can\'t changed [${action}] action value. Have you defined a setter?`
+      warning(
+        `Can\'t changed [${action}] action value. Have you defined a setter?` +
+          `\n\n --- from [${action}] action.`
+      )
     }
   }
   return reducer
@@ -67,7 +117,7 @@ export class Store {
       `Can't repeat defined [${action}] action.`,
     )
 
-    const { partialState } = assertReducer(this.state, action, reducer)
+    const { partialState } = filterReducer(this.state, action, reducer)
 
     reducer.action = action
     this.reducers.push(reducer)
@@ -96,19 +146,46 @@ export class Store {
     )
 
     // call all middleware
-    this.middleware.process(action, payload, (desPayload, restoreProcessState) => {
+    this.middleware.process(action, payload, (destPayload, restoreProcessState) => {
       this.isDispatching = true
 
       try {
-        const newPartialState = reducer.setter(this.state, desPayload)
+        let newPartialState
+        const namespace = reducer.namespace
+        const isModuleDispatch = typeof namespace === 'string'
+
+        if (isModuleDispatch) {
+          const module = this.getModule(namespace, true)
+          // generate new partial state
+          newPartialState = reducer.setter(module, destPayload, this.state)
+        } else {
+          newPartialState = reducer.setter(this.state, destPayload)
+        }
 
         assert(
           isPlainObject(newPartialState),
           'setter function should be return a plain object.',
         )
         
+        // update global state
         if (!isEmptyObject(newPartialState)) {
-          this.state = mergeState(this.state, newPartialState)
+          if (isModuleDispatch) {
+            this.state = mergeState(
+              this.state,
+              {
+                [namespace]: Object.assign(
+                  {},
+                  this.getModule(namespace),
+                  newPartialState,
+                ),
+              },
+            )
+          } else {
+            this.state = mergeState(
+              this.state,
+              newPartialState,
+            )
+          }
         }
       } finally {
         // the `isDispatching` need restore.
@@ -145,6 +222,18 @@ export class Store {
     this.GLOBALWORD = key
   }
 
+  getModule (namespace, needInspect) {
+    // deal with module state
+    const module = this.state[namespace]
+    // if the module does not meet the requirements
+    // throw error
+    if (needInspect && !(isPlainObject(module) && module.__mpModule)) {
+      warning(`The [${namespace}] module is not exist.`)
+    }
+    
+    return module
+  }
+
   // insert method
   rewirteCfgAndAddDep (config, isPage) {
     let createState = null
@@ -174,7 +263,17 @@ export class Store {
 
     // get the global state words used
     if (typeof useState === 'function') {
-      const defineObject = useState.call(store, store)
+      let namespace = null
+      let defineObject = null
+      const useConfig = useState.call(store, store)
+
+      // inspect should need module state
+      if (Array.isArray(useConfig)) {
+        namespace = useConfig[0]
+        defineObject = useConfig[1]
+      } else {
+        defineObject = useConfig
+      }
 
       assert(
         isPlainObject(defineObject),
@@ -183,7 +282,11 @@ export class Store {
       )
       
       // need deep clone, otherwise the `data.global` on the back of the component cannot be changed.
-      createState = () => clone(mapObject(defineObject, fn => fn(store.state)))
+      createState = () => clone(mapObject(defineObject, fn => {
+        return namespace === null
+          ? fn(store.state)
+          : fn(this.getModule(namespace, true), store.state)
+      }))
     }
 
     // get state used by the current component
