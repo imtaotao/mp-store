@@ -8,15 +8,23 @@ import {
   mapObject,
   mergeState,
   createWraper,
+  inspectState,
   isPlainObject,
   isEmptyObject,
-  inspectStateNamespace,
 } from './utils'
+
+import {
+  isModule,
+  getModule,
+  MODULE_FLAG,
+  createModule,
+  createModuleByNamespace,
+} from './module'
+
 import { diff } from './diff'
 import TimeTravel from './time-travel'
 import { Middleware, COMMONACTION } from './middleware'
 import { applyPatchs, updateComponents } from './update'
-import { moduleFlag, isModule, getModule, createModuleByNamespace, createModule } from './module'
 
 // Each `store` instance has a unique id
 let storeId = 0
@@ -45,45 +53,9 @@ function filterReducer (state, action, reducer) {
         `\n\n --- from [${action}] action.`,
     )
 
-    // obtaining module according namespace
-    const module = getModule(state, namespace)
-    // if the namespace is already in global state
-    if (namespace in state) {
-      if (!(isPlainObject(module) && module[moduleFlag])) {
-        warning(
-          `The module [${namespace}] in the global state, you can't defined [${namespace}] module` +
-            `\n\n --- from [${action}] action.`
-        )
-      }
-    }
-    
-    // create module
-    if (module) {
-      inspectStateNamespace(partialState, module, key => {
-        return `The [${key}] already exists in [${namespace}] module, ` +
-          `Please don't repeat defined. \n\n --- from [${action}] action.`
-      })
-
-      reducer.partialState = {
-        [namespace]: Object.assign(
-          {},
-          module,
-          partialState,
-        )
-      }
-    } else {
-      reducer.partialState = {
-        [namespace]: Object.assign(
-          partialState,
-          {
-            [moduleFlag]: true,
-          },
-        ),
-      }
-    }
   } else {
     // inspect all state key 
-    inspectStateNamespace(partialState, state, key => {
+    inspectState(partialState, state, key => {
       return `The [${key}] already exists in global state, ` +
         `Please don't repeat defined. \n\n --- from [${action}] action.`
     })

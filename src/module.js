@@ -3,7 +3,7 @@ import { assert, parsePath, isPlainObject } from './utils'
 // 1. can't delete module, if module is created
 // 2. modules allow nesting
 
-const MODULE_FLAG = '__mpModule'
+export const MODULE_FLAG = '__mpModule'
 
 export function isModule (obj) {
   return isPlainObject(obj) && obj[MODULE_FLAG] === true
@@ -58,7 +58,7 @@ export function createModule (baseModule) {
 //   })
 // 
 // 2. if create new module, we need jugement the namespace whether in parent module
-export function createModuleByNamespace (namespace, state) {
+export function createModuleByNamespace (namespace, state, action) {
   let parentWraper = {}
   let parentModule = state
   const moduleWraper = parentWraper
@@ -73,7 +73,10 @@ export function createModuleByNamespace (namespace, state) {
         isModule(parentModule),
         'the child modules must be in the parent module.\n\n' +
           `parent module namespace is [${key}]\n\n` +
-          `child module namespace is [${segments[i - 1]}]`,
+          `child module namespace is [${segments[i - 1]}]` + 
+            action ?
+              `\n\n --- from [${action}] action`
+              : '',
       )
     }
 
@@ -81,7 +84,10 @@ export function createModuleByNamespace (namespace, state) {
       assert(
         isModule(parentModule[key]),
         'you can\'t create child moudle, ' +
-          `because the [${key}] already exists in [${segments[i - 1] || 'global'}] state.`,
+          `because the [${key}] already exists in [${segments[i - 1] || 'global'}] state.` +
+            action ?
+              `\n\n --- from [${action}] action`
+              : '',
       )
     } else {
       const childModule = {

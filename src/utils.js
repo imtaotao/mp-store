@@ -44,7 +44,7 @@ export function mixinMethods (config, methods) {
   }
 }
 
-export function inspectStateNamespace(partialState, state, sendWarn) {
+export function inspectState(partialState, state, sendWarn) {
   for (const key in partialState) {
     assert(!state.hasOwnProperty(key), sendWarn(key))
   }
