@@ -4,6 +4,7 @@ import {
   remove,
   warning,
   callHook,
+  parsePath,
   mapObject,
   mergeState,
   createWraper,
@@ -15,6 +16,7 @@ import { diff } from './diff'
 import TimeTravel from './time-travel'
 import { Middleware, COMMONACTION } from './middleware'
 import { applyPatchs, updateComponents } from './update'
+import { moduleFlag, isModule, getModule, createModuleByNamespace, createModule } from './module'
 
 // Each `store` instance has a unique id
 let storeId = 0
@@ -34,17 +36,17 @@ function filterReducer (state, action, reducer) {
       `\n\n --- from [${action}] action.`,
   )
 
-  // in fact, the `namespace` is `moudle`
-  if ('namespace' in reducer) {
+  const haveNamespace = 'namespace' in reducer
+  // if `partialState` have `__mpModule` word, in fact, the `partialState` is module
+  if (haveNamespace || isModule(partialState)) {
     assert(
-      typeof namespace === 'string',
+      haveNamespace && typeof namespace === 'string',
       'The module namespace must be a string.' +
         `\n\n --- from [${action}] action.`,
     )
 
-    const moduleFlag = '__mpModule'
-    const module = state[namespace]
-    
+    // obtaining module according namespace
+    const module = getModule(state, namespace)
     // if the namespace is already in global state
     if (namespace in state) {
       if (!(isPlainObject(module) && module[moduleFlag])) {
@@ -107,7 +109,7 @@ export class Store {
     this.GLOBALWORD = 'global' // global state namespace
     this.isDispatching = false
     this.version = __VERSION__
-    this.state = Object.freeze({})
+    this.state = Object.freeze(createModule({}))
     this.middleware = new Middleware(this)
   }
 
@@ -222,9 +224,15 @@ export class Store {
     this.GLOBALWORD = key
   }
 
+  // get module
   getModule (namespace, needInspect) {
+    assert(
+      typeof namespace === 'string',
+      'the namespace mast be a string',
+    )
+
     // deal with module state
-    const module = this.state[namespace]
+    const module = parsePath(namespace)(this.state)
     // if the module does not meet the requirements
     // throw error
     if (needInspect && !(isPlainObject(module) && module.__mpModule)) {

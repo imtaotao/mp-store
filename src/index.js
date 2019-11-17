@@ -8,6 +8,7 @@ import mixin from './mixin'
 import { Store } from './store'
 export { clone } from './utils'
 export { diff, restore } from './diff'
+export { createModule } from './module'
 
 export const version = __VERSION__
 

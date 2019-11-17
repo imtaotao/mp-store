@@ -144,7 +144,7 @@ export function clone (value, record = new WeakMap) {
 export function parsePath (path) {
   const segments = path.split('.')
   return function (obj) {
-    for (let i = 0; i < segments.length; i++) {
+    for (let i = 0, len = segments.length; i < len; i++) {
       if (!obj) return
       obj = obj[segments[i]]
     }
