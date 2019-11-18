@@ -1,4 +1,8 @@
-import { assert, parsePath, isPlainObject } from './utils'
+import {
+  assert,
+  parsePath,
+  isPlainObject,
+} from './utils'
 
 // a. can't delete module, if module is created
 // b. modules allow nesting
@@ -30,6 +34,7 @@ export function mergeModule (module, partialModule, moduleName, createMsg) {
       )
     }
   }
+
   return createModule(Object.assign({}, module, partialModule))
 }
 
@@ -115,5 +120,6 @@ export function createModuleByNamespace (namespace, partialModule, rootModule, a
     parentWraper = childModule
     parentModule = childModule
   }
+
   return moduleWraper
 }
