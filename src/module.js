@@ -30,11 +30,21 @@ export function mergeModule (module, partialModule, moduleName, createMsg) {
       assert(!(key in module), createMsg(key, moduleName))
     } else {
       // when changing by the setter function
+      const originItem = module[key]
+      const currentPartialItem = partialModule[key]
+      const isModuleForOrigin = isModule(originItem)
+      const isModuleForCurrent = isModule(currentPartialItem)
+
       assert(
-        !(isModule(module[key]) && !isModule(partialModule[key])),
+        !(isModuleForOrigin && !isModuleForCurrent),
         `The namespace [${key}] is a module that you can change to other value, ` +
           'You can use `createModule` method to recreate a module.',
       )
+      
+      // allow merge child module
+      if (isModuleForOrigin && isModuleForCurrent) {
+        isModuleForCurrent[key] = mergeModule(originItem, currentPartialItem)
+      }
     }
   }
 

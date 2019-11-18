@@ -261,7 +261,15 @@ function mergeModule(module, partialModule, moduleName, createMsg) {
     if (typeof createMsg === 'function') {
       assert(!(key in module), createMsg(key, moduleName));
     } else {
-      assert(!(isModule(module[key]) && !isModule(partialModule[key])), "The namespace [".concat(key, "] is a module that you can change to other value, ") + 'You can use `createModule` method to recreate a module.');
+      var originItem = module[key];
+      var currentPartialItem = partialModule[key];
+      var isModuleForOrigin = isModule(originItem);
+      var isModuleForCurrent = isModule(currentPartialItem);
+      assert(!(isModuleForOrigin && !isModuleForCurrent), "The namespace [".concat(key, "] is a module that you can change to other value, ") + 'You can use `createModule` method to recreate a module.');
+
+      if (isModuleForOrigin && isModuleForCurrent) {
+        isModuleForCurrent[key] = mergeModule(originItem, currentPartialItem);
+      }
     }
   }
 

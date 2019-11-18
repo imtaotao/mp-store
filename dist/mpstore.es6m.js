@@ -159,11 +159,18 @@ function mergeModule (module, partialModule, moduleName, createMsg) {
     if (typeof createMsg === 'function') {
       assert(!(key in module), createMsg(key, moduleName));
     } else {
+      const originItem = module[key];
+      const currentPartialItem = partialModule[key];
+      const isModuleForOrigin = isModule(originItem);
+      const isModuleForCurrent = isModule(currentPartialItem);
       assert(
-        !(isModule(module[key]) && !isModule(partialModule[key])),
+        !(isModuleForOrigin && !isModuleForCurrent),
         `The namespace [${key}] is a module that you can change to other value, ` +
           'You can use `createModule` method to recreate a module.',
       );
+      if (isModuleForOrigin && isModuleForCurrent) {
+        isModuleForCurrent[key] = mergeModule(originItem, currentPartialItem);
+      }
     }
   }
   return createModule(Object.assign({}, module, partialModule))
