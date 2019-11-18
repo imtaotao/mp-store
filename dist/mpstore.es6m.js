@@ -38,7 +38,7 @@ function mixinMethods (config, methods) {
     }
   }
 }
-function inspectStateNamespace(partialState, state, sendWarn) {
+function inspectState(partialState, state, sendWarn) {
   for (const key in partialState) {
     assert(!state.hasOwnProperty(key), sendWarn(key));
   }
@@ -145,6 +145,29 @@ function mixin (inject) {
     inject(callback);
   }
   return expandMethods
+}
+
+const MODULE_FLAG = '__mpModule';
+function isModule (m) {
+  return isPlainObject(m) && m[MODULE_FLAG] === true
+}
+function getModule (state, namespace) {
+  return namespace
+    ? parsePath(namespace)(state)
+    : state
+}
+function createModule (obj) {
+  assert(
+    isPlainObject(obj),
+    'The base module object must be an plain object',
+  );
+  if (isModule(obj)) return obj
+  assert(
+    !(MODULE_FLAG in obj),
+    `the [${MODULE_FLAG}] is the keyword of the mpStore module, you can't use it`,
+  );
+  obj[MODULE_FLAG] = true;
+  return obj
 }
 
 const ADD = 1;
@@ -503,59 +526,6 @@ class Middleware {
   }
 }
 
-const MODULE_FLAG = '__mpModule';
-function isModule (obj) {
-  return isPlainObject(obj) && obj[MODULE_FLAG] === true
-}
-function getModule (state, namespace) {
-  return parsePath(namespace)(state)
-}
-function createModule (baseModule) {
-  assert(
-    isPlainObject(baseModule),
-    'The base module object must be an plain object',
-  );
-  if (isModule(baseModule)) return baseModule
-  assert(
-    !(MODULE_FLAG in baseModule),
-    `the [${MODULE_FLAG}] is the keyword of the mpStore module, you can't use it`,
-  );
-  baseModule[MODULE_FLAG] = true;
-  return baseModule
-}
-function createModuleByNamespace (namespace, state) {
-  let parentWraper = {};
-  let parentModule = state;
-  const moduleWraper = parentWraper;
-  const segments = namespace.split('.');
-  for (let i = 0, len = segments.length; i < len; i++) {
-    const key = segments[i];
-    if (i > 0) {
-      assert(
-        isModule(parentModule),
-        'the child modules must be in the parent module.\n\n' +
-          `parent module namespace is [${key}]\n\n` +
-          `child module namespace is [${segments[i - 1]}]`,
-      );
-    }
-    if (key in parentModule) {
-      assert(
-        isModule(parentModule[key]),
-        'you can\'t create child moudle, ' +
-          `because the [${key}] already exists in [${segments[i - 1] || 'global'}] state.`,
-      );
-    } else {
-      const childModule = {
-        [MODULE_FLAG]: true,
-      };
-      parentWraper[key] = childModule;
-      parentWraper = childModule;
-    }
-    parentModule = state[key];
-  }
-  return moduleWraper
-}
-
 let storeId = 0;
 function filterReducer (state, action, reducer) {
   const { setter, namespace, partialState } = reducer;
@@ -569,50 +539,19 @@ function filterReducer (state, action, reducer) {
     `The [partialState] must be an object.` +
       `\n\n --- from [${action}] action.`,
   );
-  const haveNamespace = 'namespace' in reducer;
-  if (haveNamespace || isModule(partialState)) {
+  if ('namespace' in reducer) {
     assert(
-      haveNamespace && typeof namespace === 'string',
+      typeof namespace === 'string',
       'The module namespace must be a string.' +
         `\n\n --- from [${action}] action.`,
     );
     const module = getModule(state, namespace);
-    if (namespace in state) {
-      if (!(isPlainObject(module) && module[MODULE_FLAG])) {
-        warning(
-          `The module [${namespace}] in the global state, you can't defined [${namespace}] module` +
-            `\n\n --- from [${action}] action.`
-        );
-      }
-    }
-    if (module) {
-      inspectStateNamespace(partialState, module, key => {
-        return `The [${key}] already exists in [${namespace}] module, ` +
-          `Please don't repeat defined. \n\n --- from [${action}] action.`
-      });
-      createModuleByNamespace();
-      reducer.partialState = {
-        [namespace]: Object.assign(
-          {},
-          module,
-          partialState,
-        )
-      };
-    } else {
-      reducer.partialState = {
-        [namespace]: Object.assign(
-          partialState,
-          {
-            [MODULE_FLAG]: true,
-          },
-        ),
-      };
-    }
   } else {
-    inspectStateNamespace(partialState, state, key => {
+    inspectState(partialState, state, key => {
       return `The [${key}] already exists in global state, ` +
         `Please don't repeat defined. \n\n --- from [${action}] action.`
     });
+    if (isModule(partialState)) ;
   }
   if (typeof setter !== 'function') {
     reducer.setter = () => {
@@ -874,3 +813,4 @@ function index (mixinInject, hooks) {
 
 export default index;
 export { clone, createModule, diff, restore, version };
+//# sourceMappingURL=mpstore.es6m.js.map

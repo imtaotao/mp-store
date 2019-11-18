@@ -135,7 +135,7 @@ function mixinMethods(config, methods) {
     }
   }
 }
-function inspectStateNamespace(partialState, state, sendWarn) {
+function inspectState(partialState, state, sendWarn) {
   for (var key in partialState) {
     assert(!state.hasOwnProperty(key), sendWarn(key));
   }
@@ -251,6 +251,21 @@ function mixin (inject) {
   }
 
   return expandMethods;
+}
+
+var MODULE_FLAG = '__mpModule';
+function isModule(m) {
+  return isPlainObject(m) && m[MODULE_FLAG] === true;
+}
+function getModule(state, namespace) {
+  return namespace ? parsePath(namespace)(state) : state;
+}
+function createModule(obj) {
+  assert(isPlainObject(obj), 'The base module object must be an plain object');
+  if (isModule(obj)) return obj;
+  assert(!(MODULE_FLAG in obj), "the [".concat(MODULE_FLAG, "] is the keyword of the mpStore module, you can't use it"));
+  obj[MODULE_FLAG] = true;
+  return obj;
 }
 
 var ADD = 1;
@@ -694,48 +709,6 @@ function () {
   return Middleware;
 }();
 
-var MODULE_FLAG = '__mpModule';
-function isModule(obj) {
-  return isPlainObject(obj) && obj[MODULE_FLAG] === true;
-}
-function getModule(state, namespace) {
-  return parsePath(namespace)(state);
-}
-function createModule(baseModule) {
-  assert(isPlainObject(baseModule), 'The base module object must be an plain object');
-  if (isModule(baseModule)) return baseModule;
-  assert(!(MODULE_FLAG in baseModule), "the [".concat(MODULE_FLAG, "] is the keyword of the mpStore module, you can't use it"));
-  baseModule[MODULE_FLAG] = true;
-  return baseModule;
-}
-function createModuleByNamespace(namespace, state) {
-  var parentWraper = {};
-  var parentModule = state;
-  var moduleWraper = parentWraper;
-  var segments = namespace.split('.');
-
-  for (var i = 0, len = segments.length; i < len; i++) {
-    var key = segments[i];
-
-    if (i > 0) {
-      assert(isModule(parentModule), 'the child modules must be in the parent module.\n\n' + "parent module namespace is [".concat(key, "]\n\n") + "child module namespace is [".concat(segments[i - 1], "]"));
-    }
-
-    if (key in parentModule) {
-      assert(isModule(parentModule[key]), 'you can\'t create child moudle, ' + "because the [".concat(key, "] already exists in [").concat(segments[i - 1] || 'global', "] state."));
-    } else {
-      var childModule = _defineProperty({}, MODULE_FLAG, true);
-
-      parentWraper[key] = childModule;
-      parentWraper = childModule;
-    }
-
-    parentModule = state[key];
-  }
-
-  return moduleWraper;
-}
-
 var storeId = 0;
 
 function filterReducer(state, action, reducer) {
@@ -744,31 +717,16 @@ function filterReducer(state, action, reducer) {
       partialState = reducer.partialState;
   assert('partialState' in reducer, "You must defined [partialState]." + "\n\n --- from [".concat(action, "] action."));
   assert(isPlainObject(partialState), "The [partialState] must be an object." + "\n\n --- from [".concat(action, "] action."));
-  var haveNamespace = 'namespace' in reducer;
 
-  if (haveNamespace || isModule(partialState)) {
-    assert(haveNamespace && typeof namespace === 'string', 'The module namespace must be a string.' + "\n\n --- from [".concat(action, "] action."));
+  if ('namespace' in reducer) {
+    assert(typeof namespace === 'string', 'The module namespace must be a string.' + "\n\n --- from [".concat(action, "] action."));
     var module = getModule(state, namespace);
-
-    if (namespace in state) {
-      if (!(isPlainObject(module) && module[MODULE_FLAG])) {
-        warning("The module [".concat(namespace, "] in the global state, you can't defined [").concat(namespace, "] module") + "\n\n --- from [".concat(action, "] action."));
-      }
-    }
-
-    if (module) {
-      inspectStateNamespace(partialState, module, function (key) {
-        return "The [".concat(key, "] already exists in [").concat(namespace, "] module, ") + "Please don't repeat defined. \n\n --- from [".concat(action, "] action.");
-      });
-      createModuleByNamespace();
-      reducer.partialState = _defineProperty({}, namespace, Object.assign({}, module, partialState));
-    } else {
-      reducer.partialState = _defineProperty({}, namespace, Object.assign(partialState, _defineProperty({}, MODULE_FLAG, true)));
-    }
   } else {
-    inspectStateNamespace(partialState, state, function (key) {
+    inspectState(partialState, state, function (key) {
       return "The [".concat(key, "] already exists in global state, ") + "Please don't repeat defined. \n\n --- from [".concat(action, "] action.");
     });
+
+    if (isModule(partialState)) ;
   }
 
   if (typeof setter !== 'function') {
@@ -1039,3 +997,4 @@ exports.default = index;
 exports.diff = diff;
 exports.restore = restore;
 exports.version = version;
+//# sourceMappingURL=mpstore.common.js.map

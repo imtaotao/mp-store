@@ -44,21 +44,32 @@ function filterReducer (state, action, reducer) {
       `\n\n --- from [${action}] action.`,
   )
 
-  const haveNamespace = 'namespace' in reducer
-  // if `partialState` have `__mpModule` word, in fact, the `partialState` is module
-  if (haveNamespace || isModule(partialState)) {
+  if ('namespace' in reducer) {
     assert(
-      haveNamespace && typeof namespace === 'string',
+      typeof namespace === 'string',
       'The module namespace must be a string.' +
         `\n\n --- from [${action}] action.`,
     )
 
+    const module = getModule(state, namespace, action)
+    
+    if (module) {
+      // const newPartialModule = mergeModule(module, partialState, true)
+      // const 
+    } else {
+
+    }
   } else {
     // inspect all state key 
     inspectState(partialState, state, key => {
       return `The [${key}] already exists in global state, ` +
         `Please don't repeat defined. \n\n --- from [${action}] action.`
     })
+
+    // if `partialState` have `__mpModule` word, in fact, the `partialState` is module
+    if (isModule(partialState)) {
+
+    }
   }
 
   if (typeof setter !== 'function') {
