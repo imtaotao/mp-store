@@ -295,6 +295,7 @@ function createModuleByNamespace(namespace, partialModule, rootModule, action, c
   var remaingMsg = action ? "\n\n  --- from [".concat(action, "] action") : '';
 
   for (var i = 0, len = segments.length; i < len; i++) {
+    var childModule = void 0;
     var key = segments[i];
     var isLastIndex = i === len - 1;
 
@@ -304,17 +305,14 @@ function createModuleByNamespace(namespace, partialModule, rootModule, action, c
 
     if (key in parentModule) {
       assert(isModule(parentModule[key]), 'you can\'t create child moudle, ' + "because the [".concat(key, "] already exists in [").concat(segments[i - 1] || 'root', "] module, ") + "but [".concat(key, "] not a module.").concat(remaingMsg));
-      var childModule = isLastIndex ? mergeModule(parentModule[key], partialModule, key, createMsg) : createModule(Object.assign({}, parentModule[key]));
-      parentWraper[key] = childModule;
-      parentWraper = childModule;
-      parentModule = childModule;
+      childModule = isLastIndex ? mergeModule(parentModule[key], partialModule, key, createMsg) : createModule(Object.assign({}, parentModule[key]));
     } else {
-      var _childModule = isLastIndex ? createModule(partialModule) : createModule({});
-
-      parentWraper[key] = _childModule;
-      parentWraper = _childModule;
-      parentModule = _childModule;
+      childModule = isLastIndex ? createModule(partialModule) : createModule({});
     }
+
+    parentWraper[key] = childModule;
+    parentWraper = childModule;
+    parentModule = childModule;
   }
 
   return moduleWraper;
@@ -1079,5 +1077,6 @@ exports.clone = clone;
 exports.createModule = createModule;
 exports.default = index;
 exports.diff = diff;
+exports.isModule = isModule;
 exports.restore = restore;
 exports.version = version;

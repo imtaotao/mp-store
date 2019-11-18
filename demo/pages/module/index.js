@@ -19,9 +19,11 @@ Page({
       })
 
       store.add('MODULE_STATE', {
-        namespace: 'taoo.tao',
+        namespace: 'taoo',
         partialState: {
           cc: 1,
+          // tao: {
+          // }
         },
         setter (state, payload) {
           console.log(state, payload)
@@ -32,7 +34,7 @@ Page({
       })
 
       store.add('MODULE_STATE_1', {
-        namespace: 'taoo.tao',
+        namespace: 'taoo.tao.abc',
         partialState: {
           index: 0,
         },

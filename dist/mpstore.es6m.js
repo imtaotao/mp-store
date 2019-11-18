@@ -185,13 +185,7 @@ function createModule (obj) {
   });
   return obj
 }
-function createModuleByNamespace (
-  namespace,
-  partialModule,
-  rootModule,
-  action,
-  createMsg,
-) {
+function createModuleByNamespace (namespace, partialModule, rootModule, action, createMsg) {
   if (!namespace) {
     return mergeModule(rootModule, partialModule)
   }
@@ -201,6 +195,7 @@ function createModuleByNamespace (
   const segments = namespace.split('.');
   const remaingMsg =  action ? `\n\n  --- from [${action}] action` : '';
   for (let i = 0, len = segments.length; i < len; i++) {
+    let childModule;
     const key = segments[i];
     const isLastIndex = i === len - 1;
     if (i > 0) {
@@ -218,27 +213,17 @@ function createModuleByNamespace (
           `because the [${key}] already exists in [${segments[i - 1] || 'root'}] module, ` +
             `but [${key}] not a module.${remaingMsg}`,
       );
-      const childModule = isLastIndex
-        ? mergeModule(
-            parentModule[key],
-            partialModule,
-            key,
-            createMsg,
-          )
-        : createModule(
-            Object.assign({}, parentModule[key])
-          );
-      parentWraper[key] = childModule;
-      parentWraper = childModule;
-      parentModule = childModule;
+      childModule = isLastIndex
+        ? mergeModule(parentModule[key], partialModule, key, createMsg)
+        : createModule(Object.assign({}, parentModule[key]));
     } else {
-      const childModule = isLastIndex
+      childModule = isLastIndex
         ? createModule(partialModule)
         : createModule({});
-      parentWraper[key] = childModule;
-      parentWraper = childModule;
-      parentModule = childModule;
     }
+    parentWraper[key] = childModule;
+    parentWraper = childModule;
+    parentModule = childModule;
   }
   return moduleWraper
 }
@@ -915,4 +900,4 @@ function index (mixinInject, hooks) {
 }
 
 export default index;
-export { clone, createModule, diff, restore, version };
+export { clone, createModule, diff, isModule, restore, version };

@@ -1,7 +1,7 @@
 import { assert, parsePath, isPlainObject } from './utils'
 
-// 1. can't delete module, if module is created
-// 2. modules allow nesting
+// a. can't delete module, if module is created
+// b. modules allow nesting
 export const MODULE_FLAG = '__mpModule'
 
 export function isModule (m) {
@@ -20,7 +20,6 @@ export function mergeModule (module, partialModule, moduleName, createMsg) {
 
   while(~--len) {
     const key = keys[len]
-
     // inspect all attribute
     if (typeof createMsg === 'function') {
       assert(!(key in module), createMsg(key, moduleName))
@@ -58,7 +57,7 @@ export function createModule (obj) {
   return obj
 }
 
-// 1. if want to define a module, the parent and child modules must be modules.
+// a. if want to define a module, the parent and child modules must be modules.
 // demo:
 //   store.add('action', {
 //     __mpModule: true,
@@ -67,14 +66,8 @@ export function createModule (obj) {
 //     }
 //   })
 // 
-// 2. if create new module, we need jugement the namespace whether in parent module
-export function createModuleByNamespace (
-  namespace,
-  partialModule,
-  rootModule,
-  action,
-  createMsg,
-) {
+// b. if create new module, we need jugement the namespace whether in parent module
+export function createModuleByNamespace (namespace, partialModule, rootModule, action, createMsg) {
   if (!namespace) {
     return mergeModule(rootModule, partialModule)
   }
@@ -86,6 +79,7 @@ export function createModuleByNamespace (
   const remaingMsg =  action ? `\n\n  --- from [${action}] action` : ''
 
   for (let i = 0, len = segments.length; i < len; i++) {
+    let childModule
     const key = segments[i]
     const isLastIndex = i === len - 1
 
@@ -108,29 +102,18 @@ export function createModuleByNamespace (
       )
 
       // the parentModule is module
-      const childModule = isLastIndex
-        ? mergeModule(
-            parentModule[key],
-            partialModule,
-            key,
-            createMsg,
-          )
-        : createModule(
-            Object.assign({}, parentModule[key])
-          )
-      
-      parentWraper[key] = childModule
-      parentWraper = childModule
-      parentModule = childModule
+      childModule = isLastIndex
+        ? mergeModule(parentModule[key], partialModule, key, createMsg)
+        : createModule(Object.assign({}, parentModule[key]))
     } else {
-      const childModule = isLastIndex
+      childModule = isLastIndex
         ? createModule(partialModule)
         : createModule({})
-
-      parentWraper[key] = childModule
-      parentWraper = childModule
-      parentModule = childModule
     }
+
+    parentWraper[key] = childModule
+    parentWraper = childModule
+    parentModule = childModule
   }
   return moduleWraper
 }
