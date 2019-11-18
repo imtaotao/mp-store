@@ -6,7 +6,7 @@ import {
 
 // a. can't delete module, if module is created
 // b. modules allow nesting
-export const MODULE_FLAG = '__mpModule'
+export const MODULE_FLAG = Symbol('__module')
 
 export function isModule (m) {
   return isPlainObject(m) && m[MODULE_FLAG] === true
@@ -22,20 +22,29 @@ export function mergeModule (module, partialModule, moduleName, createMsg) {
   const keys = Object.keys(partialModule)
   let len = keys.length
 
+  // inspect all attribute
   while(~--len) {
     const key = keys[len]
-    // inspect all attribute
+    // when create by reducer
     if (typeof createMsg === 'function') {
       assert(!(key in module), createMsg(key, moduleName))
     } else {
+      // when changing by the setter function
       assert(
         !(isModule(module[key]) && !isModule(partialModule[key])),
-        `The [${key}] is a module that you can change to other values.`,
+        `The namespace [${key}] is a module that you can change to other value, ` +
+          'You can use `createModule` method to recreate a module.',
       )
     }
   }
 
   return createModule(Object.assign({}, module, partialModule))
+}
+
+// the `__mpModule` flag is not allowed to be traversed
+export function addModuleFlag (obj) {
+  obj[MODULE_FLAG] = true
+  return obj
 }
 
 export function createModule (obj) {
@@ -44,21 +53,11 @@ export function createModule (obj) {
     'The base module object must be an plain object',
   )
 
-  if (isModule(obj)) return obj
+  if (isModule(obj)) {
+    return obj
+  }
 
-  assert(
-    !(MODULE_FLAG in obj),
-    `the [${MODULE_FLAG}] is the keyword of the mpStore module, you can't use it`,
-  )
-
-  // the `__mpModule` is not allowed to be traversed
-  Object.defineProperty(obj, MODULE_FLAG, {
-    value: true,
-    writable: false,
-    enumerable: false,
-    configurable: false,
-  })
-
+  addModuleFlag(obj)
   return obj
 }
 
@@ -81,7 +80,7 @@ export function createModuleByNamespace (namespace, partialModule, rootModule, a
   let parentModule = rootModule
   const moduleWraper = parentWraper
   const segments = namespace.split('.')
-  const remaingMsg =  action ? `\n\n  --- from [${action}] action` : ''
+  const remaingMsg =  action ? `\n\n  --- from [${action.toString()}] action` : ''
 
   for (let i = 0, len = segments.length; i < len; i++) {
     let childModule
@@ -102,18 +101,18 @@ export function createModuleByNamespace (namespace, partialModule, rootModule, a
       assert(
         isModule(parentModule[key]),
         'you can\'t create child moudle, ' +
-          `because the [${key}] already exists in [${segments[i - 1] || 'root'}] module, ` +
+          `because namespace [${key}] already exists in [${segments[i - 1] || 'root'}] module, ` +
             `but [${key}] not a module.${remaingMsg}`,
       )
 
       // the parentModule is module
       childModule = isLastIndex
         ? mergeModule(parentModule[key], partialModule, key, createMsg)
-        : createModule(Object.assign({}, parentModule[key]))
+        : Object.assign({}, parentModule[key])
     } else {
       childModule = isLastIndex
         ? createModule(partialModule)
-        : createModule({})
+        : addModuleFlag({})
     }
 
     parentWraper[key] = childModule

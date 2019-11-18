@@ -29,7 +29,7 @@ function createComponent ( travelLimit, needAddAction = true) {
   return cm
 }
 
-describe('time travel', () => {
+describe('Time travel', () => {
   it('go', () => {
     const store = createStore()
     const cm = createComponent(3)

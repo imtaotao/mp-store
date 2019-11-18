@@ -15,6 +15,9 @@
 + [ ] diff 的所有测试用例都要分为 diff 逻辑层和视图层验证
 
 ### reducer 定义
++ [ ] `action` 必须是 string 或者 symbol 类型
++ [ ] `action` 是唯一的
++ [ ] `namespace` 必须是 string 类型
 + [x] reducer 里面必须定义 `partialState` 字段
 + [x] `partialState` 字段必须为一个普通对象
 + [x] `partialState` 中不能有重复的全局字段
@@ -95,3 +98,32 @@
 + [x] 只对当前组件起作用
 + [x] 有新的全局状态改变将指针将重新指向最末端
 + [x] `history` 记录时，超过了指定的范围将丢弃前面的 `patchs`
+
+### module
++ [ ] module 可以通过 `createModule` 方法来创建
++ [ ] module 可以通过 namespace 来创建
++ [ ] module 可以嵌套存在
++ [ ] module 嵌套时，父级对象必须是 module
++ [ ] 如果创建的 module 命名空间在父 module 中被占用（但是占用的不是 module 时），则报错
++ [ ] 如果创建的 module 命名空间在父 module 中被占用（但是占用是 module 时），则合并
++ [ ] 如果创建的 module 命名空间在父 module 中被占用（但是占用是 module 时），则合并，合并时有相同的子命名空间，则报错（就是不能重复定义相同的字段）
++ [ ] 如果通过 namespace 创建模块，父对象不存在时，默认新建一个空的父模块
++ [ ] 如果通过 namespace 创建模块，父对象存在时，但不是一个模块时，则报错
++ [ ] 如果通过 namespace 创建模块，父对象存在时，是一个模块时，则在其中新建子模块
++ [ ] setter 函数返回的对象中，如果更改了其中的子模块，必须同样是模块，不能更改为其他的值（模块的优先级高一些），否则报错
++ [ ] setter 函数返回的对象作用于当前 namespace 定义的模块
+
+### addModules
++ [ ] 检查 namespace 的类型
++ [ ] 允许通过 symbol 和 string 作为 key
+
+### getModule
++ [ ] 检查 namespace 的类型
++ [ ] 如果 namespace  返回 state
++ [ ] 如果有 remainMsg 则会检查是否是一个模块，不是的话需要报错
+
+### createModule 和 isModule
++ [ ] createModule 时，如果本身就是一个 module，则返回自己
++ [ ] createModule 将会添加一个 symbol 值作为标识符
++ [ ] isModule 检查时，必须是一个 plainObject
++ [ ] isModule 将检查 symbol 标识符

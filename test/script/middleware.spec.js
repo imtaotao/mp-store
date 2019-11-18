@@ -13,7 +13,7 @@ const define = action => store.add(action, {
   setter: () => ({}),
 })
 
-describe('middleware', () => {
+describe('Middleware', () => {
   it('no specify action', () => {
     let i = 0
     let j = 0

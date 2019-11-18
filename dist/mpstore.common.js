@@ -248,7 +248,7 @@ function mixin (inject) {
   return expandMethods;
 }
 
-var MODULE_FLAG = '__mpModule';
+var MODULE_FLAG = Symbol('__module');
 function isModule(m) {
   return isPlainObject(m) && m[MODULE_FLAG] === true;
 }
@@ -265,22 +265,24 @@ function mergeModule(module, partialModule, moduleName, createMsg) {
     if (typeof createMsg === 'function') {
       assert(!(key in module), createMsg(key, moduleName));
     } else {
-      assert(!(isModule(module[key]) && !isModule(partialModule[key])), "The [".concat(key, "] is a module that you can change to other values."));
+      assert(!(isModule(module[key]) && !isModule(partialModule[key])), "The namespace [".concat(key, "] is a module that you can change to other value, ") + 'You can use `createModule` method to recreate a module.');
     }
   }
 
   return createModule(Object.assign({}, module, partialModule));
 }
+function addModuleFlag(obj) {
+  obj[MODULE_FLAG] = true;
+  return obj;
+}
 function createModule(obj) {
   assert(isPlainObject(obj), 'The base module object must be an plain object');
-  if (isModule(obj)) return obj;
-  assert(!(MODULE_FLAG in obj), "the [".concat(MODULE_FLAG, "] is the keyword of the mpStore module, you can't use it"));
-  Object.defineProperty(obj, MODULE_FLAG, {
-    value: true,
-    writable: false,
-    enumerable: false,
-    configurable: false
-  });
+
+  if (isModule(obj)) {
+    return obj;
+  }
+
+  addModuleFlag(obj);
   return obj;
 }
 function createModuleByNamespace(namespace, partialModule, rootModule, action, createMsg) {
@@ -292,7 +294,7 @@ function createModuleByNamespace(namespace, partialModule, rootModule, action, c
   var parentModule = rootModule;
   var moduleWraper = parentWraper;
   var segments = namespace.split('.');
-  var remaingMsg = action ? "\n\n  --- from [".concat(action, "] action") : '';
+  var remaingMsg = action ? "\n\n  --- from [".concat(action.toString(), "] action") : '';
 
   for (var i = 0, len = segments.length; i < len; i++) {
     var childModule = void 0;
@@ -304,10 +306,10 @@ function createModuleByNamespace(namespace, partialModule, rootModule, action, c
     }
 
     if (key in parentModule) {
-      assert(isModule(parentModule[key]), 'you can\'t create child moudle, ' + "because the [".concat(key, "] already exists in [").concat(segments[i - 1] || 'root', "] module, ") + "but [".concat(key, "] not a module.").concat(remaingMsg));
-      childModule = isLastIndex ? mergeModule(parentModule[key], partialModule, key, createMsg) : createModule(Object.assign({}, parentModule[key]));
+      assert(isModule(parentModule[key]), 'you can\'t create child moudle, ' + "because namespace [".concat(key, "] already exists in [").concat(segments[i - 1] || 'root', "] module, ") + "but [".concat(key, "] not a module.").concat(remaingMsg));
+      childModule = isLastIndex ? mergeModule(parentModule[key], partialModule, key, createMsg) : Object.assign({}, parentModule[key]);
     } else {
-      childModule = isLastIndex ? createModule(partialModule) : createModule({});
+      childModule = isLastIndex ? createModule(partialModule) : addModuleFlag({});
     }
 
     parentWraper[key] = childModule;
@@ -684,7 +686,7 @@ function handleLayer(action, fn, store, payload, next, restoreProcessState) {
     if (hooks && typeof hooks['middlewareError'] === 'function') {
       hooks['middlewareError'](action, payload, error);
     } else {
-      warning("".concat(error, "\n\n   --- from middleware [").concat(action, "] action."));
+      warning("".concat(error, "\n\n   --- from middleware [").concat(action.toString(), "] action."));
     }
   }
 }
@@ -764,12 +766,16 @@ var storeId = 0;
 function assertReducer(action, reducer) {
   var setter = reducer.setter,
       partialState = reducer.partialState;
-  assert('partialState' in reducer, "You must defined [partialState]." + "\n\n --- from [".concat(action, "] action."));
-  assert(isPlainObject(partialState), "The [partialState] must be an object." + "\n\n --- from [".concat(action, "] action."));
+
+  var actionType = _typeof(action);
+
+  assert(typeof actionType === 'string' || _typeof(actionType) === 'symbol', "The action must be a Symbol or String, but now is [".concat(actionType, "]."));
+  assert('partialState' in reducer, "You must defined [partialState]." + "\n\n --- from [".concat(action.toString(), "] action."));
+  assert(isPlainObject(partialState), "The [partialState] must be an object." + "\n\n --- from [".concat(action.toString(), "] action."));
 
   if (typeof setter !== 'function') {
     reducer.setter = function () {
-      warning("Can't changed [".concat(action, "] action value. Have you defined a setter?") + "\n\n --- from [".concat(action, "] action."));
+      warning("Can't changed [".concat(action.toString(), "] action value. Have you defined a setter?") + "\n\n --- from [".concat(action.toString(), "] action."));
     };
   }
 
@@ -781,16 +787,16 @@ function filterReducer(state, action, reducer) {
       partialState = reducer.partialState;
 
   if ('namespace' in reducer) {
-    assert(typeof namespace === 'string', 'The module namespace must be a string.' + "\n\n --- from [".concat(action, "] action."));
+    assert(typeof namespace === 'string', 'The module namespace must be a string.' + "\n\n --- from [".concat(action.toString(), "] action."));
 
     if (!isEmptyObject(partialState)) {
       reducer.partialState = createModuleByNamespace(namespace, partialState, state, action, function (key, moduleName) {
-        return "The [".concat(key, "] already exists in [").concat(moduleName, "] module, ") + "Please don't repeat defined. \n\n --- from [".concat(action, "] action.");
+        return "The [".concat(key, "] already exists in [").concat(moduleName, "] module, ") + "Please don't repeat defined. \n\n --- from [".concat(action.toString(), "] action.");
       });
     }
   } else {
     for (var key in partialState) {
-      assert(!state.hasOwnProperty(key), "The [".concat(key, "] already exists in global state, ") + "Please don't repeat defined. \n\n --- from [".concat(action, "] action."));
+      assert(!state.hasOwnProperty(key), "The [".concat(key, "] already exists in global state, ") + "Please don't repeat defined. \n\n --- from [".concat(action.toString(), "] action."));
     }
   }
 
@@ -809,7 +815,7 @@ function () {
     this.depComponents = [];
     this.GLOBALWORD = 'global';
     this.isDispatching = false;
-    this.version = '0.0.10';
+    this.version = '0.1.0';
     this.state = Object.freeze(createModule({}));
     this.middleware = new Middleware(this);
   }
@@ -819,7 +825,7 @@ function () {
     value: function add(action, reducer) {
       assert(!this.reducers.find(function (v) {
         return v.action === action;
-      }), "Can't repeat defined [".concat(action, "] action."));
+      }), "Can't repeat defined [".concat(action.toString(), "] action."));
       assertReducer(action, reducer);
       filterReducer(this.state, action, reducer);
       reducer.action = action;
@@ -837,7 +843,7 @@ function () {
 
       var reducers = this.reducers,
           isDispatching = this.isDispatching;
-      assert(!isDispatching, 'It is not allowed to call "dispatch" during dispatch execution.' + "\n\n   --- from [".concat(action, "] action."));
+      assert(!isDispatching, 'It is not allowed to call "dispatch" during dispatch execution.' + "\n\n   --- from [".concat(action.toString(), "] action."));
       var reducer = reducers.find(function (v) {
         return v.action === action;
       });
@@ -863,9 +869,10 @@ function () {
           if (!isEmptyObject(newPartialState)) {
             if (isModuleDispatching) {
               newPartialState = createModuleByNamespace(namespace, newPartialState, _this.state, action);
+              _this.state = mergeState(_this.state, newPartialState);
+            } else {
+              _this.state = deepFreeze(mergeModule(_this.state, newPartialState));
             }
-
-            _this.state = mergeState(_this.state, newPartialState);
           }
         } finally {
           _this.isDispatching = false;
@@ -916,20 +923,35 @@ function () {
   }, {
     key: "addModule",
     value: function addModule(namespace, reducers) {
+      var _this3 = this;
+
       assert(typeof namespace === 'string', 'the namespace mast be a string');
 
-      if (isPlainObject(reducers)) {
-        for (var action in reducers) {
-          var reducer = reducers[action];
-          reducer.namespace = namespace;
-          this.add(action, reducers);
+      if (!isEmptyObject(reducers)) {
+        var i = 0;
+        var keys = Object.keys(reducers);
+        var symbols = Object.getOwnPropertySymbols(reducers);
+
+        var addRecucer = function addRecucer(action) {
+          var recuder = reducers[action];
+          recuder.namespace = namespace;
+
+          _this3.add(action, reducer);
+        };
+
+        for (; i < keys.length; i++) {
+          addRecucer(keys[i]);
+        }
+
+        for (i = 0; i < symbols.length; i++) {
+          addRecucer(symbols[i]);
         }
       }
     }
   }, {
     key: "rewirteConfigAndAddDep",
     value: function rewirteConfigAndAddDep(config, isPage) {
-      var _this3 = this;
+      var _this4 = this;
 
       var createState = null;
       var store = this;
@@ -970,7 +992,7 @@ function () {
               return fn(store.state);
             }
 
-            var module = _this3.getModule(namespace, "\n\n   --- from [".concat(namespace, "] of useState."));
+            var module = _this4.getModule(namespace, "\n\n   --- from [".concat(namespace, "] of useState."));
 
             return fn(module, store.state);
           }));
@@ -986,13 +1008,13 @@ function () {
       }
 
       var addDep = function addDep(component) {
-        var shouldAdd = callHook(_this3.hooks, 'addDep', [component, isPage]);
+        var shouldAdd = callHook(_this4.hooks, 'addDep', [component, isPage]);
 
         if (shouldAdd !== false && createState !== null) {
           if (component.data && isPlainObject(component.data[GLOBALWORD])) {
             component.timeTravel = new TimeTravel(component, GLOBALWORD, travelLimit);
 
-            _this3.depComponents.push({
+            _this4.depComponents.push({
               isPage: isPage,
               component: component,
               didUpdate: didUpdate,
@@ -1042,7 +1064,7 @@ function () {
   return Store;
 }();
 
-var version = '0.0.10';
+var version = '0.1.0';
 var nativePage = Page;
 var nativeComponent = Component;
 

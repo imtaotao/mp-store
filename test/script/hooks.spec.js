@@ -3,7 +3,7 @@ import { REPLACE } from '../../src/diff'
 import createStore from '../../src/index'
 import { applyPatchs } from '../../src/update'
 
-describe('hooks', () => {
+describe('Hooks', () => {
   it('createBefore', () => {
     let first = true
     const pageCfg = {}

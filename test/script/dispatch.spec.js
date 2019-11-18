@@ -7,7 +7,7 @@ beforeEach(() => {
   store = createStore()
 })
 
-describe('dispatch', () => {
+describe('Dispatch', () => {
   it('store state cannot be changed', () => {
     const one = () => store.state.a = 2
     expect(isError(one)).toBeTruthy()

@@ -6,6 +6,7 @@ import {
   callHook,
   mapObject,
   mergeState,
+  deepFreeze,
   createWraper,
   isPlainObject,
   isEmptyObject,
@@ -14,6 +15,7 @@ import {
 import {
   isModule,
   getModule,
+  mergeModule,
   createModule,
   createModuleByNamespace,
 } from './module'
@@ -28,24 +30,30 @@ let storeId = 0
 
 function assertReducer (action, reducer) {
   const { setter, partialState } = reducer
+  const actionType = typeof action
+
+  assert(
+    typeof actionType === 'string' || typeof actionType === 'symbol',
+    `The action must be a Symbol or String, but now is [${actionType}].`,
+  )
 
   assert(
     'partialState' in reducer,
     `You must defined [partialState].` + 
-      `\n\n --- from [${action}] action.`,
+      `\n\n --- from [${action.toString()}] action.`,
   )
 
   assert(
     isPlainObject(partialState),
     `The [partialState] must be an object.` +
-      `\n\n --- from [${action}] action.`,
+      `\n\n --- from [${action.toString()}] action.`,
   )
 
   if (typeof setter !== 'function') {
     reducer.setter = () => {
       warning(
-        `Can\'t changed [${action}] action value. Have you defined a setter?` +
-          `\n\n --- from [${action}] action.`
+        `Can\'t changed [${action.toString()}] action value. Have you defined a setter?` +
+          `\n\n --- from [${action.toString()}] action.`
       )
     }
   }
@@ -59,7 +67,7 @@ function filterReducer (state, action, reducer) {
     assert(
       typeof namespace === 'string',
       'The module namespace must be a string.' +
-        `\n\n --- from [${action}] action.`,
+        `\n\n --- from [${action.toString()}] action.`,
     )
 
     if (!isEmptyObject(partialState)) {
@@ -69,7 +77,7 @@ function filterReducer (state, action, reducer) {
         state,
         action,
         (key, moduleName) => `The [${key}] already exists in [${moduleName}] module, ` +
-          `Please don't repeat defined. \n\n --- from [${action}] action.`,
+          `Please don't repeat defined. \n\n --- from [${action.toString()}] action.`,
       )
     }
   } else {
@@ -78,7 +86,7 @@ function filterReducer (state, action, reducer) {
       assert(
         !state.hasOwnProperty(key),
         `The [${key}] already exists in global state, ` +
-          `Please don't repeat defined. \n\n --- from [${action}] action.`,
+          `Please don't repeat defined. \n\n --- from [${action.toString()}] action.`,
       )
     }
   }
@@ -101,7 +109,7 @@ export class Store {
   add (action, reducer) {
     assert(
       !this.reducers.find(v => v.action === action),
-      `Can't repeat defined [${action}] action.`,
+      `Can't repeat defined [${action.toString()}] action.`,
     )
     
     assertReducer(action, reducer)
@@ -112,6 +120,8 @@ export class Store {
     const { partialState } = reducer
 
     if (!isEmptyObject(partialState)) {
+      // because we don't allow duplicate fields to be created,
+      // so don't need to use `mergeModule`
       this.state = mergeState(this.state, partialState)
     }
   }
@@ -124,7 +134,7 @@ export class Store {
     assert(
       !isDispatching,
       'It is not allowed to call "dispatch" during dispatch execution.' +
-        `\n\n   --- from [${action}] action.`
+        `\n\n   --- from [${action.toString()}] action.`
     )
 
     const reducer = reducers.find(v => v.action === action)
@@ -167,8 +177,10 @@ export class Store {
               this.state,
               action,
             )
+            this.state = mergeState(this.state, newPartialState)
+          } else {
+            this.state = deepFreeze(mergeModule(this.state, newPartialState))
           }
-          this.state = mergeState(this.state, newPartialState)
         }
       } finally {
         // the `isDispatching` need restore.
@@ -233,11 +245,23 @@ export class Store {
       'the namespace mast be a string',
     )
 
-    if (isPlainObject(reducers)) {
-      for (const action in reducers) {
-        const reducer = reducers[action]
-        reducer.namespace = namespace
-        this.add(action, reducers)
+    if (!isEmptyObject(reducers)) {
+      let i = 0
+      const keys = Object.keys(reducers)
+      const symbols = Object.getOwnPropertySymbols(reducers)
+
+      const addRecucer = action => {
+        const recuder = reducers[action]
+        recuder.namespace = namespace
+        this.add(action, reducer)
+      }
+    
+      for (; i < keys.length; i++) {
+        addRecucer(keys[i])
+      }
+      
+      for (i = 0; i < symbols.length; i++) {
+        addRecucer(symbols[i])
       }
     }
   }
@@ -294,10 +318,7 @@ export class Store {
         if (namespace === null) {
           return fn(store.state)
         }
-        const module = this.getModule(
-          namespace,
-          `\n\n   --- from [${namespace}] of useState.`
-        )
+        const module = this.getModule(namespace, `\n\n   --- from [${namespace}] of useState.`)
         return fn(module, store.state)
       }))
     }

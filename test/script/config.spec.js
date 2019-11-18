@@ -3,7 +3,7 @@ import { REPLACE } from '../../src/diff'
 import createStore from '../../src/index'
 import TimeTravel from '../../src/time-travel'
 
-describe('component config', () => {
+describe('Component config', () => {
   it('delete `storeConfig` option', () => {
     window.Page = v => v
     window.Component = v => v

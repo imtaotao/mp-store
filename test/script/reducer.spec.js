@@ -7,7 +7,7 @@ beforeEach(() => {
   store = createStore()
 })
 
-describe('reducer', () => {
+describe('Reducer', () => {
   it('need `partialState` word', () => {
     const fn = () => store.add('testAction', {
       partialState: {},

@@ -20,7 +20,7 @@ import { isError, expectPatch } from '../utils'
 
 const root = '/'
 
-describe('json diff', () => {
+describe('Json diff', () => {
   it('a', () => {
     const patchs = diff(a[0], a[1], root)
     expect(patchs.length).toBe(3)

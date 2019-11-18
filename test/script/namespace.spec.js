@@ -1,7 +1,7 @@
 import { isError } from '../utils'
 import createStore from '../../src/index'
 
-describe('namespace', () => {
+describe('Namespace', () => {
   it('inspect default namespace', () => {
     createStore()
     const id = simulate.load(Component({

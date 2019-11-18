@@ -1,7 +1,7 @@
 import { isError } from '../utils'
 import createStore from '../../src/index'
 
-describe('mixin', () => {
+describe('Mixin', () => {
   it('inspect params', () => {
     createStore(define => {
       const one = () => define()
