@@ -44,12 +44,6 @@ export function mixinMethods (config, methods) {
   }
 }
 
-export function inspectState(partialState, state, sendWarn) {
-  for (const key in partialState) {
-    assert(!state.hasOwnProperty(key), sendWarn(key))
-  }
-}
-
 // remove component from depsComponent
 export function remove (list, component) {
   const index = list.findIndex(item => item.component === component)

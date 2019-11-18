@@ -42,7 +42,7 @@ export default function (mixinInject, hooks) {
     
       // the store will record all page and component
       // when global state changed, the dependent components will be update
-      store.rewirteCfgAndAddDep(config, true)
+      store.rewirteConfigAndAddDep(config, true)
     },
   )
 
@@ -52,7 +52,7 @@ export default function (mixinInject, hooks) {
       callHook(hooks, 'createBefore', [config, false])
 
       expandConfig(config, expandMethods, false)
-      store.rewirteCfgAndAddDep(config, false)
+      store.rewirteConfigAndAddDep(config, false)
     },
   )
 

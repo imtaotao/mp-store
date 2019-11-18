@@ -3,38 +3,70 @@ Page({
   storeConfig: {
     travelLimit: 5,
     defineReducer (store) {
-      store.add('MODULE_STATE', {
-        namespace: 'tao',
+      store.add('MODULE_STATE_root', {
         partialState: {
-          index: 0,
+          taoo: {
+          //   aa: 111,
+            __mpModule: true,
+          //   tao: {
+          //     __mpModule: true,
+          //   }
+          }
         },
-        // setter (state, payload) {
-        //   return { index: payload }
-        // },
+        setter (state, payload) {
+          return { index: payload }
+        },
+      })
+
+      store.add('MODULE_STATE', {
+        namespace: 'taoo.tao',
+        partialState: {
+          cc: 1,
+        },
+        setter (state, payload) {
+          console.log(state, payload)
+          return {
+            cc: payload
+          }
+        }
       })
 
       store.add('MODULE_STATE_1', {
-        namespace: 'tao',
+        namespace: 'taoo.tao',
         partialState: {
-          a: 0,
+          index: 0,
         },
-        setter (state, payload) {
-          return { a: payload }
+      })
+
+      store.add('MODULE_STATE_2', {
+        partialState: {
+          abc: 0,
+          cab: {
+            fff: 121,
+            __mpModule: true,
+          }
         },
+      })
+
+      store.add('fff', {
+        namespace: 'cab',
+        partialState: {
+          'taotao': 1221
+        }
       })
     },
 
-    useState: () => (['tao', {
-      index: state => state.index,
+    useState: () => (['taoo.tao', {
+      index: state => state.cc,
     }]),
   },
 
   onLoad () {
-    console.log(this.store)
+    console.log(this.store.state)
   },
 
   change () {
-    this.store.dispatch('MODULE_STATE', this.store.state.tao.index + 1)
+    this.store.dispatch('MODULE_STATE', this.store.getModule('taoo.tao').cc + 1)
     console.log(this.store.state)
   }
 })

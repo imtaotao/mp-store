@@ -2,7 +2,6 @@ import { assert, parsePath, isPlainObject } from './utils'
 
 // 1. can't delete module, if module is created
 // 2. modules allow nesting
-
 export const MODULE_FLAG = '__mpModule'
 
 export function isModule (m) {
@@ -15,7 +14,7 @@ export function getModule (state, namespace) {
     : state
 }
 
-export function mergeModule (module, partialModule, createMsg) {
+export function mergeModule (module, partialModule, moduleName, createMsg) {
   const keys = Object.keys(partialModule)
   let len = keys.length
 
@@ -23,8 +22,8 @@ export function mergeModule (module, partialModule, createMsg) {
     const key = keys[len]
 
     // inspect all attribute
-    if (createMsg) {
-      assert(!(key in module), createMsg)
+    if (typeof createMsg === 'function') {
+      assert(!(key in module), createMsg(key, moduleName))
     } else {
       assert(
         !(isModule(module[key]) && !isModule(partialModule[key])),
@@ -32,7 +31,7 @@ export function mergeModule (module, partialModule, createMsg) {
       )
     }
   }
-  return Object.assign({}, module, partialModule)
+  return createModule(Object.assign({}, module, partialModule))
 }
 
 export function createModule (obj) {
@@ -48,7 +47,14 @@ export function createModule (obj) {
     `the [${MODULE_FLAG}] is the keyword of the mpStore module, you can't use it`,
   )
 
-  obj[MODULE_FLAG] = true
+  // the `__mpModule` is not allowed to be traversed
+  Object.defineProperty(obj, MODULE_FLAG, {
+    value: true,
+    writable: false,
+    enumerable: false,
+    configurable: false,
+  })
+
   return obj
 }
 
@@ -62,7 +68,13 @@ export function createModule (obj) {
 //   })
 // 
 // 2. if create new module, we need jugement the namespace whether in parent module
-export function createModuleByNamespace (namespace, partialModule, rootModule, action) {
+export function createModuleByNamespace (
+  namespace,
+  partialModule,
+  rootModule,
+  action,
+  createMsg,
+) {
   if (!namespace) {
     return mergeModule(rootModule, partialModule)
   }
@@ -75,14 +87,15 @@ export function createModuleByNamespace (namespace, partialModule, rootModule, a
 
   for (let i = 0, len = segments.length; i < len; i++) {
     const key = segments[i]
+    const isLastIndex = i === len - 1
 
     // the global state certainly module
     if (i > 0) {
       assert(
         isModule(parentModule),
         'the child modules must be in the parent module.\n\n' +
-          ` parent module namespace is [${key}]\n\n` +
-            ` child module namespace is [${segments[i - 1]}]${remaingMsg}`, 
+          `  the parent module namespace is [${segments[i - 1]}]\n\n` +
+            `  the child module namespace is [${key}]${remaingMsg}`, 
       )
     }
 
@@ -95,54 +108,29 @@ export function createModuleByNamespace (namespace, partialModule, rootModule, a
       )
 
       // the parentModule is module
-      const childModule = i === len - 1
-        ? mergeModule(parentModule[key], partialModule)
-        : parentModule[key]
+      const childModule = isLastIndex
+        ? mergeModule(
+            parentModule[key],
+            partialModule,
+            key,
+            createMsg,
+          )
+        : createModule(
+            Object.assign({}, parentModule[key])
+          )
       
       parentWraper[key] = childModule
       parentWraper = childModule
+      parentModule = childModule
     } else {
-      const childModule = i === len - 1
+      const childModule = isLastIndex
         ? createModule(partialModule)
-        : { __mpModule: true }
+        : createModule({})
 
       parentWraper[key] = childModule
       parentWraper = childModule
+      parentModule = childModule
     }
-
-    parentModule = parentModule[key]
   }
   return moduleWraper
 }
-
-
-// const state = {
-//   a: 1,
-//   b: createModule({
-//     ba: 1,
-//     c: createModule({
-//       name: 'tao'
-//     }),
-//     d: createModule({
-//       dm: createModule({
-//         ab: 'code',
-//         arr: [121],
-//         child: {
-//           name: 'chen',
-//           __mpModule: true,
-//         }
-//       })
-//     })
-//   })
-// }
-
-// const namespace = ''
-// const module = getModule(state, namespace)
-// const newPModule = createModuleByNamespace(namespace, {
-//   aaa: 121,
-//   dm: {
-//     __mpModule: true
-//   }
-// }, state, 'test')
-// console.log(module)
-// console.log(newPModule)

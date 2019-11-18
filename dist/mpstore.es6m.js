@@ -38,11 +38,6 @@ function mixinMethods (config, methods) {
     }
   }
 }
-function inspectState(partialState, state, sendWarn) {
-  for (const key in partialState) {
-    assert(!state.hasOwnProperty(key), sendWarn(key));
-  }
-}
 function remove (list, component) {
   const index = list.findIndex(item => item.component === component);
   if (index > -1) {
@@ -156,6 +151,22 @@ function getModule (state, namespace) {
     ? parsePath(namespace)(state)
     : state
 }
+function mergeModule (module, partialModule, moduleName, createMsg) {
+  const keys = Object.keys(partialModule);
+  let len = keys.length;
+  while(~--len) {
+    const key = keys[len];
+    if (typeof createMsg === 'function') {
+      assert(!(key in module), createMsg(key, moduleName));
+    } else {
+      assert(
+        !(isModule(module[key]) && !isModule(partialModule[key])),
+        `The [${key}] is a module that you can change to other values.`,
+      );
+    }
+  }
+  return createModule(Object.assign({}, module, partialModule))
+}
 function createModule (obj) {
   assert(
     isPlainObject(obj),
@@ -166,8 +177,70 @@ function createModule (obj) {
     !(MODULE_FLAG in obj),
     `the [${MODULE_FLAG}] is the keyword of the mpStore module, you can't use it`,
   );
-  obj[MODULE_FLAG] = true;
+  Object.defineProperty(obj, MODULE_FLAG, {
+    value: true,
+    writable: false,
+    enumerable: false,
+    configurable: false,
+  });
   return obj
+}
+function createModuleByNamespace (
+  namespace,
+  partialModule,
+  rootModule,
+  action,
+  createMsg,
+) {
+  if (!namespace) {
+    return mergeModule(rootModule, partialModule)
+  }
+  let parentWraper = {};
+  let parentModule = rootModule;
+  const moduleWraper = parentWraper;
+  const segments = namespace.split('.');
+  const remaingMsg =  action ? `\n\n  --- from [${action}] action` : '';
+  for (let i = 0, len = segments.length; i < len; i++) {
+    const key = segments[i];
+    const isLastIndex = i === len - 1;
+    if (i > 0) {
+      assert(
+        isModule(parentModule),
+        'the child modules must be in the parent module.\n\n' +
+          `  the parent module namespace is [${segments[i - 1]}]\n\n` +
+            `  the child module namespace is [${key}]${remaingMsg}`,
+      );
+    }
+    if (key in parentModule) {
+      assert(
+        isModule(parentModule[key]),
+        'you can\'t create child moudle, ' +
+          `because the [${key}] already exists in [${segments[i - 1] || 'root'}] module, ` +
+            `but [${key}] not a module.${remaingMsg}`,
+      );
+      const childModule = isLastIndex
+        ? mergeModule(
+            parentModule[key],
+            partialModule,
+            key,
+            createMsg,
+          )
+        : createModule(
+            Object.assign({}, parentModule[key])
+          );
+      parentWraper[key] = childModule;
+      parentWraper = childModule;
+      parentModule = childModule;
+    } else {
+      const childModule = isLastIndex
+        ? createModule(partialModule)
+        : createModule({});
+      parentWraper[key] = childModule;
+      parentWraper = childModule;
+      parentModule = childModule;
+    }
+  }
+  return moduleWraper
 }
 
 const ADD = 1;
@@ -527,8 +600,8 @@ class Middleware {
 }
 
 let storeId = 0;
-function filterReducer (state, action, reducer) {
-  const { setter, namespace, partialState } = reducer;
+function assertReducer (action, reducer) {
+  const { setter, partialState } = reducer;
   assert(
     'partialState' in reducer,
     `You must defined [partialState].` +
@@ -539,20 +612,6 @@ function filterReducer (state, action, reducer) {
     `The [partialState] must be an object.` +
       `\n\n --- from [${action}] action.`,
   );
-  if ('namespace' in reducer) {
-    assert(
-      typeof namespace === 'string',
-      'The module namespace must be a string.' +
-        `\n\n --- from [${action}] action.`,
-    );
-    const module = getModule(state, namespace);
-  } else {
-    inspectState(partialState, state, key => {
-      return `The [${key}] already exists in global state, ` +
-        `Please don't repeat defined. \n\n --- from [${action}] action.`
-    });
-    if (isModule(partialState)) ;
-  }
   if (typeof setter !== 'function') {
     reducer.setter = () => {
       warning(
@@ -560,6 +619,35 @@ function filterReducer (state, action, reducer) {
           `\n\n --- from [${action}] action.`
       );
     };
+  }
+  return reducer
+}
+function filterReducer (state, action, reducer) {
+  const { namespace, partialState } = reducer;
+  if ('namespace' in reducer) {
+    assert(
+      typeof namespace === 'string',
+      'The module namespace must be a string.' +
+        `\n\n --- from [${action}] action.`,
+    );
+    if (!isEmptyObject(partialState)) {
+      reducer.partialState = createModuleByNamespace(
+        namespace,
+        partialState,
+        state,
+        action,
+        (key, moduleName) => `The [${key}] already exists in [${moduleName}] module, ` +
+          `Please don't repeat defined. \n\n --- from [${action}] action.`,
+      );
+    }
+  } else {
+    for (const key in partialState) {
+      assert(
+        !state.hasOwnProperty(key),
+        `The [${key}] already exists in global state, ` +
+          `Please don't repeat defined. \n\n --- from [${action}] action.`,
+      );
+    }
   }
   return reducer
 }
@@ -580,9 +668,11 @@ class Store {
       !this.reducers.find(v => v.action === action),
       `Can't repeat defined [${action}] action.`,
     );
-    const { partialState } = filterReducer(this.state, action, reducer);
+    assertReducer(action, reducer);
+    filterReducer(this.state, action, reducer);
     reducer.action = action;
     this.reducers.push(reducer);
+    const { partialState } = reducer;
     if (!isEmptyObject(partialState)) {
       this.state = mergeState(this.state, partialState);
     }
@@ -605,9 +695,9 @@ class Store {
       try {
         let newPartialState;
         const namespace = reducer.namespace;
-        const isModuleDispatch = typeof namespace === 'string';
-        if (isModuleDispatch) {
-          const module = this.getModule(namespace, true);
+        const isModuleDispatching = typeof namespace === 'string';
+        if (isModuleDispatching) {
+          const module = this.getModule(namespace, `\n\n --- from [${action}] action.`);
           newPartialState = reducer.setter(module, destPayload, this.state);
         } else {
           newPartialState = reducer.setter(this.state, destPayload);
@@ -617,23 +707,15 @@ class Store {
           'setter function should be return a plain object.',
         );
         if (!isEmptyObject(newPartialState)) {
-          if (isModuleDispatch) {
-            this.state = mergeState(
-              this.state,
-              {
-                [namespace]: Object.assign(
-                  {},
-                  this.getModule(namespace),
-                  newPartialState,
-                ),
-              },
-            );
-          } else {
-            this.state = mergeState(
-              this.state,
+          if (isModuleDispatching) {
+            newPartialState = createModuleByNamespace(
+              namespace,
               newPartialState,
+              this.state,
+              action,
             );
           }
+          this.state = mergeState(this.state, newPartialState);
         }
       } finally {
          this.isDispatching = false;
@@ -660,18 +742,34 @@ class Store {
     );
     this.GLOBALWORD = key;
   }
-  getModule (namespace, needInspect) {
+  getModule (namespace, remainMsg) {
     assert(
       typeof namespace === 'string',
       'the namespace mast be a string',
     );
-    const module = parsePath(namespace)(this.state);
-    if (needInspect && !(isPlainObject(module) && module.__mpModule)) {
-      warning(`The [${namespace}] module is not exist.`);
+    if (!namespace) {
+      return this.state
+    }
+    const module = getModule(this.state, namespace);
+    if (remainMsg && !isModule(module)) {
+      warning(`The [${namespace}] module is not exist.${remainMsg || ''}`);
     }
     return module
   }
-  rewirteCfgAndAddDep (config, isPage) {
+  addModule (namespace, reducers) {
+    assert(
+      typeof namespace === 'string',
+      'the namespace mast be a string',
+    );
+    if (isPlainObject(reducers)) {
+      for (const action in reducers) {
+        const reducer = reducers[action];
+        reducer.namespace = namespace;
+        this.add(action, reducers);
+      }
+    }
+  }
+  rewirteConfigAndAddDep (config, isPage) {
     let createState = null;
     const store = this;
     const GLOBALWORD = this.GLOBALWORD;
@@ -707,9 +805,14 @@ class Store {
           `but now is return a [${typeof defineObject}]`,
       );
       createState = () => clone(mapObject(defineObject, fn => {
-        return namespace === null
-          ? fn(store.state)
-          : fn(this.getModule(namespace, true), store.state)
+        if (namespace === null) {
+          return fn(store.state)
+        }
+        const module = this.getModule(
+          namespace,
+          `\n\n   --- from [${namespace}] of useState.`
+        );
+        return fn(module, store.state)
       }));
     }
     if (createState !== null) {
@@ -797,7 +900,7 @@ function index (mixinInject, hooks) {
     function (config) {
       callHook(hooks, 'createBefore', [config, true]);
       expandConfig(config, expandMethods, true);
-      store.rewirteCfgAndAddDep(config, true);
+      store.rewirteConfigAndAddDep(config, true);
     },
   );
   Component = createWraper(
@@ -805,7 +908,7 @@ function index (mixinInject, hooks) {
     function (config) {
       callHook(hooks, 'createBefore', [config, false]);
       expandConfig(config, expandMethods, false);
-      store.rewirteCfgAndAddDep(config, false);
+      store.rewirteConfigAndAddDep(config, false);
     },
   );
   return store
@@ -813,4 +916,3 @@ function index (mixinInject, hooks) {
 
 export default index;
 export { clone, createModule, diff, restore, version };
-//# sourceMappingURL=mpstore.es6m.js.map
