@@ -6,16 +6,17 @@ import {
 
 // a. can't delete module, if module is created
 // b. modules allow nesting
-export const MODULE_FLAG = Symbol('__module')
+export const MODULE_FLAG = Symbol('module')
 
 export function isModule (m) {
   return isPlainObject(m) && m[MODULE_FLAG] === true
 }
 
 export function getModule (state, namespace) {
-  return namespace
+  const module = namespace
     ? parsePath(namespace)(state)
     : state
+  return isModule(module) ? module : null
 }
 
 export function mergeModule (module, partialModule, moduleName, createMsg) {
@@ -38,12 +39,13 @@ export function mergeModule (module, partialModule, moduleName, createMsg) {
       assert(
         !(isModuleForOrigin && !isModuleForCurrent),
         `The namespace [${key}] is a module that you can change to other value, ` +
-          'You can use `createModule` method to recreate a module.',
+          'You can use `createModule` method to recreate a module.' + 
+            '\n\n  --- from setter function.',
       )
       
       // allow merge child module
       if (isModuleForOrigin && isModuleForCurrent) {
-        isModuleForCurrent[key] = mergeModule(originItem, currentPartialItem)
+        partialModule[key] = mergeModule(originItem, currentPartialItem)
       }
     }
   }
@@ -90,7 +92,7 @@ export function createModuleByNamespace (namespace, partialModule, rootModule, s
   let parentModule = rootModule
   const moduleWraper = parentWraper
   const segments = namespace.split('.')
-  const remaingMsg =  action ? `\n\n  --- from [${stringifyAction}] action` : ''
+  const remaingMsg =  `\n\n  --- from [${stringifyAction}] action`
 
   for (let i = 0, len = segments.length; i < len; i++) {
     let childModule

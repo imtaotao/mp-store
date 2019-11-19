@@ -14,7 +14,7 @@ const define = action => store.add(action, {
 })
 
 describe('Middleware', () => {
-  it('', () => {
+  it('Allow interception of `Symbol` action', () => {
     let i = 0
     let j = 0
     const s = Symbol()

@@ -5,26 +5,50 @@ Page({
   storeConfig: {
     travelLimit: 5,
     defineReducer (store) {
-      store.add('MODULE_STATE_root', {
-        // namespace: 'root',
+      store.add('action', {
         partialState: {
-          taoo: createModule({
-            parent: 1,
-            tao: createModule({
-              index: 1,
-              fff: 121,
-              c: createModule({
-                aa: 1,
-              })
-            }),
-          })
-        },
-        setter (state, payload) {
-          return {
-            taoo: 1
-          }
-        },
+          a: createModule({}),
+        }
       })
+      console.log(store.getModule('a'), 'tao')
+      // store.add('two', {
+      //   namespace: 'b',
+      //   partialState: {},
+      // })
+      // store.add('three', {
+      //   namespace: 'a.a',
+      //   partialState: { a: 1 },
+      // })
+      // store.add('four', {
+      //   namespace: 'a.a',
+      //   partialState: { b: 2 },
+      // })
+      // store.add('MODULE_STATE_root', {
+      //   // namespace: 'root',
+      //   partialState: {
+      //     taoo: createModule({
+      //       parent: 1,
+      //       tao: createModule({
+      //         index: 1,
+      //         fff: 121,
+      //         c: createModule({
+      //           aa: 1,
+      //         })
+      //       }),
+      //     })
+      //   },
+      //   setter (state, payload) {
+      //     return {
+      //       taoo: createModule({
+      //         parent: payload,
+      //         tao: createModule({
+      //           index: payload,
+                
+      //         })
+      //       })
+      //     }
+      //   },
+      // })
 
       // store.add('MODULE_STATE', {
       //   namespace: 'taoo',
@@ -41,12 +65,12 @@ Page({
       //   }
       // })
 
-      store.add('MODULE_STATE_1', {
-        namespace: 'taoo.tao.c',
-        partialState: {
-          index: 0,
-        },
-      })
+      // store.add('MODULE_STATE_1', {
+      //   namespace: 'taoo.tao.c',
+      //   partialState: {
+      //     index: 0,
+      //   },
+      // })
 
       // store.add('MODULE_STATE_2', {
       //   partialState: {
@@ -66,9 +90,9 @@ Page({
       // })
     },
 
-    useState: () => (['taoo.tao', {
-      index: state => state.index,
-    }]),
+    // useState: () => (['taoo.tao', {
+    //   index: state => state.index,
+    // }]),
   },
 
   onLoad () {

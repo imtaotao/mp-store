@@ -13,7 +13,6 @@ import {
 } from './utils'
 
 import {
-  isModule,
   getModule,
   mergeModule,
   createModule,
@@ -71,13 +70,13 @@ function filterReducer (state, action, reducer) {
       'The module namespace must be a string.' +
         `\n\n --- from [${stringifyAction}] action.`,
     )
-
-    if (!isEmptyObject(partialState)) {
+    
+    if (!getModule(state, namespace) || !isEmptyObject(partialState)) {
       reducer.partialState = createModuleByNamespace(
         namespace,
         partialState,
         state,
-        action,
+        stringifyAction,
         (key, moduleName) => `The [${key}] already exists in [${moduleName}] module, ` +
           `Please don't repeat defined. \n\n --- from [${stringifyAction}] action.`,
       )
@@ -235,10 +234,9 @@ export class Store {
     const module = getModule(this.state, namespace)
     // if the module does not meet the requirements
     // throw error
-    if (remainMsg && !isModule(module)) {
+    if (remainMsg && module === null) {
       warning(`The [${namespace}] module is not exist.${remainMsg || ''}`)
     }
-
     return module
   }
 
@@ -254,8 +252,8 @@ export class Store {
       const symbols = Object.getOwnPropertySymbols(reducers)
 
       const addRecucer = action => {
-        const recuder = reducers[action]
-        recuder.namespace = namespace
+        const reducer = reducers[action]
+        reducer.namespace = namespace
         this.add(action, reducer)
       }
     

@@ -244,12 +244,13 @@ function mixin (inject) {
   return expandMethods;
 }
 
-var MODULE_FLAG = Symbol('__module');
+var MODULE_FLAG = Symbol('module');
 function isModule(m) {
   return isPlainObject(m) && m[MODULE_FLAG] === true;
 }
 function getModule(state, namespace) {
-  return namespace ? parsePath(namespace)(state) : state;
+  var module = namespace ? parsePath(namespace)(state) : state;
+  return isModule(module) ? module : null;
 }
 function mergeModule(module, partialModule, moduleName, createMsg) {
   var keys = Object.keys(partialModule);
@@ -265,10 +266,10 @@ function mergeModule(module, partialModule, moduleName, createMsg) {
       var currentPartialItem = partialModule[key];
       var isModuleForOrigin = isModule(originItem);
       var isModuleForCurrent = isModule(currentPartialItem);
-      assert(!(isModuleForOrigin && !isModuleForCurrent), "The namespace [".concat(key, "] is a module that you can change to other value, ") + 'You can use `createModule` method to recreate a module.');
+      assert(!(isModuleForOrigin && !isModuleForCurrent), "The namespace [".concat(key, "] is a module that you can change to other value, ") + 'You can use `createModule` method to recreate a module.' + '\n\n  --- from setter function.');
 
       if (isModuleForOrigin && isModuleForCurrent) {
-        isModuleForCurrent[key] = mergeModule(originItem, currentPartialItem);
+        partialModule[key] = mergeModule(originItem, currentPartialItem);
       }
     }
   }
@@ -298,7 +299,7 @@ function createModuleByNamespace(namespace, partialModule, rootModule, stringify
   var parentModule = rootModule;
   var moduleWraper = parentWraper;
   var segments = namespace.split('.');
-  var remaingMsg = action ? "\n\n  --- from [".concat(stringifyAction, "] action") : '';
+  var remaingMsg = "\n\n  --- from [".concat(stringifyAction, "] action");
 
   for (var i = 0, len = segments.length; i < len; i++) {
     var childModule = void 0;
@@ -795,8 +796,8 @@ function filterReducer(state, action, reducer) {
   if ('namespace' in reducer) {
     assert(typeof namespace === 'string', 'The module namespace must be a string.' + "\n\n --- from [".concat(stringifyAction, "] action."));
 
-    if (!isEmptyObject(partialState)) {
-      reducer.partialState = createModuleByNamespace(namespace, partialState, state, action, function (key, moduleName) {
+    if (!getModule(state, namespace) || !isEmptyObject(partialState)) {
+      reducer.partialState = createModuleByNamespace(namespace, partialState, state, stringifyAction, function (key, moduleName) {
         return "The [".concat(key, "] already exists in [").concat(moduleName, "] module, ") + "Please don't repeat defined. \n\n --- from [".concat(stringifyAction, "] action.");
       });
     }
@@ -921,7 +922,7 @@ function () {
 
       var module = getModule(this.state, namespace);
 
-      if (remainMsg && !isModule(module)) {
+      if (remainMsg && module === null) {
         warning("The [".concat(namespace, "] module is not exist.").concat(remainMsg || ''));
       }
 
@@ -940,8 +941,8 @@ function () {
         var symbols = Object.getOwnPropertySymbols(reducers);
 
         var addRecucer = function addRecucer(action) {
-          var recuder = reducers[action];
-          recuder.namespace = namespace;
+          var reducer = reducers[action];
+          reducer.namespace = namespace;
 
           _this3.add(action, reducer);
         };
@@ -1104,3 +1105,4 @@ function index (mixinInject, hooks) {
 
 export default index;
 export { clone, createModule, diff, isModule, restore, version };
+//# sourceMappingURL=mpstore.esm.js.map

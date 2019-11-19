@@ -142,14 +142,15 @@ function mixin (inject) {
   return expandMethods
 }
 
-const MODULE_FLAG = Symbol('__module');
+const MODULE_FLAG = Symbol('module');
 function isModule (m) {
   return isPlainObject(m) && m[MODULE_FLAG] === true
 }
 function getModule (state, namespace) {
-  return namespace
+  const module = namespace
     ? parsePath(namespace)(state)
-    : state
+    : state;
+  return isModule(module) ? module : null
 }
 function mergeModule (module, partialModule, moduleName, createMsg) {
   const keys = Object.keys(partialModule);
@@ -166,10 +167,11 @@ function mergeModule (module, partialModule, moduleName, createMsg) {
       assert(
         !(isModuleForOrigin && !isModuleForCurrent),
         `The namespace [${key}] is a module that you can change to other value, ` +
-          'You can use `createModule` method to recreate a module.',
+          'You can use `createModule` method to recreate a module.' +
+            '\n\n  --- from setter function.',
       );
       if (isModuleForOrigin && isModuleForCurrent) {
-        isModuleForCurrent[key] = mergeModule(originItem, currentPartialItem);
+        partialModule[key] = mergeModule(originItem, currentPartialItem);
       }
     }
   }
@@ -198,7 +200,7 @@ function createModuleByNamespace (namespace, partialModule, rootModule, stringif
   let parentModule = rootModule;
   const moduleWraper = parentWraper;
   const segments = namespace.split('.');
-  const remaingMsg =  action ? `\n\n  --- from [${stringifyAction}] action` : '';
+  const remaingMsg =  `\n\n  --- from [${stringifyAction}] action`;
   for (let i = 0, len = segments.length; i < len; i++) {
     let childModule;
     const key = segments[i];
@@ -627,12 +629,12 @@ function filterReducer (state, action, reducer) {
       'The module namespace must be a string.' +
         `\n\n --- from [${stringifyAction}] action.`,
     );
-    if (!isEmptyObject(partialState)) {
+    if (!getModule(state, namespace) || !isEmptyObject(partialState)) {
       reducer.partialState = createModuleByNamespace(
         namespace,
         partialState,
         state,
-        action,
+        stringifyAction,
         (key, moduleName) => `The [${key}] already exists in [${moduleName}] module, ` +
           `Please don't repeat defined. \n\n --- from [${stringifyAction}] action.`,
       );
@@ -751,7 +753,7 @@ class Store {
       return this.state
     }
     const module = getModule(this.state, namespace);
-    if (remainMsg && !isModule(module)) {
+    if (remainMsg && module === null) {
       warning(`The [${namespace}] module is not exist.${remainMsg || ''}`);
     }
     return module
@@ -766,8 +768,8 @@ class Store {
       const keys = Object.keys(reducers);
       const symbols = Object.getOwnPropertySymbols(reducers);
       const addRecucer = action => {
-        const recuder = reducers[action];
-        recuder.namespace = namespace;
+        const reducer = reducers[action];
+        reducer.namespace = namespace;
         this.add(action, reducer);
       };
       for (; i < keys.length; i++) {
@@ -922,3 +924,4 @@ function index (mixinInject, hooks) {
 
 export default index;
 export { clone, createModule, diff, isModule, restore, version };
+//# sourceMappingURL=mpstore.es6m.js.map

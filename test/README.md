@@ -46,6 +46,7 @@
 + [x] `defineReducer` 方法在小程序初始化的时候调用，允许定义 `reducer`，接受一个参数为 `store`，上下文为 `store`
 + [x] 没有 `useState` 方法当前组件将不会被添加到依赖中
 + [x] `useState` 返回一个普通对象，对象中每个 `value` 是一个函数，将接受一个参数为全局 `state`，否则将会报错
++ [ ] `useState` 返回一个数组时，第一个参数为 namespace, 第二参数为对象
 + [x] 依赖添加将在 `onLoad` 和 `attached` 钩子之前，`store` 添加是同样的逻辑，`timeTravel` 添加是同样的逻辑
 + [x] 依赖移除将在 `onUnload` 和 `detached` 钩子之后，`store` 不会被移除，`timeTravel` 不会被移除
 + [x] `willUpdate` 将在当前组件更新之前调用，返回 false 将阻止更新，接受两个参数 为 `component、newPartialState`， `this 为 store`
@@ -101,31 +102,35 @@
 + [x] `history` 记录时，超过了指定的范围将丢弃前面的 `patchs`
 
 ### module
-+ [ ] module 可以通过 `createModule` 方法来创建
-+ [ ] module 可以通过 namespace 来创建
-+ [ ] module 可以嵌套存在
-+ [ ] module 嵌套时，父级对象必须是 module
-+ [ ] 如果创建的 module 命名空间在父 module 中被占用（但是占用的不是 module 时），则报错
-+ [ ] 如果创建的 module 命名空间在父 module 中被占用（但是占用是 module 时），则合并
-+ [ ] 如果创建的 module 命名空间在父 module 中被占用（但是占用是 module 时），则合并，合并时有相同的子命名空间，则报错（就是不能重复定义相同的字段）
-+ [ ] 如果通过 namespace 创建模块，父对象不存在时，默认新建一个空的父模块
-+ [ ] 如果通过 namespace 创建模块，父对象存在时，但不是一个模块时，则报错
-+ [ ] 如果通过 namespace 创建模块，父对象存在时，是一个模块时，则在其中新建子模块
++ [x] global state 就是一个 module
++ [x] module 可以通过 `createModule` 方法来创建
++ [x] module 可以通过 namespace 来创建
++ [x] module 可以嵌套存在
++ [x] module 嵌套时，父级对象必须是 module
++ [x] 如果创建的 module 命名空间在父 module 中被占用（但是占用的不是 module 时），则报错
++ [x] 如果创建的 module 命名空间在父 module 中被占用（但是占用是 module 时），则合并
++ [x] 如果创建的 module 命名空间在父 module 中被占用（但是占用是 module 时），则合并，合并时有相同的子命名空间，则报错（就是不能重复定义相同的字段）
++ [x] 如果通过 namespace 创建模块，父对象不存在时，默认新建一个空的父模块
++ [x] 如果通过 namespace 创建模块，父对象存在时，但不是一个模块时，则报错
++ [x] 如果通过 namespace 创建模块，父对象存在时，是一个模块时，则在其中新建子模块
 + [ ] setter 函数返回的对象中，如果更改了其中的子模块，必须同样是模块，不能更改为其他的值（模块的优先级高一些），否则报错
 + [ ] setter 函数返回的对象中，如果更改了其中的子模块，必须同样是模块，不能更改为其他的值（模块的优先级高一些），并且合并递归合并子模块
 + [ ] setter 函数返回的对象作用于当前 namespace 定义的模块
 
-### addModules
-+ [ ] 检查 namespace 的类型
-+ [ ] 允许通过 symbol 和 string 作为 key
+### addModule
++ [x] 检查 namespace 的类型
++ [x] 允许通过 symbol 和 string 作为 key
++ [x] 先添加 string 类型的 key，再添加 symbol 类型的 key
++ [x] 默认是调用 `store.add` 方法
 
 ### getModule
-+ [ ] 检查 namespace 的类型
-+ [ ] 如果 namespace  返回 state
-+ [ ] 如果有 remainMsg 则会检查是否是一个模块，不是的话需要报错
++ [x] 检查 namespace 的类型
++ [x] 如果没有 namespace  返回 state
++ [x] 如果有 remainMsg 则会检查模块是否存在，没有的话需要报错
 
 ### createModule 和 isModule
-+ [ ] createModule 时，如果本身就是一个 module，则返回自己
-+ [ ] createModule 将会添加一个 symbol 值作为标识符
-+ [ ] isModule 检查时，必须是一个 plainObject
-+ [ ] isModule 将检查 symbol 标识符
++ [x] createModule 时，如果本身就是一个 module，则返回自己
++ [x] createModule 将会添加一个 symbol 值作为标识符
++ [x] createModule 必须传入一个 plainObject
++ [x] isModule 检查时，必须是一个 plainObject
++ [x] isModule 将检查 symbol 标识符
