@@ -666,7 +666,7 @@ class Store {
   add (action, reducer) {
     const actionType = typeof action;
     assert(
-      typeof actionType === 'string' || typeof actionType === 'symbol',
+      actionType === 'string' || actionType === 'symbol',
       `The action must be a Symbol or String, but now is [${actionType}].`,
     );
     assert(

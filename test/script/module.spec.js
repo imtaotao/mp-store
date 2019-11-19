@@ -134,6 +134,25 @@ describe('Module', () => {
     expect(store.state.b.b).toBe(2)
   })
 
+  it('when namespace is an empty string, it is equivalent to in the global module.', () => {
+    store.add('one', {
+      namespace: '',
+      partialState: {
+        a: 1,
+      },
+      setter (state, payload, rootState) {
+        expect(state).toBe(store.state)
+        expect(state).toBe(rootState)
+        return { a: payload }
+      },
+    })
+    expect(isModule(store.state)).toBeTruthy()
+    expect(Object.keys(store.state).length).toBe(1)
+    expect(store.state.a).toBe(1)
+    store.dispatch('one', 2)
+    expect(store.state.a).toBe(2)
+  })
+
   it(
     'if the created module namespace is occupied in the parent module (but the module is occupied), ' +
     'then merge, merge with the same sub-namespace, then report an error (that is, you cannot repeatedly define the same field)',

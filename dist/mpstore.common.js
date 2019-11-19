@@ -833,7 +833,7 @@ function () {
     value: function add(action, reducer) {
       var actionType = _typeof(action);
 
-      assert(typeof actionType === 'string' || _typeof(actionType) === 'symbol', "The action must be a Symbol or String, but now is [".concat(actionType, "]."));
+      assert(actionType === 'string' || actionType === 'symbol', "The action must be a Symbol or String, but now is [".concat(actionType, "]."));
       assert(!this.reducers.find(function (v) {
         return v.action === action;
       }), "Can't repeat defined [".concat(action.toString(), "] action."));
