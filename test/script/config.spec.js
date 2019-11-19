@@ -151,11 +151,46 @@ describe('Component config', () => {
     expect(isError(three)).toBeFalsy()
     expect(isError(four)).toBeTruthy()
     const cfg = common({
-      a (state) {
+      a (state, rootState) {
         expect(state).toBe(store.state)
+        expect(rootState).toBeUndefined()
       },
     })
     expect(cfg.data.a).toBeUndefined()
+  })
+
+  it('when `useState` return an array', () => {
+    const store = createStore()
+    const fn = () => {
+      return Component({
+        template: '<div>{{ global.name }}</div>',
+        storeConfig: {
+          useState (_store) {
+            expect(this).toBe(_store)
+            expect(_store).toBe(store)
+            return ['a.b', {
+              name: (state, rootState) => {
+                expect(state).toBe(store.getModule('a.b'))
+                expect(rootState).toBe(store.state)
+                return state.name
+              }
+            }]
+          },
+        },
+      })
+    }
+    expect(isError(fn)).toBeTruthy()
+    store.add('action',{
+      namespace: 'a.b',
+      partialState: {
+        name: 'tao',
+      },
+    })
+    const id = simulate.load(fn())
+    const cm = simulate.render(id)
+    cm.attach(document.createElement('parent-wrapper'))
+    expect(cm.data.global.name).toBe('tao')
+    expect(cm.dom.textContent).toBe('tao')
   })
 
   it('inspect time of add dep and store for component', done => {

@@ -170,6 +170,12 @@ function mergeModule (module, partialModule, moduleName, createMsg) {
           'You can use `createModule` method to recreate a module.' +
             '\n\n  --- from setter function.',
       );
+      assert(
+        !(!isModuleForOrigin && isModuleForCurrent),
+        `The namespace [${key}] is not a module, you can't create it as a module, ` +
+          'you must define the module in `reducer`.' +
+            '\n\n  --- from setter function.',
+      );
       if (isModuleForOrigin && isModuleForCurrent) {
         partialModule[key] = mergeModule(originItem, currentPartialItem);
       }
@@ -595,11 +601,6 @@ let storeId = 0;
 function assertReducer (action, reducer) {
   const { setter, partialState } = reducer;
   const stringifyAction = action.toString();
-  const actionType = typeof action;
-  assert(
-    typeof actionType === 'string' || typeof actionType === 'symbol',
-    `The action must be a Symbol or String, but now is [${actionType}].`,
-  );
   assert(
     'partialState' in reducer,
     `You must defined [partialState].` +
@@ -663,6 +664,11 @@ class Store {
     this.middleware = new Middleware(this);
   }
   add (action, reducer) {
+    const actionType = typeof action;
+    assert(
+      typeof actionType === 'string' || typeof actionType === 'symbol',
+      `The action must be a Symbol or String, but now is [${actionType}].`,
+    );
     assert(
       !this.reducers.find(v => v.action === action),
       `Can't repeat defined [${action.toString()}] action.`,
@@ -924,4 +930,3 @@ function index (mixinInject, hooks) {
 
 export default index;
 export { clone, createModule, diff, isModule, restore, version };
-//# sourceMappingURL=mpstore.es6m.js.map

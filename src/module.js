@@ -42,6 +42,13 @@ export function mergeModule (module, partialModule, moduleName, createMsg) {
           'You can use `createModule` method to recreate a module.' + 
             '\n\n  --- from setter function.',
       )
+
+      assert(
+        !(!isModuleForOrigin && isModuleForCurrent),
+        `The namespace [${key}] is not a module, you can't create it as a module, ` +
+          'you must define the module in `reducer`.' + 
+            '\n\n  --- from setter function.',
+      )
       
       // allow merge child module
       if (isModuleForOrigin && isModuleForCurrent) {

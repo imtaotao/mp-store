@@ -22,8 +22,8 @@
 + [x] `partialState` 字段必须为一个普通对象
 + [x] `partialState` 中不能有重复的全局字段
 + [x] `setter` 函数没有将会被重置为默认函数，调用会抛出错误
-+ [x] `setter` 函数接受两个参数，全局 `state` 和 `payload`
-+ [x] `setter` 函数应该返回一个对象，将被合并进全局 `state`
++ [x] `setter` 函数接受两个参数，`module`(全局 state 也是一个 module) 和 `payload`
++ [x] `setter` 函数应该返回一个对象，将被合并进 `module` (全局 state 也是一个 module)
 + [x] 不能添加重复的 reducer(action 相同的)
 + [x] store 的 id 是唯一的
 
@@ -46,7 +46,7 @@
 + [x] `defineReducer` 方法在小程序初始化的时候调用，允许定义 `reducer`，接受一个参数为 `store`，上下文为 `store`
 + [x] 没有 `useState` 方法当前组件将不会被添加到依赖中
 + [x] `useState` 返回一个普通对象，对象中每个 `value` 是一个函数，将接受一个参数为全局 `state`，否则将会报错
-+ [ ] `useState` 返回一个数组时，第一个参数为 namespace, 第二参数为对象
++ [x] `useState` 返回一个数组时，第一个参数为 namespace, 第二参数为对象，其中产生 state 的函数第一个参数为 `module`, 第二个为全局 `state`
 + [x] 依赖添加将在 `onLoad` 和 `attached` 钩子之前，`store` 添加是同样的逻辑，`timeTravel` 添加是同样的逻辑
 + [x] 依赖移除将在 `onUnload` 和 `detached` 钩子之后，`store` 不会被移除，`timeTravel` 不会被移除
 + [x] `willUpdate` 将在当前组件更新之前调用，返回 false 将阻止更新，接受两个参数 为 `component、newPartialState`， `this 为 store`
@@ -113,9 +113,12 @@
 + [x] 如果通过 namespace 创建模块，父对象不存在时，默认新建一个空的父模块
 + [x] 如果通过 namespace 创建模块，父对象存在时，但不是一个模块时，则报错
 + [x] 如果通过 namespace 创建模块，父对象存在时，是一个模块时，则在其中新建子模块
-+ [ ] setter 函数返回的对象中，如果更改了其中的子模块，必须同样是模块，不能更改为其他的值（模块的优先级高一些），否则报错
-+ [ ] setter 函数返回的对象中，如果更改了其中的子模块，必须同样是模块，不能更改为其他的值（模块的优先级高一些），并且合并递归合并子模块
-+ [ ] setter 函数返回的对象作用于当前 namespace 定义的模块
++ [x] setter 函数返回的对象中，如果更改了其中的子模块，必须同样是模块，不能更改为其他的值（模块的优先级高一些），否则报错
++ [x] setter 函数返回的对象中，如果更改了其中的子模块，必须同样是模块，不能更改为其他的值（模块的优先级高一些），并且合并递归合并子模块
++ [x] setter 函数返回的对象中，不能创建新的模块
++ [x] setter 函数返回的对象作用于当前 namespace 定义的模块
++ [x] setter 函数中第一个参数为 module, 第二个参数为 payload，如果有 namespace，第三个参数为全局 state
++ [x] 多级 module 与视图关联时，是否正确
 
 ### addModule
 + [x] 检查 namespace 的类型

@@ -267,6 +267,7 @@ function mergeModule(module, partialModule, moduleName, createMsg) {
       var isModuleForOrigin = isModule(originItem);
       var isModuleForCurrent = isModule(currentPartialItem);
       assert(!(isModuleForOrigin && !isModuleForCurrent), "The namespace [".concat(key, "] is a module that you can change to other value, ") + 'You can use `createModule` method to recreate a module.' + '\n\n  --- from setter function.');
+      assert(!(!isModuleForOrigin && isModuleForCurrent), "The namespace [".concat(key, "] is not a module, you can't create it as a module, ") + 'you must define the module in `reducer`.' + '\n\n  --- from setter function.');
 
       if (isModuleForOrigin && isModuleForCurrent) {
         partialModule[key] = mergeModule(originItem, currentPartialItem);
@@ -772,10 +773,6 @@ function assertReducer(action, reducer) {
   var setter = reducer.setter,
       partialState = reducer.partialState;
   var stringifyAction = action.toString();
-
-  var actionType = _typeof(action);
-
-  assert(typeof actionType === 'string' || _typeof(actionType) === 'symbol', "The action must be a Symbol or String, but now is [".concat(actionType, "]."));
   assert('partialState' in reducer, "You must defined [partialState]." + "\n\n --- from [".concat(stringifyAction, "] action."));
   assert(isPlainObject(partialState), "The [partialState] must be an object." + "\n\n --- from [".concat(stringifyAction, "] action."));
 
@@ -830,6 +827,9 @@ function () {
   _createClass(Store, [{
     key: "add",
     value: function add(action, reducer) {
+      var actionType = _typeof(action);
+
+      assert(typeof actionType === 'string' || _typeof(actionType) === 'symbol', "The action must be a Symbol or String, but now is [".concat(actionType, "]."));
       assert(!this.reducers.find(function (v) {
         return v.action === action;
       }), "Can't repeat defined [".concat(action.toString(), "] action."));
@@ -1105,4 +1105,3 @@ function index (mixinInject, hooks) {
 
 export default index;
 export { clone, createModule, diff, isModule, restore, version };
-//# sourceMappingURL=mpstore.esm.js.map

@@ -30,12 +30,6 @@ let storeId = 0
 function assertReducer (action, reducer) {
   const { setter, partialState } = reducer
   const stringifyAction = action.toString()
-  const actionType = typeof action
-
-  assert(
-    typeof actionType === 'string' || typeof actionType === 'symbol',
-    `The action must be a Symbol or String, but now is [${actionType}].`,
-  )
 
   assert(
     'partialState' in reducer,
@@ -108,6 +102,13 @@ export class Store {
   }
 
   add (action, reducer) {
+    const actionType = typeof action
+
+    assert(
+      typeof actionType === 'string' || typeof actionType === 'symbol',
+      `The action must be a Symbol or String, but now is [${actionType}].`,
+    )
+
     assert(
       !this.reducers.find(v => v.action === action),
       `Can't repeat defined [${action.toString()}] action.`,

@@ -352,4 +352,257 @@ describe('Module', () => {
     expect(isModule({ [Symbol('module')]: true })).toBeFalsy()
     expect(isModule({ [MODULE_FLAG]: true })).toBeTruthy()
   })
+
+  it(
+    'in the object returned by the setter function, if the submodule is changed, ' +
+    'it must be the same module, and cannot be changed to other values (the module has higher priority), otherwise an error is reported',
+    () => {
+      store.add('one', {
+        partialState: {
+          a: createModule({}),
+          b: 1,
+        },
+        setter: (state, payload) => payload
+      })
+      const fn = () => {
+        store.dispatch('one', {
+          a: {},
+          b: 3,
+        })
+      }
+      expect(store.state.b).toBe(1)
+      expect(isError(fn)).toBeTruthy()
+      expect(store.state.b).toBe(1)
+      store.dispatch('one', {
+        a: createModule({}),
+        b: 2,
+      })
+      expect(store.state.b).toBe(2)
+      expect(store.state.a).toEqual({})
+      expect(isModule(store.state.a)).toBeTruthy()
+    },
+  )
+
+  it(
+    'In the object returned by the setter function, if the submodule is changed, it must be the same module, ' +
+    'cannot be changed to other values (the module has higher priority), and the recursive merge submodule is merged',
+    () => {
+      store.add('one', {
+        partialState: {
+          a: createModule({}),
+          b: 1,
+        },
+        setter: (state, payload) => payload
+      })
+      store.dispatch('one', {
+        a: createModule({
+          name: 'tao',
+        }),
+        b: 2,
+      })
+      expect(store.state.b).toBe(2)
+      expect(store.state.a.name).toBe('tao')
+      expect(isModule(store.state.a)).toBeTruthy()
+    },
+  )
+
+  it('cannot create a new module in the object returned by the setter function', () => {
+    store.add('one', {
+      partialState: {
+        a: createModule({}),
+        b: 1,
+      },
+      setter: (state, payload) => payload
+    })
+    const one = () => {
+      store.dispatch('one', {
+        c: createModule({})
+      })
+    }
+    const two = () => {
+      store.dispatch('one', {
+        a: createModule({
+          c: createModule({})
+        })
+      })
+    }
+    const three = () => {
+      store.dispatch('one', {
+        a: createModule({
+          c: 'tao'
+        })
+      })
+    }
+    expect(isError(one)).toBeTruthy()
+    expect(isError(two)).toBeTruthy()
+    expect(isError(three)).toBeFalsy()
+    expect(isModule(store.state.a)).toBeTruthy()
+    expect(store.state.a.c).toBe('tao')
+  })
+
+  it('the object returned by the setter function acts on the module defined by the current namespace', () => {
+    store.add('one', {
+      namespace: 'a.b',
+      partialState: {
+        i: 1,
+      },
+      setter: (state, payload) => ({
+        i: payload,
+      })
+    })
+    store.add('two', {
+      namespace: 'a',
+      partialState: {
+        name: 'tao',
+      }
+    })
+    recursiveInspect(store.state, 'a.b')
+    expect(store.state.a.b.i).toBe(1)
+    expect(store.state.a.name).toBe('tao')
+    store.dispatch('one', 2)
+    expect(store.state.a.b.i).toBe(2)
+    expect(store.state.a.name).toBe('tao')
+    store.dispatch('one', 3)
+    expect(store.state.a.b.i).toBe(3)
+    expect(store.state.a.name).toBe('tao')
+  })
+
+  it('inpect setter function params', () => {
+    store.add('one', {
+      partialState: {
+        a: 1,
+      },
+      setter (state, payload, rootState) {
+        expect(isModule(state)).toBeTruthy()
+        expect(payload).toBe(2)
+        expect(rootState).toBeUndefined()
+        return { a: payload }
+      },
+    })
+    store.dispatch('one', 2)
+    expect(store.state.a).toBe(2)
+    expect(store.state.b).toBeUndefined()
+    store.add('two', {
+      namespace: 'b',
+      partialState: {
+        a: 1,
+      },
+      setter (state, payload, rootState) {
+        expect(isModule(state)).toBeTruthy()
+        expect(state).toEqual({ a: 1 })
+        expect(payload).toBe(2)
+        expect(rootState).toBe(store.state)
+        return { a: payload }
+      },
+    })
+    expect(store.state.a).toBe(2)
+    expect(store.state.b.a).toBe(1)
+    store.dispatch('two', 2)
+    expect(store.state.a).toBe(2)
+    expect(store.state.b.a).toBe(2)
+  })
+
+  it('[one] when a multi-level module is associated with a view', () => {
+    const store = createStore()
+    store.add('one', {
+      partialState: {
+        name: 'chen',
+      },
+      setter (state, payload) {
+        return {
+          name: payload,
+          a: createModule({
+            age: 20,
+          }),
+        }
+      },
+    })
+    store.add('two', {
+      namespace: 'a.b',
+      partialState: {
+        sex: 'man',
+      },
+      setter (state, payload) {
+        return  { sex: payload }
+      },
+    })
+    const id = simulate.load(Component({
+      template: '<div>{{ global.sex }}-{{ global.name }}-{{ global.age }}</div>',
+      storeConfig: {
+        useState () {
+          return ['a.b', {
+            sex: s => s.sex,
+            name: (s, r) => r.name,
+            age: (s, r) => r.a.age,
+          }]
+        },
+      },
+    }))
+    const cm = simulate.render(id)
+    cm.attach(document.createElement('parent-wrapper'))
+    const fn = (sex, name, age) => {
+      recursiveInspect(store.state, 'a.b')
+      expect(store.state.name).toBe(name)
+      expect(store.state.a.b.sex).toBe(sex)
+      expect(store.state.a.age).toBe(age)
+      expect(cm.dom.textContent).toBe(`${sex}-${name}-${age || ''}`)
+    }
+    fn('man', 'chen', undefined)
+    store.dispatch('one', 'imtaotao')
+    fn('man', 'imtaotao', 20)
+    store.dispatch('two', 'women')
+    fn('women', 'imtaotao', 20)
+  })
+
+  it('[two] when a multi-level module is associated with a view', () => {
+    const store = createStore()
+    store.add('one', {
+      partialState: {
+        name: 'chen',
+      },
+      setter: (state, payload) => ({ name: payload })
+    })
+    store.add('two', {
+      namespace: 'a',
+      partialState: {
+        age: 0,
+      },
+      setter: (state, payload) => ({ age: payload })
+    })
+    store.add('three', {
+      namespace: 'a.b',
+      partialState: {
+        sex: 'man',
+      },
+      setter: (state, payload) => ({ sex: payload })
+    })
+    const id = simulate.load(Component({
+      template: '<div>{{ global.sex }}-{{ global.name }}-{{ global.age }}</div>',
+      storeConfig: {
+        useState () {
+          return ['a.b', {
+            sex: s => s.sex,
+            name: (s, r) => r.name,
+            age: (s, r) => r.a.age,
+          }]
+        },
+      },
+    }))
+    const cm = simulate.render(id)
+    cm.attach(document.createElement('parent-wrapper'))
+    const fn = (sex, name, age) => {
+      recursiveInspect(store.state, 'a.b')
+      expect(store.state.name).toBe(name)
+      expect(store.state.a.b.sex).toBe(sex)
+      expect(store.state.a.age).toBe(age)
+      expect(cm.dom.textContent).toBe(`${sex}-${name}-${age}`)
+    }
+    fn('man', 'chen', 0)
+    store.dispatch('one', 'imtaotao')
+    fn('man', 'imtaotao', 0)
+    store.dispatch('two', 20)
+    fn('man', 'imtaotao', 20)
+    store.dispatch('three', 'women')
+    fn('women', 'imtaotao', 20)
+  })
 })
