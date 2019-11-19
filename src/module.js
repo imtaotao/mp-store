@@ -81,7 +81,7 @@ export function createModule (obj) {
 //   })
 // 
 // b. if create new module, we need jugement the namespace whether in parent module
-export function createModuleByNamespace (namespace, partialModule, rootModule, action, createMsg) {
+export function createModuleByNamespace (namespace, partialModule, rootModule, stringifyAction, createMsg) {
   if (!namespace) {
     return mergeModule(rootModule, partialModule)
   }
@@ -90,7 +90,7 @@ export function createModuleByNamespace (namespace, partialModule, rootModule, a
   let parentModule = rootModule
   const moduleWraper = parentWraper
   const segments = namespace.split('.')
-  const remaingMsg =  action ? `\n\n  --- from [${action.toString()}] action` : ''
+  const remaingMsg =  action ? `\n\n  --- from [${stringifyAction}] action` : ''
 
   for (let i = 0, len = segments.length; i < len; i++) {
     let childModule

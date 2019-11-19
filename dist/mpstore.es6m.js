@@ -190,7 +190,7 @@ function createModule (obj) {
   addModuleFlag(obj);
   return obj
 }
-function createModuleByNamespace (namespace, partialModule, rootModule, action, createMsg) {
+function createModuleByNamespace (namespace, partialModule, rootModule, stringifyAction, createMsg) {
   if (!namespace) {
     return mergeModule(rootModule, partialModule)
   }
@@ -198,7 +198,7 @@ function createModuleByNamespace (namespace, partialModule, rootModule, action, 
   let parentModule = rootModule;
   const moduleWraper = parentWraper;
   const segments = namespace.split('.');
-  const remaingMsg =  action ? `\n\n  --- from [${action.toString()}] action` : '';
+  const remaingMsg =  action ? `\n\n  --- from [${stringifyAction}] action` : '';
   for (let i = 0, len = segments.length; i < len; i++) {
     let childModule;
     const key = segments[i];
@@ -592,6 +592,7 @@ class Middleware {
 let storeId = 0;
 function assertReducer (action, reducer) {
   const { setter, partialState } = reducer;
+  const stringifyAction = action.toString();
   const actionType = typeof action;
   assert(
     typeof actionType === 'string' || typeof actionType === 'symbol',
@@ -600,30 +601,31 @@ function assertReducer (action, reducer) {
   assert(
     'partialState' in reducer,
     `You must defined [partialState].` +
-      `\n\n --- from [${action.toString()}] action.`,
+      `\n\n --- from [${stringifyAction}] action.`,
   );
   assert(
     isPlainObject(partialState),
     `The [partialState] must be an object.` +
-      `\n\n --- from [${action.toString()}] action.`,
+      `\n\n --- from [${stringifyAction}] action.`,
   );
   if (typeof setter !== 'function') {
     reducer.setter = () => {
       warning(
-        `Can\'t changed [${action.toString()}] action value. Have you defined a setter?` +
-          `\n\n --- from [${action.toString()}] action.`
+        `Can\'t changed [${stringifyAction}] action value. Have you defined a setter?` +
+          `\n\n --- from [${stringifyAction}] action.`
       );
     };
   }
   return reducer
 }
 function filterReducer (state, action, reducer) {
+  const stringifyAction = action.toString();
   const { namespace, partialState } = reducer;
   if ('namespace' in reducer) {
     assert(
       typeof namespace === 'string',
       'The module namespace must be a string.' +
-        `\n\n --- from [${action.toString()}] action.`,
+        `\n\n --- from [${stringifyAction}] action.`,
     );
     if (!isEmptyObject(partialState)) {
       reducer.partialState = createModuleByNamespace(
@@ -632,7 +634,7 @@ function filterReducer (state, action, reducer) {
         state,
         action,
         (key, moduleName) => `The [${key}] already exists in [${moduleName}] module, ` +
-          `Please don't repeat defined. \n\n --- from [${action.toString()}] action.`,
+          `Please don't repeat defined. \n\n --- from [${stringifyAction}] action.`,
       );
     }
   } else {
@@ -640,7 +642,7 @@ function filterReducer (state, action, reducer) {
       assert(
         !state.hasOwnProperty(key),
         `The [${key}] already exists in global state, ` +
-          `Please don't repeat defined. \n\n --- from [${action.toString()}] action.`,
+          `Please don't repeat defined. \n\n --- from [${stringifyAction}] action.`,
       );
     }
   }
@@ -674,15 +676,16 @@ class Store {
   }
   dispatch (action, payload, callback) {
     const { reducers, isDispatching } = this;
+    const stringifyAction = action.toString();
     assert(
       !isDispatching,
       'It is not allowed to call "dispatch" during dispatch execution.' +
-        `\n\n   --- from [${action.toString()}] action.`
+        `\n\n   --- from [${stringifyAction}] action.`
     );
     const reducer = reducers.find(v => v.action === action);
     assert(
       reducer,
-      `The [${action}] action does not exist. ` +
+      `The [${stringifyAction}] action does not exist. ` +
         'Maybe you have not defined.'
     );
     this.middleware.process(action, payload, (destPayload, restoreProcessState) => {
@@ -692,7 +695,7 @@ class Store {
         const namespace = reducer.namespace;
         const isModuleDispatching = typeof namespace === 'string';
         if (isModuleDispatching) {
-          const module = this.getModule(namespace, `\n\n --- from [${action}] action.`);
+          const module = this.getModule(namespace, `\n\n --- from [${stringifyAction}] action.`);
           newPartialState = reducer.setter(module, destPayload, this.state);
         } else {
           newPartialState = reducer.setter(this.state, destPayload);
@@ -707,7 +710,7 @@ class Store {
               namespace,
               newPartialState,
               this.state,
-              action,
+              stringifyAction,
             );
             this.state = mergeState(this.state, newPartialState);
           } else {

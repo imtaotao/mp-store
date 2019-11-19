@@ -14,6 +14,26 @@ const define = action => store.add(action, {
 })
 
 describe('Middleware', () => {
+  it('', () => {
+    let i = 0
+    let j = 0
+    const s = Symbol()
+    define(s)
+    store.use((payload, next) => {
+      i++
+      j++
+      next()
+    })
+    store.use(s, (payload, next) => {
+      i++
+      next()
+    })
+    store.dispatch(s, () => {
+      expect(i).toBe(2)
+      expect(j).toBe(1)
+    })
+  })
+
   it('no specify action', () => {
     let i = 0
     let j = 0

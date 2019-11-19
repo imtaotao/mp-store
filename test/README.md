@@ -15,9 +15,9 @@
 + [ ] diff 的所有测试用例都要分为 diff 逻辑层和视图层验证
 
 ### reducer 定义
-+ [ ] `action` 必须是 string 或者 symbol 类型
-+ [ ] `action` 是唯一的
-+ [ ] `namespace` 必须是 string 类型
++ [x] `action` 必须是 string 或者 symbol 类型
++ [x] `action` 是唯一的
++ [x] `namespace` 必须是 string 类型
 + [x] reducer 里面必须定义 `partialState` 字段
 + [x] `partialState` 字段必须为一个普通对象
 + [x] `partialState` 中不能有重复的全局字段
@@ -73,6 +73,7 @@
 + [x] 顺带单独测试 `applyPatchs` 这个内部方法
 
 ### middleware
++ [x] 可以拦截 symbal action
 + [x] 如果没有指定 `action`，则默认为拦截所有 `dispatch`
 + [x] 拦截所有 `action`
 + [x] 检查中间件的数量

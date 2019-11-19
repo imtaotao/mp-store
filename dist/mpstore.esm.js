@@ -289,7 +289,7 @@ function createModule(obj) {
   addModuleFlag(obj);
   return obj;
 }
-function createModuleByNamespace(namespace, partialModule, rootModule, action, createMsg) {
+function createModuleByNamespace(namespace, partialModule, rootModule, stringifyAction, createMsg) {
   if (!namespace) {
     return mergeModule(rootModule, partialModule);
   }
@@ -298,7 +298,7 @@ function createModuleByNamespace(namespace, partialModule, rootModule, action, c
   var parentModule = rootModule;
   var moduleWraper = parentWraper;
   var segments = namespace.split('.');
-  var remaingMsg = action ? "\n\n  --- from [".concat(action.toString(), "] action") : '';
+  var remaingMsg = action ? "\n\n  --- from [".concat(stringifyAction, "] action") : '';
 
   for (var i = 0, len = segments.length; i < len; i++) {
     var childModule = void 0;
@@ -770,16 +770,17 @@ var storeId = 0;
 function assertReducer(action, reducer) {
   var setter = reducer.setter,
       partialState = reducer.partialState;
+  var stringifyAction = action.toString();
 
   var actionType = _typeof(action);
 
   assert(typeof actionType === 'string' || _typeof(actionType) === 'symbol', "The action must be a Symbol or String, but now is [".concat(actionType, "]."));
-  assert('partialState' in reducer, "You must defined [partialState]." + "\n\n --- from [".concat(action.toString(), "] action."));
-  assert(isPlainObject(partialState), "The [partialState] must be an object." + "\n\n --- from [".concat(action.toString(), "] action."));
+  assert('partialState' in reducer, "You must defined [partialState]." + "\n\n --- from [".concat(stringifyAction, "] action."));
+  assert(isPlainObject(partialState), "The [partialState] must be an object." + "\n\n --- from [".concat(stringifyAction, "] action."));
 
   if (typeof setter !== 'function') {
     reducer.setter = function () {
-      warning("Can't changed [".concat(action.toString(), "] action value. Have you defined a setter?") + "\n\n --- from [".concat(action.toString(), "] action."));
+      warning("Can't changed [".concat(stringifyAction, "] action value. Have you defined a setter?") + "\n\n --- from [".concat(stringifyAction, "] action."));
     };
   }
 
@@ -787,20 +788,21 @@ function assertReducer(action, reducer) {
 }
 
 function filterReducer(state, action, reducer) {
+  var stringifyAction = action.toString();
   var namespace = reducer.namespace,
       partialState = reducer.partialState;
 
   if ('namespace' in reducer) {
-    assert(typeof namespace === 'string', 'The module namespace must be a string.' + "\n\n --- from [".concat(action.toString(), "] action."));
+    assert(typeof namespace === 'string', 'The module namespace must be a string.' + "\n\n --- from [".concat(stringifyAction, "] action."));
 
     if (!isEmptyObject(partialState)) {
       reducer.partialState = createModuleByNamespace(namespace, partialState, state, action, function (key, moduleName) {
-        return "The [".concat(key, "] already exists in [").concat(moduleName, "] module, ") + "Please don't repeat defined. \n\n --- from [".concat(action.toString(), "] action.");
+        return "The [".concat(key, "] already exists in [").concat(moduleName, "] module, ") + "Please don't repeat defined. \n\n --- from [".concat(stringifyAction, "] action.");
       });
     }
   } else {
     for (var key in partialState) {
-      assert(!state.hasOwnProperty(key), "The [".concat(key, "] already exists in global state, ") + "Please don't repeat defined. \n\n --- from [".concat(action.toString(), "] action."));
+      assert(!state.hasOwnProperty(key), "The [".concat(key, "] already exists in global state, ") + "Please don't repeat defined. \n\n --- from [".concat(stringifyAction, "] action."));
     }
   }
 
@@ -847,11 +849,12 @@ function () {
 
       var reducers = this.reducers,
           isDispatching = this.isDispatching;
-      assert(!isDispatching, 'It is not allowed to call "dispatch" during dispatch execution.' + "\n\n   --- from [".concat(action.toString(), "] action."));
+      var stringifyAction = action.toString();
+      assert(!isDispatching, 'It is not allowed to call "dispatch" during dispatch execution.' + "\n\n   --- from [".concat(stringifyAction, "] action."));
       var reducer = reducers.find(function (v) {
         return v.action === action;
       });
-      assert(reducer, "The [".concat(action, "] action does not exist. ") + 'Maybe you have not defined.');
+      assert(reducer, "The [".concat(stringifyAction, "] action does not exist. ") + 'Maybe you have not defined.');
       this.middleware.process(action, payload, function (destPayload, restoreProcessState) {
         _this.isDispatching = true;
 
@@ -861,7 +864,7 @@ function () {
           var isModuleDispatching = typeof namespace === 'string';
 
           if (isModuleDispatching) {
-            var module = _this.getModule(namespace, "\n\n --- from [".concat(action, "] action."));
+            var module = _this.getModule(namespace, "\n\n --- from [".concat(stringifyAction, "] action."));
 
             newPartialState = reducer.setter(module, destPayload, _this.state);
           } else {
@@ -872,7 +875,7 @@ function () {
 
           if (!isEmptyObject(newPartialState)) {
             if (isModuleDispatching) {
-              newPartialState = createModuleByNamespace(namespace, newPartialState, _this.state, action);
+              newPartialState = createModuleByNamespace(namespace, newPartialState, _this.state, stringifyAction);
               _this.state = mergeState(_this.state, newPartialState);
             } else {
               _this.state = deepFreeze(mergeModule(_this.state, newPartialState));

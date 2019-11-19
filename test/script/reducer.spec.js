@@ -8,6 +8,54 @@ beforeEach(() => {
 })
 
 describe('Reducer', () => {
+  it('inspect action type', () => {
+    const one = () => {
+      store.add('testAction', { partialState: {} })
+    }
+    const two = () => {
+      store.add(Symbol(), { partialState: {} })
+    }
+    const three = () => {
+      store.add(null, { partialState: {} })
+    }
+    expect(isError(one)).toBeFalsy()
+    expect(isError(two)).toBeFalsy()
+    expect(isError(three)).toBeTruthy()
+  })
+
+  it('the action is only', () => {
+    const s = Symbol()
+    const one = () => {
+      store.add(s,  { partialState: {} })
+    }
+    const two = () => {
+      store.add(Symbol(),  { partialState: {} })
+    }
+    const three = () => {
+      store.add(s,  { partialState: {} })
+    }
+    expect(isError(one)).toBeFalsy()
+    expect(isError(two)).toBeFalsy()
+    expect(isError(three)).toBeTruthy()
+  })
+
+  it('the namespace must be a string', () => {
+    const one = () => {
+      store.add('testActionOne',  {
+        namespace: '',
+        partialState: {},
+      })
+    }
+    const two = () => {
+      store.add('testActionTwo',  {
+        namespace: null,
+        partialState: {},
+      })
+    }
+    expect(isError(one)).toBeFalsy()
+    expect(isError(two)).toBeTruthy()
+  })
+
   it('need `partialState` word', () => {
     const fn = () => store.add('testAction', {
       partialState: {},

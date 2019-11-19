@@ -18,7 +18,7 @@ export const expectPatch = (patchs, path, val, type) => {
   }
 }
 
-export const isRangeTime = (time, duration, deviation = 30) => {
+export const isRangeTime = (time, duration, deviation = 50) => {
   const result = time - duration
   return result > -deviation && result < deviation
 }
