@@ -21,6 +21,7 @@
 + [x] reducer 里面必须定义 `partialState` 字段
 + [x] `partialState` 字段必须为一个普通对象
 + [x] `partialState` 中不能有重复的全局字段
++ [x] `partialState` 只拥有 symbol 类型的值时，将会判断为空对象，不添加
 + [x] `setter` 函数没有将会被重置为默认函数，调用会抛出错误
 + [x] `setter` 函数接受两个参数，`module`(全局 state 也是一个 module) 和 `payload`
 + [x] `setter` 函数应该返回一个对象，将被合并进 `module` (全局 state 也是一个 module)
@@ -107,6 +108,7 @@
 + [x] module 可以通过 namespace 来创建
 + [x] module 可以嵌套存在
 + [x] module 嵌套时，父级对象必须是 module
++ [x] module 嵌套时，如果父模块不是 module，getModule 将得到的是 null
 + [x] 如果创建的 module 命名空间在父 module 中被占用（但是占用的不是 module 时），则报错
 + [x] 如果创建的 module 命名空间在父 module 中被占用（但是占用是 module 时），则合并
 + [x] 如果创建的 module 命名空间在父 module 中被占用（但是占用是 module 时），则合并，合并时有相同的子命名空间，则报错（就是不能重复定义相同的字段）
@@ -125,6 +127,7 @@
 
 ### addModule
 + [x] 检查 namespace 的类型
++ [x] 允许重复添加，但不能有相同的 action
 + [x] 允许通过 symbol 和 string 作为 key
 + [x] 先添加 string 类型的 key，再添加 symbol 类型的 key
 + [x] 默认是调用 `store.add` 方法

@@ -6,34 +6,50 @@ Page({
   storeConfig: {
     travelLimit: 5,
     defineReducer (store) {
-      store.add('one', {
-        partialState: {
-          name: 'chen',
-        },
-        setter: (state, payload) => ({ name: payload })
-      })
-      store.add('two', {
-        namespace: 'a',
-        partialState: {
-          age: 0,
-        },
-        setter: (state, payload) => ({ age: payload })
-      })
-      store.add('three', {
-        namespace: 'a.b',
-        partialState: {
-          sex: 'man',
-        },
-        setter: (state, payload) => ({ sex: payload })
-      })
-  
-      // store.add('action', {
+      // store.add('one', {
       //   partialState: {
-      //     a: {},
-      //   }
+      //     name: 'chen',
+      //   },
+      //   setter: (state, payload) => ({ name: payload })
       // })
       // store.add('two', {
-      //   namespace: 'b',
+      //   namespace: 'a',
+      //   partialState: {
+      //     age: 0,
+      //   },
+      //   setter: (state, payload) => ({ age: payload })
+      // })
+      // store.add('three', {
+      //   namespace: 'a.b',
+      //   partialState: {
+      //     sex: 'man',
+      //   },
+      //   setter: (state, payload) => ({ sex: payload })
+      // })
+      
+      const s = Symbol()
+      store.addModule('a', {
+        [s]: {
+          partialState: {
+            name: 'tao0',
+          }
+        },
+        // 'bb': {
+        //   partialState: {
+        //     nameTwo: 'imtaotao',
+        //   }
+        // }
+      })
+   
+      // store.addModule('a', {
+      //   [Symbol()]: {
+      //     partialState: {
+      //       name: 'tao',
+      //     }
+      //   },
+      // })
+      // store.add('two', {
+      //   namespace: 'a',
       //   partialState: {},
       // })
       // store.add('three', {
@@ -115,13 +131,13 @@ Page({
     //   index: state => state.index,
     // }]),
     travelLimit: 5,
-    useState () {
-      return ['a.b', {
-        sex: s => s.sex,
-        name: (s, r) => r.name,
-        age: (s, r) => r.a.age,
-      }]
-    },
+    // useState () {
+    //   return ['a.b', {
+    //     sex: s => s.sex,
+    //     name: (s, r) => r.name,
+    //     age: (s, r) => r.a.age,
+    //   }]
+    // },
   },
 
   check (sex, name, age) {

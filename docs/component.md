@@ -128,3 +128,30 @@
 
   // page.data.global => { a: 2, b: 2 }
 ```
+
+`useState` 如果返回的是一个数组，则第一个参数将作为 namespace，意思是，你将使用的是一个模块的状态
+```js
+store.add('action', {
+  namespace: 'a.b',
+  partialState: {
+    a: 1,
+    b: 2,
+  },
+  setter (state, payload) {
+    return { a: payload }
+  },
+})
+
+Page({
+  storeConfig: {
+    useState (store) {
+      // state 将会是是 store.state.a.b 这个模块
+      // 而且你将会得到第二个参数，参数是 rootModule，也就是 store.state
+      return['a.b', {
+        a: (state, rootState) => state.a,
+        b: (state, rootState) => state.b,
+      }]
+    },
+  },
+})
+```

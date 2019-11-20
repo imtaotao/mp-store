@@ -17,12 +17,20 @@ const store = createStore(() => {}, {})
 ```
 
 ### API
-#### add(action: string, reducer: Object) : void
++ `store.add`
++ `store.dispatch`
++ `store.setNamespace`
++ `store.use`
++ `store.getModule`
++ `store.addModule`
+
+#### add(action: string | symbol, reducer: Object) : void
 `add` 方法用于添加一个 `reducer`, `action` 是唯一的，如果有重复，将会报错，`reducer` 的类型如下
 ```ts
   interface Reducere {
+    namespace?: string
     partialState: Object
-    setter?: (state: Store['state'], payload: any) : Object
+    setter?: (state: module, payload: any, rootState?: Store['state'] ) : Object
   }
 ```
 `partialState` 定义的状态将被合并到全局状态，如果里面包含着全局状态已有的字段，是不被允许的，`setter` 函数可以用来返回一个对象，这个对象将被合并到全局状态中
@@ -44,7 +52,7 @@ const store = createStore(() => {}, {})
   console.log(store.state.name) // 'imtaotao'
 ```
 
-#### dispatch(action: string, payload: any, callback?: () => void) : void
+#### dispatch(action: string | symbol, payload: any, callback?: () => void) : void
 `dispatch` 方法用于触发一个 `action`，他会调用所有的中间件，最后在调用 `reducer` 的 `setter` 函数，你将不能在 `setter` 函数中调用 `dispatch` 方法，以下的写法将会报错。这样做的愿意是为了避免逻辑过于混乱，但你可以在中间件中调用 `dispatch`
 ```js
   store.add('action', {
@@ -94,7 +102,7 @@ store 默认会在组件的 data 中添加 `global` 来接受用到的全局状�
   })
 ``` 
 
-#### use(action: string | Function, layer?: Function) : Function
+#### use(action: string | symbol | Function, layer?: Function) : Function
 `use` 方法用来添加中间件，中间件的详细文档在[这里](./middleware.md)可以看到。如果只传了一个参数，则默认拦截所有的 `action`，use 方法会返回一个 remove 函数，用来注销掉当前添加的中间件
 ```js
   // 将会拦截 `changed` 这个 action
@@ -116,6 +124,41 @@ store 默认会在组件的 data 中添加 `global` 来接受用到的全局状�
 
   // 注销掉中间件
   remove()
+```
+
+### getModule(namespace: string) : Module
+`getModule` 可以根据 namespace 得到一个 module，如果 namespace 为一个空字符串，则会返回 rootModule（就是全局 state）
+
+```js
+  store.add('action', {
+    namespace: 'a.b',
+    partialState: {
+      name: 'tao'
+    },
+  })
+  const module = store.getModule('a.b')
+  console.log(module) // { name: 'tao' }
+  console.log(module === store.state.a.b) // true
+```
+
+### addModule(namespace: string, reducers: Object) : void
+
+`addModule` 用于添加一个模块，也是添加多个 reducer，共用一个 namespace，底层也是调用 `store.add` 方法，所以这只是一个语法糖，你也可以自己封装一套你自己熟悉的语法
+```js
+  const s = Symbol()
+  store.addModule('a.b', {
+    // key 作为 action, value 作为 reducer
+    [s]: {
+      partialState: { name: 'tao' },
+      setter (state, payload) {},
+    },
+    'action': {
+      partialState: { age: 24 },
+      setter (state, payload) {},
+    },
+  })
+
+  console.log(store.state) // { a: { b: { name: 'tao', age: 24 } } }
 ```
 
 ### 数据不可变

@@ -1,6 +1,5 @@
 import {
   assert,
-  parsePath,
   isPlainObject,
 } from './utils'
 
@@ -13,10 +12,17 @@ export function isModule (m) {
   return isPlainObject(m) && m[MODULE_FLAG] === true
 }
 
+// get module by namespace
 export function getModule (state, namespace) {
-  const module = namespace
-    ? parsePath(namespace)(state)
-    : state
+  if (!namespace) return state
+  let module = state
+  const segments = namespace.split('.')
+
+  for (let i = 0, len = segments.length; i < len; i++) {
+    // every parent object must be a module
+    if (!isModule(module)) return null
+    module = module[segments[i]]
+  }
   return isModule(module) ? module : null
 }
 

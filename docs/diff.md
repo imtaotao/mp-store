@@ -11,3 +11,5 @@
 + 如果是 `function`，将会直接替换 
 + 如果是正则，将会使用旧值，不做替换
 + 不会对 `symbol` 类型的数据做 diff
+
+### 因为不会对 symbol 做 diff，所以 `partialState` 中定义的 symbol 将会出现一些不可预测的行为，比如 `partialState` 中只有 symbol 类型的数据时，将不会被添加到 store.state 中去

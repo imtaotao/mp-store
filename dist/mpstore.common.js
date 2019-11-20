@@ -219,17 +219,6 @@ function clone(value) {
 
   return result;
 }
-function parsePath(path) {
-  var segments = path.split('.');
-  return function (obj) {
-    for (var i = 0, len = segments.length; i < len; i++) {
-      if (!obj) return;
-      obj = obj[segments[i]];
-    }
-
-    return obj;
-  };
-}
 
 function mixin (inject) {
   var expandMethods = Object.create(null);
@@ -253,7 +242,15 @@ function isModule(m) {
   return isPlainObject(m) && m[MODULE_FLAG] === true;
 }
 function getModule(state, namespace) {
-  var module = namespace ? parsePath(namespace)(state) : state;
+  if (!namespace) return state;
+  var module = state;
+  var segments = namespace.split('.');
+
+  for (var i = 0, len = segments.length; i < len; i++) {
+    if (!isModule(module)) return null;
+    module = module[segments[i]];
+  }
+
   return isModule(module) ? module : null;
 }
 function mergeModule(module, partialModule, moduleName, createMsg) {
@@ -792,12 +789,9 @@ function filterReducer(state, action, reducer) {
 
   if ('namespace' in reducer) {
     assert(typeof namespace === 'string', 'The module namespace must be a string.' + "\n\n --- from [".concat(stringifyAction, "] action."));
-
-    if (!getModule(state, namespace) || !isEmptyObject(partialState)) {
-      reducer.partialState = createModuleByNamespace(namespace, partialState, state, stringifyAction, function (key, moduleName) {
-        return "The [".concat(key, "] already exists in [").concat(moduleName, "] module, ") + "Please don't repeat defined. \n\n --- from [".concat(stringifyAction, "] action.");
-      });
-    }
+    reducer.partialState = createModuleByNamespace(namespace, partialState, state, stringifyAction, function (key, moduleName) {
+      return "The [".concat(key, "] already exists in [").concat(moduleName, "] module, ") + "Please don't repeat defined. \n\n --- from [".concat(stringifyAction, "] action.");
+    });
   } else {
     for (var key in partialState) {
       assert(!state.hasOwnProperty(key), "The [".concat(key, "] already exists in global state, ") + "Please don't repeat defined. \n\n --- from [".concat(stringifyAction, "] action."));
@@ -819,7 +813,7 @@ function () {
     this.depComponents = [];
     this.GLOBALWORD = 'global';
     this.isDispatching = false;
-    this.version = '0.1.1';
+    this.version = '0.1.2';
     this.state = Object.freeze(createModule({}));
     this.middleware = new Middleware(this);
   }
@@ -935,24 +929,27 @@ function () {
 
       assert(typeof namespace === 'string', 'the namespace mast be a string');
 
-      if (!isEmptyObject(reducers)) {
-        var i = 0;
+      if (isPlainObject(reducers)) {
         var keys = Object.keys(reducers);
         var symbols = Object.getOwnPropertySymbols(reducers);
 
-        var addRecucer = function addRecucer(action) {
-          var reducer = reducers[action];
-          reducer.namespace = namespace;
+        if (keys.length + symbols.length > 0) {
+          var i = 0;
 
-          _this3.add(action, reducer);
-        };
+          var addRecucer = function addRecucer(action) {
+            var reducer = reducers[action];
+            reducer.namespace = namespace;
 
-        for (; i < keys.length; i++) {
-          addRecucer(keys[i]);
-        }
+            _this3.add(action, reducer);
+          };
 
-        for (i = 0; i < symbols.length; i++) {
-          addRecucer(symbols[i]);
+          for (; i < keys.length; i++) {
+            addRecucer(keys[i]);
+          }
+
+          for (i = 0; i < symbols.length; i++) {
+            addRecucer(symbols[i]);
+          }
         }
       }
     }
@@ -1076,7 +1073,7 @@ function () {
   return Store;
 }();
 
-var version = '0.1.1';
+var version = '0.1.2';
 var nativePage = Page;
 var nativeComponent = Component;
 

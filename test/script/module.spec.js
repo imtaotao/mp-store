@@ -1,5 +1,5 @@
 import { isError } from '../utils'
-import { MODULE_FLAG } from '../../src/module'
+import { getModule, MODULE_FLAG } from '../../src/module'
 import createStore, { isModule, createModule } from '../../src/index'
 
 let store
@@ -83,6 +83,50 @@ describe('Module', () => {
       partialState: {},
     })
     recursiveInspect(store.state, 'a.a.a')
+  })
+
+  it('when the module is nested, if the parent module is not a module, getModule will get null', () => {
+    const partialState = createModule({
+      a: {
+        b: createModule({}),
+      },
+    })
+    expect(isModule(partialState)).toBeTruthy()
+    expect(isModule(partialState.a.b)).toBeTruthy()
+    expect(getModule(partialState, 'a.b')).toBeNull()
+    store.add('one', { partialState })
+    expect(isModule(store.state)).toBeTruthy()
+    expect(isModule(store.state.a.b)).toBeTruthy()
+    expect(getModule(store.state, 'a.b')).toBeNull()
+    expect(store.getModule('a.b')).toBeNull()
+    const one = () => {
+      store.add('two', {
+        partialState: {
+          a: createModule({
+            b: createModule({}),
+          }),
+        }
+      })
+    }
+    const two = () => {
+      store.add('three', {
+        namespace: 'a.b',
+        partialState: { name: 'tao' }
+      })
+    }
+    // repeat defined `a`
+    expect(isError(one)).toBeTruthy()
+    // `a` is not a module
+    expect(isError(two)).toBeTruthy()
+    store = createStore()
+    expect(isError(one)).toBeFalsy()
+    expect(isError(two)).toBeFalsy()
+    expect(isModule(store.state)).toBeTruthy()
+    expect(isModule(store.state.a.b)).toBeTruthy()
+    expect(getModule(store.state, 'a.b')).toEqual({ name: 'tao' })
+    expect(store.getModule('a.b')).toEqual({ name: 'tao' })
+    expect(getModule(store.state, 'a')).toEqual({ b: { name: 'tao' } })
+    expect(store.getModule('a')).toEqual({ b: { name: 'tao' } })
   })
 
   it('if the created module namespace is occupied in the parent module (but not the module)', () => {
@@ -176,15 +220,20 @@ describe('Module', () => {
   )
 
   it('if a module is created by namespace and the parent object does not exist, a new empty parent module is created by default', () => {
-    const namespace = 'a.b.c.d.e.f.g.h'
+    const namespaceOne = 'a.b.c.d.e.f.g.h'
+    const namespaceTwo = 'i.j.k.l.m.n.o.p'
     store.add('one', {
-      namespace,
-      partialState: {
-        a: 1,
-      },
+      partialState: { a: 1 },
+      namespace: namespaceOne,
     })
-    recursiveInspect(store.state, namespace)
+    store.add('two', {
+      partialState: {},
+      namespace: namespaceTwo,
+    })
+    recursiveInspect(store.state, namespaceOne)
+    recursiveInspect(store.state, namespaceTwo)
     expect(store.state.a.b.c.d.e.f.g.h).toEqual({ a: 1 })
+    expect(store.state.i.j.k.l.m.n.o.p).toEqual({})
   })
 
   it('if the module is created by namespace, the parent object exists, but not a module, then an error is reported', () => {
@@ -241,6 +290,46 @@ describe('Module', () => {
     expect(Object.keys(store.state.a).length).toBe(2)
     expect(store.state.a.name).toBe('tao')
     expect(store.state.a.nameTwo).toBe('imtaotao')
+  })
+
+  it('[addModule] allow duplicate additions, but not the same action', () => {
+    const s = Symbol()
+    store.addModule('a', {
+      [s]: {
+        partialState: {
+          name: 'tao',
+        }
+      },
+      'bb': {
+        partialState: {
+          nameTwo: 'imtaotao',
+        }
+      }
+    })
+    expect(isModule(store.getModule('a'))).toBeTruthy()
+    expect(store.reducers.length).toBe(2)
+    store.addModule('a', {
+      [Symbol()]: {
+        partialState: {
+          nameThree: 'tao',
+        }
+      },
+    })
+    expect(isModule(store.getModule('a'))).toBeTruthy()
+    expect(store.reducers.length).toBe(3)
+    const fn = action => {
+      return () => {
+        store.addModule('a', {
+          [action]: {
+            partialState: {
+              aa: 'tao',
+            }
+          },
+        })
+      }
+    }
+    expect(isError(fn(s))).toBeTruthy()
+    expect(isError(fn('bb'))).toBeTruthy()
   })
 
   it('[addModule] allow symbol and string as keys', () => {
@@ -309,9 +398,7 @@ describe('Module', () => {
         a: createModule({ a: 1 }),
       }
     })
-    const fn = () => {
-      store.getModule(null)
-    }
+    const fn = () => store.getModule(null)
     expect(isError(fn)).toBeTruthy()
     expect(isModule(store.getModule('a'))).toBeTruthy()
     expect(store.getModule('a')).toEqual({ a: 1 })
@@ -325,6 +412,7 @@ describe('Module', () => {
     })
     expect(isModule(store.getModule(''))).toBeTruthy()
     expect(store.getModule('')).toBe(store.state)
+    expect(getModule(store.state, '')).toBe(store.state)
   })
 
   it('[getModule] if there is remainMsg, it will check if the module exists. If not, it needs to report an error', () => {

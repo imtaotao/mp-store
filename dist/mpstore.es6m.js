@@ -109,16 +109,6 @@ function clone (value, record = new WeakMap) {
   }
   return result
 }
-function parsePath (path) {
-  const segments = path.split('.');
-  return function (obj) {
-    for (let i = 0, len = segments.length; i < len; i++) {
-      if (!obj) return
-      obj = obj[segments[i]];
-    }
-    return obj
-  }
-}
 
 function mixin (inject) {
   const expandMethods = Object.create(null);
@@ -147,9 +137,13 @@ function isModule (m) {
   return isPlainObject(m) && m[MODULE_FLAG] === true
 }
 function getModule (state, namespace) {
-  const module = namespace
-    ? parsePath(namespace)(state)
-    : state;
+  if (!namespace) return state
+  let module = state;
+  const segments = namespace.split('.');
+  for (let i = 0, len = segments.length; i < len; i++) {
+    if (!isModule(module)) return null
+    module = module[segments[i]];
+  }
   return isModule(module) ? module : null
 }
 function mergeModule (module, partialModule, moduleName, createMsg) {
@@ -622,16 +616,14 @@ function filterReducer (state, action, reducer) {
       'The module namespace must be a string.' +
         `\n\n --- from [${stringifyAction}] action.`,
     );
-    if (!getModule(state, namespace) || !isEmptyObject(partialState)) {
-      reducer.partialState = createModuleByNamespace(
-        namespace,
-        partialState,
-        state,
-        stringifyAction,
-        (key, moduleName) => `The [${key}] already exists in [${moduleName}] module, ` +
-          `Please don't repeat defined. \n\n --- from [${stringifyAction}] action.`,
-      );
-    }
+    reducer.partialState = createModuleByNamespace(
+      namespace,
+      partialState,
+      state,
+      stringifyAction,
+      (key, moduleName) => `The [${key}] already exists in [${moduleName}] module, ` +
+        `Please don't repeat defined. \n\n --- from [${stringifyAction}] action.`,
+    );
   } else {
     for (const key in partialState) {
       assert(
@@ -651,7 +643,7 @@ class Store {
     this.depComponents = [];
     this.GLOBALWORD = 'global';
     this.isDispatching = false;
-    this.version = '0.1.1';
+    this.version = '0.1.2';
     this.state = Object.freeze(createModule({}));
     this.middleware = new Middleware(this);
   }
@@ -761,20 +753,22 @@ class Store {
       typeof namespace === 'string',
       'the namespace mast be a string',
     );
-    if (!isEmptyObject(reducers)) {
-      let i = 0;
+    if (isPlainObject(reducers)) {
       const keys = Object.keys(reducers);
       const symbols = Object.getOwnPropertySymbols(reducers);
-      const addRecucer = action => {
-        const reducer = reducers[action];
-        reducer.namespace = namespace;
-        this.add(action, reducer);
-      };
-      for (; i < keys.length; i++) {
-        addRecucer(keys[i]);
-      }
-      for (i = 0; i < symbols.length; i++) {
-        addRecucer(symbols[i]);
+      if (keys.length + symbols.length > 0) {
+        let i = 0;
+        const addRecucer = action => {
+          const reducer = reducers[action];
+          reducer.namespace = namespace;
+          this.add(action, reducer);
+        };
+        for (; i < keys.length; i++) {
+          addRecucer(keys[i]);
+        }
+        for (i = 0; i < symbols.length; i++) {
+          addRecucer(symbols[i]);
+        }
       }
     }
   }
@@ -886,7 +880,7 @@ class Store {
   }
 }
 
-const version = '0.1.1';
+const version = '0.1.2';
 const nativePage = Page;
 const nativeComponent = Component;
 function expandConfig (config, expandMethods, isPage) {

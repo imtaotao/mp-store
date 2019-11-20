@@ -98,6 +98,44 @@ describe('Reducer', () => {
     expect(isError(fn)).toBeTruthy()
   })
 
+  it('`partialState` will only evaluate to an empty object if it has a value of type symbol', () => {
+    const s = Symbol()
+    store.add('actionOne', {
+      partialState: {
+        [Symbol()]: 1,
+        [Symbol()]: 2
+      },
+    })
+    expect(store.state).toEqual({})
+    expect(Object.keys(store.state).length).toBe(0)
+    // the Symbol('module') must exist
+    expect(Reflect.ownKeys(store.state).length).toBe(1)
+    store.add('actionTwo', {
+      partialState: {
+        [s]: 1,
+        [s]: 2
+      },
+    })
+    expect(store.state).toEqual({})
+    expect(Object.keys(store.state).length).toBe(0)
+    // the Symbol('module') must exist
+    expect(Reflect.ownKeys(store.state).length).toBe(1)
+    store = createStore()
+    const fn = () => {
+      store.add('actionThree', {
+        partialState: {
+          [s]: 1,
+          [s]: 2,
+          a: 1,
+        },
+      })
+    }
+    expect(isError(fn)).toBeFalsy()
+    expect(Object.keys(store.state).length).toBe(1)
+    // [a, Symbol(), Symbol('module') ]
+    expect(Reflect.ownKeys(store.state).length).toBe(3)
+  })
+
   it('default setter function', () => {
     const reducer = {
       partialState: {},

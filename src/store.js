@@ -65,16 +65,14 @@ function filterReducer (state, action, reducer) {
         `\n\n --- from [${stringifyAction}] action.`,
     )
     
-    if (!getModule(state, namespace) || !isEmptyObject(partialState)) {
-      reducer.partialState = createModuleByNamespace(
-        namespace,
-        partialState,
-        state,
-        stringifyAction,
-        (key, moduleName) => `The [${key}] already exists in [${moduleName}] module, ` +
-          `Please don't repeat defined. \n\n --- from [${stringifyAction}] action.`,
-      )
-    }
+    reducer.partialState = createModuleByNamespace(
+      namespace,
+      partialState,
+      state,
+      stringifyAction,
+      (key, moduleName) => `The [${key}] already exists in [${moduleName}] module, ` +
+        `Please don't repeat defined. \n\n --- from [${stringifyAction}] action.`,
+    )
   } else {
     // inspect all state key 
     for (const key in partialState) {
@@ -119,7 +117,8 @@ export class Store {
     reducer.action = action
     this.reducers.push(reducer)
     const { partialState } = reducer
-
+    
+    // we filter the symbol when we diff, so we don't need to detect
     if (!isEmptyObject(partialState)) {
       // because we don't allow duplicate fields to be created,
       // so don't need to use `mergeModule`
@@ -246,23 +245,26 @@ export class Store {
       'the namespace mast be a string',
     )
 
-    if (!isEmptyObject(reducers)) {
-      let i = 0
+    if (isPlainObject(reducers)) {
+      // Todo: replace to `Reflect.ownKeys`
       const keys = Object.keys(reducers)
       const symbols = Object.getOwnPropertySymbols(reducers)
 
-      const addRecucer = action => {
-        const reducer = reducers[action]
-        reducer.namespace = namespace
-        this.add(action, reducer)
-      }
-    
-      for (; i < keys.length; i++) {
-        addRecucer(keys[i])
-      }
+      if (keys.length + symbols.length > 0) {
+        let i = 0
+        const addRecucer = action => {
+          const reducer = reducers[action]
+          reducer.namespace = namespace
+          this.add(action, reducer)
+        }
       
-      for (i = 0; i < symbols.length; i++) {
-        addRecucer(symbols[i])
+        for (; i < keys.length; i++) {
+          addRecucer(keys[i])
+        }
+        
+        for (i = 0; i < symbols.length; i++) {
+          addRecucer(symbols[i])
+        }
       }
     }
   }
