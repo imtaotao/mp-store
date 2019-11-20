@@ -6,6 +6,18 @@ Page({
   storeConfig: {
     travelLimit: 5,
     defineReducer (store) {
+      store.add('action', {
+        partialState: {
+          a: createModule({})
+        },
+        setter (state, payload) {
+          // 这会报错，因为 b 原本不是一个模块，所以你不能新增 b 模块
+          return {
+            b: createModule({}),
+          }
+        },
+      })
+      store.dispatch('action')
       // store.add('one', {
       //   partialState: {
       //     name: 'chen',
@@ -27,19 +39,19 @@ Page({
       //   setter: (state, payload) => ({ sex: payload })
       // })
       
-      const s = Symbol()
-      store.addModule('a', {
-        [s]: {
-          partialState: {
-            name: 'tao0',
-          }
-        },
+      // const s = Symbol()
+      // store.addModule('a', {
+      //   [s]: {
+      //     partialState: {
+      //       name: 'tao0',
+      //     }
+      //   },
         // 'bb': {
         //   partialState: {
         //     nameTwo: 'imtaotao',
         //   }
         // }
-      })
+      // })
    
       // store.addModule('a', {
       //   [Symbol()]: {
