@@ -315,13 +315,14 @@ export class Store {
       )
       
       // need deep clone, otherwise the `data.global` on the back of the component cannot be changed.
-      createState = () => clone(mapObject(defineObject, fn => {
-        if (namespace === null) {
-          return fn(store.state)
+      if (namespace === null) {
+        createState = () => clone(mapObject(defineObject, fn => fn(store.state)))
+      } else {
+        createState = () => {
+          const module = this.getModule(namespace, `\n\n   --- from [${namespace}] of useState.`)
+          return clone(mapObject(defineObject, fn => fn(module, store.state)))
         }
-        const module = this.getModule(namespace, `\n\n   --- from [${namespace}] of useState.`)
-        return fn(module, store.state)
-      }))
+      }
     }
 
     // get state used by the current component

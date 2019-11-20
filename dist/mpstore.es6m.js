@@ -813,13 +813,14 @@ class Store {
         '[useState] must return a plain object, ' +
           `but now is return a [${typeof defineObject}]`,
       );
-      createState = () => clone(mapObject(defineObject, fn => {
-        if (namespace === null) {
-          return fn(store.state)
-        }
-        const module = this.getModule(namespace, `\n\n   --- from [${namespace}] of useState.`);
-        return fn(module, store.state)
-      }));
+      if (namespace === null) {
+        createState = () => clone(mapObject(defineObject, fn => fn(store.state)));
+      } else {
+        createState = () => {
+          const module = this.getModule(namespace, `\n\n   --- from [${namespace}] of useState.`);
+          return clone(mapObject(defineObject, fn => fn(module, store.state)))
+        };
+      }
     }
     if (createState !== null) {
       const useState = createState();

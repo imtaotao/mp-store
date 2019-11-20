@@ -994,17 +994,21 @@ function () {
 
         assert(isPlainObject(defineObject), '[useState] must return a plain object, ' + "but now is return a [".concat(_typeof(defineObject), "]"));
 
-        createState = function createState() {
-          return clone(mapObject(defineObject, function (fn) {
-            if (namespace === null) {
+        if (namespace === null) {
+          createState = function createState() {
+            return clone(mapObject(defineObject, function (fn) {
               return fn(store.state);
-            }
-
+            }));
+          };
+        } else {
+          createState = function createState() {
             var module = _this4.getModule(namespace, "\n\n   --- from [".concat(namespace, "] of useState."));
 
-            return fn(module, store.state);
-          }));
-        };
+            return clone(mapObject(defineObject, function (fn) {
+              return fn(module, store.state);
+            }));
+          };
+        }
       }
 
       if (createState !== null) {

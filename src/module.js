@@ -4,8 +4,9 @@ import {
   isPlainObject,
 } from './utils'
 
-// a. can't delete module, if module is created
-// b. modules allow nesting
+// a. modules allow nesting
+// b. can't delete module, if module is created
+// c. can't create new module in setter function
 export const MODULE_FLAG = Symbol('module')
 
 export function isModule (m) {
