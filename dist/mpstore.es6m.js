@@ -643,7 +643,7 @@ class Store {
     this.depComponents = [];
     this.GLOBALWORD = 'global';
     this.isDispatching = false;
-    this.version = '0.1.2';
+    this.version = '0.1.3';
     this.state = Object.freeze(createModule({}));
     this.middleware = new Middleware(this);
   }
@@ -880,7 +880,7 @@ class Store {
   }
 }
 
-const version = '0.1.2';
+const version = '0.1.3';
 const nativePage = Page;
 const nativeComponent = Component;
 function expandConfig (config, expandMethods, isPage) {

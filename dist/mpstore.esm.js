@@ -809,7 +809,7 @@ function () {
     this.depComponents = [];
     this.GLOBALWORD = 'global';
     this.isDispatching = false;
-    this.version = '0.1.2';
+    this.version = '0.1.3';
     this.state = Object.freeze(createModule({}));
     this.middleware = new Middleware(this);
   }
@@ -1069,7 +1069,7 @@ function () {
   return Store;
 }();
 
-var version = '0.1.2';
+var version = '0.1.3';
 var nativePage = Page;
 var nativeComponent = Component;
 
