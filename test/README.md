@@ -120,6 +120,8 @@
 + [x] setter 函数返回的对象作用于当前 namespace 定义的模块
 + [x] setter 函数中第一个参数为 module, 第二个参数为 payload，如果有 namespace，第三个参数为全局 state
 + [x] 多级 module 与视图关联时，是否正确
++ [x] 与 middleware 联动时
++ [x] 与 timeTravel 联动时
 
 ### addModule
 + [x] 检查 namespace 的类型

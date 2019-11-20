@@ -624,4 +624,131 @@ describe('Module', () => {
     store.dispatch('three', 'women')
     fn('women', 'imtaotao', 20)
   })
+
+  it('when linked with `middleware`', () => {
+    store.add('one', {
+      namespace: 'a.b',
+      partialState: {
+        i: 1,
+      },
+      setter: (state, payload) => ({ i: payload })
+    })
+    store.add('two', {
+      namespace: 'a',
+      partialState: {
+        n: 2,
+      },
+      setter: (state, payload) => ({ n: payload }),
+    })
+    store.use('one', (payload, next) => {
+      expect(payload).toBe(3)
+      next(payload * 10)
+    })
+    store.use('two', (payload, next) => {
+      expect(payload).toBe(4)
+      next(payload * 10)
+    })
+    store.use((payload, next) => {
+      if (payload / 10 % 2 === 0) {
+        expect(payload).toBe(40)
+      } else {
+        expect(payload).toBe(30)
+      }
+      next(payload)
+    })
+    recursiveInspect(store.state, 'a.b')
+    expect(store.state.a.n).toBe(2)
+    expect(store.state.a.b.i).toBe(1)
+    store.dispatch('one', 3)
+    expect(store.state.a.n).toBe(2)
+    expect(store.state.a.b.i).toBe(30)
+    store.dispatch('two', 4)
+    expect(store.state.a.n).toBe(40)
+    expect(store.state.a.b.i).toBe(30)
+  })
+
+  it('when linked with `timeTravel`', () => {
+    const store = createStore()
+    store.add('one', {
+      partialState: {
+        name: 'chen',
+      },
+      setter: (state, payload) => ({ name: payload })
+    })
+    store.add('two', {
+      namespace: 'a',
+      partialState: {
+        age: 0,
+      },
+      setter: (state, payload) => ({ age: payload })
+    })
+    store.add('three', {
+      namespace: 'a.b',
+      partialState: {
+        sex: 'man',
+      },
+      setter: (state, payload) => ({ sex: payload })
+    })
+    const id = simulate.load(Component({
+      template: '<div>{{ global.sex }}-{{ global.name }}-{{ global.age }}</div>',
+      storeConfig: {
+        travelLimit: 5,
+        useState () {
+          return ['a.b', {
+            sex: s => s.sex,
+            name: (s, r) => r.name,
+            age: (s, r) => r.a.age,
+          }]
+        },
+      },
+    }))
+    const cm = simulate.render(id)
+    cm.attach(document.createElement('parent-wrapper'))
+    const fn = (sex, name, age) => {
+      recursiveInspect(store.state, 'a.b')
+      expect(store.state.name).toBe(name)
+      expect(store.state.a.b.sex).toBe(sex)
+      expect(store.state.a.age).toBe(age)
+      expect(cm.data.global.sex).toBe(sex)
+      expect(cm.data.global.age).toBe(age)
+      expect(cm.data.global.name).toBe(name)
+      expect(cm.dom.textContent).toBe(`${sex}-${name}-${age}`)
+    }
+    fn('man', 'chen', 0)
+    store.dispatch('one', 'imtaotao')
+    fn('man', 'imtaotao', 0)
+    store.dispatch('two', 20)
+    fn('man', 'imtaotao', 20)
+    store.dispatch('three', 'women')
+    fn('women', 'imtaotao', 20)
+    const fnTwo = (sex, name, age) => {
+      recursiveInspect(store.state, 'a.b')
+      expect(store.state.name).toBe('imtaotao')
+      expect(store.state.a.b.sex).toBe('women')
+      expect(store.state.a.age).toBe(20)
+      expect(cm.data.global.sex).toBe(sex)
+      expect(cm.data.global.age).toBe(age)
+      expect(cm.data.global.name).toBe(name)
+      expect(cm.dom.textContent).toBe(`${sex}-${name}-${age}`)
+    }
+    const timeTravel = cm.instance.timeTravel
+    timeTravel.back()
+    fnTwo('man', 'imtaotao', 20)
+    timeTravel.forward()
+    fnTwo('women', 'imtaotao', 20)
+    timeTravel.go(-1)
+    fnTwo('man', 'imtaotao', 20)
+    timeTravel.go(-1)
+    fnTwo('man', 'imtaotao', 0)
+    timeTravel.back()
+    fnTwo('man', 'chen', 0)
+    timeTravel.back()
+    fnTwo('man', 'chen', 0)
+    timeTravel.toEnd()
+    fnTwo('women', 'imtaotao', 20)
+    timeTravel.toStart()
+    fnTwo('man', 'chen', 0)
+    store.dispatch('two', 22)
+    fn('women', 'imtaotao', 22)
+  })
 })

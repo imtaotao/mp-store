@@ -1,2 +1,2 @@
-<view bindtap="change">{{ global.index }}</view>
+<view bindtap="change">{{ global.sex }}-{{ global.name }}-{{ global.age }}</view>
 

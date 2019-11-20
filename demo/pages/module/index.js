@@ -1,16 +1,37 @@
 import { createModule } from '../../store/mpstore.esm'
 
+let i = 0
 // this is a demo for time travel
 Page({
   storeConfig: {
     travelLimit: 5,
     defineReducer (store) {
-      store.add('action', {
+      store.add('one', {
         partialState: {
-          a: createModule({}),
-        }
+          name: 'chen',
+        },
+        setter: (state, payload) => ({ name: payload })
       })
-      console.log(store.getModule('a'), 'tao')
+      store.add('two', {
+        namespace: 'a',
+        partialState: {
+          age: 0,
+        },
+        setter: (state, payload) => ({ age: payload })
+      })
+      store.add('three', {
+        namespace: 'a.b',
+        partialState: {
+          sex: 'man',
+        },
+        setter: (state, payload) => ({ sex: payload })
+      })
+  
+      // store.add('action', {
+      //   partialState: {
+      //     a: createModule({}),
+      //   }
+      // })
       // store.add('two', {
       //   namespace: 'b',
       //   partialState: {},
@@ -93,6 +114,27 @@ Page({
     // useState: () => (['taoo.tao', {
     //   index: state => state.index,
     // }]),
+    travelLimit: 5,
+    useState () {
+      return ['a.b', {
+        sex: s => s.sex,
+        name: (s, r) => r.name,
+        age: (s, r) => r.a.age,
+      }]
+    },
+  },
+
+  check (sex, name, age) {
+    const expect = (val) => {
+      return {
+        toBe(v) {
+          console.log(val === v)
+        },
+      }
+    }
+    expect(this.store.state.name).toBe(name)
+    expect(this.store.state.a.b.sex).toBe(sex)
+    expect(this.store.state.a.age).toBe(age)
   },
 
   onLoad () {
@@ -100,7 +142,23 @@ Page({
   },
 
   change () {
-    this.store.dispatch('MODULE_STATE_root', this.store.getModule('taoo.tao').index + 1)
-    console.log(this.store.state)
+    const store = this.store
+    if (i === 0) {
+      store.dispatch('one', 'imtaotao')
+      this.check('man', 'imtaotao', 0)
+    } else if (i === 1) {
+      store.dispatch('two', 20)
+      this.check('man', 'imtaotao', 20)
+    } else if (i === 2) {
+      store.dispatch('three', 'women')
+      this.check('women', 'imtaotao', 20)
+    } else if (i === 3) {
+      this.timeTravel.back()
+    } else if (i === 4) {
+      this.timeTravel.back()
+    } else if (i === 5) {
+      this.timeTravel.back()
+    }
+    i++
   }
 })
