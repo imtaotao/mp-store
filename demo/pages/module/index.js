@@ -6,40 +6,40 @@ Page({
   storeConfig: {
     travelLimit: 5,
     defineReducer (store) {
-      store.add('one', {
-        partialState: {
-          name: 'chen',
-        },
-        setter: (state, payload) => ({ name: payload })
-      })
-      store.add('two', {
-        namespace: 'a',
-        partialState: {
-          age: 0,
-        },
-        setter: (state, payload) => ({ age: payload })
-      })
-      store.add('three', {
-        namespace: 'a.b',
-        partialState: {
-          sex: 'man',
-        },
-        setter: (state, payload) => ({ sex: payload })
-      })
-  
-      // store.add('action', {
+      // store.add('one', {
       //   partialState: {
-      //     a: createModule({}),
-      //   }
+      //     name: 'chen',
+      //   },
+      //   setter: (state, payload) => ({ name: payload })
       // })
+      // store.add('two', {
+      //   namespace: 'a',
+      //   partialState: {
+      //     age: 0,
+      //   },
+      //   setter: (state, payload) => ({ age: payload })
+      // })
+      // store.add('three', {
+      //   namespace: 'a.b',
+      //   partialState: {
+      //     sex: 'man',
+      //   },
+      //   setter: (state, payload) => ({ sex: payload })
+      // })
+  
+      store.add('action', {
+        partialState: {
+          a: {},
+        }
+      })
       // store.add('two', {
       //   namespace: 'b',
       //   partialState: {},
       // })
-      // store.add('three', {
-      //   namespace: 'a.a',
-      //   partialState: { a: 1 },
-      // })
+      store.add('three', {
+        namespace: 'a.b',
+        partialState: { a: 1 },
+      })
       // store.add('four', {
       //   namespace: 'a.a',
       //   partialState: { b: 2 },
@@ -114,14 +114,14 @@ Page({
     // useState: () => (['taoo.tao', {
     //   index: state => state.index,
     // }]),
-    travelLimit: 5,
-    useState () {
-      return ['a.b', {
-        sex: s => s.sex,
-        name: (s, r) => r.name,
-        age: (s, r) => r.a.age,
-      }]
-    },
+    // travelLimit: 5,
+    // useState () {
+    //   return ['a.b', {
+    //     sex: s => s.sex,
+    //     name: (s, r) => r.name,
+    //     age: (s, r) => r.a.age,
+    //   }]
+    // },
   },
 
   check (sex, name, age) {

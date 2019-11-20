@@ -311,10 +311,6 @@ function createModuleByNamespace(namespace, partialModule, rootModule, stringify
     var key = segments[i];
     var isLastIndex = i === len - 1;
 
-    if (i > 0) {
-      assert(isModule(parentModule), 'the child modules must be in the parent module.\n\n' + "  the parent module namespace is [".concat(segments[i - 1], "]\n\n") + "  the child module namespace is [".concat(key, "]").concat(remaingMsg));
-    }
-
     if (key in parentModule) {
       assert(isModule(parentModule[key]), 'you can\'t create child moudle, ' + "because namespace [".concat(key, "] already exists in [").concat(segments[i - 1] || 'root', "] module, ") + "but [".concat(key, "] not a module.").concat(remaingMsg));
       childModule = isLastIndex ? mergeModule(parentModule[key], partialModule, key, createMsg) : Object.assign({}, parentModule[key]);
@@ -823,7 +819,7 @@ function () {
     this.depComponents = [];
     this.GLOBALWORD = 'global';
     this.isDispatching = false;
-    this.version = '0.1.0';
+    this.version = '0.1.1';
     this.state = Object.freeze(createModule({}));
     this.middleware = new Middleware(this);
   }
@@ -1076,7 +1072,7 @@ function () {
   return Store;
 }();
 
-var version = '0.1.0';
+var version = '0.1.1';
 var nativePage = Page;
 var nativeComponent = Component;
 

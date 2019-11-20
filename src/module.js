@@ -106,16 +106,6 @@ export function createModuleByNamespace (namespace, partialModule, rootModule, s
     const key = segments[i]
     const isLastIndex = i === len - 1
 
-    // the global state certainly module
-    if (i > 0) {
-      assert(
-        isModule(parentModule),
-        'the child modules must be in the parent module.\n\n' +
-          `  the parent module namespace is [${segments[i - 1]}]\n\n` +
-            `  the child module namespace is [${key}]${remaingMsg}`, 
-      )
-    }
-
     if (key in parentModule) {
       assert(
         isModule(parentModule[key]),
@@ -136,6 +126,7 @@ export function createModuleByNamespace (namespace, partialModule, rootModule, s
 
     parentWraper[key] = childModule
     parentWraper = childModule
+    // the parentModule must be a module
     parentModule = childModule
   }
 

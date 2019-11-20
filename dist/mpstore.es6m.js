@@ -211,14 +211,6 @@ function createModuleByNamespace (namespace, partialModule, rootModule, stringif
     let childModule;
     const key = segments[i];
     const isLastIndex = i === len - 1;
-    if (i > 0) {
-      assert(
-        isModule(parentModule),
-        'the child modules must be in the parent module.\n\n' +
-          `  the parent module namespace is [${segments[i - 1]}]\n\n` +
-            `  the child module namespace is [${key}]${remaingMsg}`,
-      );
-    }
     if (key in parentModule) {
       assert(
         isModule(parentModule[key]),
@@ -659,7 +651,7 @@ class Store {
     this.depComponents = [];
     this.GLOBALWORD = 'global';
     this.isDispatching = false;
-    this.version = '0.1.0';
+    this.version = '0.1.1';
     this.state = Object.freeze(createModule({}));
     this.middleware = new Middleware(this);
   }
@@ -893,7 +885,7 @@ class Store {
   }
 }
 
-const version = '0.1.0';
+const version = '0.1.1';
 const nativePage = Page;
 const nativeComponent = Component;
 function expandConfig (config, expandMethods, isPage) {
