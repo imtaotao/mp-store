@@ -105,7 +105,9 @@ store.add('action', {
     }
   },
 })
+```
 
+```js
 store.add('action', {
   partialState: {
     a: createModule({})
@@ -144,14 +146,12 @@ console.log(store.getModule('a')) // { name: 'tao', age: 24 }
 ```js
 store.add('one', {
   namespace: 'a',
-  partialState: {
-    a: createModule({}),
-  },
+  partialState: {},
 })
 
 store.add('two', {
   partialState: {
-    a: createModule({}), // 这个会报错，因为 a 以及存在了
+    a: createModule({}), // 这个会报错，因为 a 这个命名空间已经存在了，不管他是模块还是其他，都是不被允许的
   },
 })
 ```
