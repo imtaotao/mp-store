@@ -392,6 +392,22 @@ describe('Module', () => {
     expect(store.add).toHaveBeenCalledWith('aa', reducer)
   })
 
+  it('[addModule] the namespace in reducer will be replaced with the global namespace', () => {
+    store.addModule('a', {
+      'action': {
+        namespace: 'b',
+        partialState: {
+          name: 'tao',
+        },
+      },
+    })
+    expect(isModule(store.state.a)).toBeTruthy()
+    expect(isModule(store.state.b)).toBeFalsy()
+    expect(store.state.b).toBeUndefined()
+    expect(store.state.a.name).toBe('tao')
+    expect(Object.keys(store.getModule('a')).length).toBe(1)
+  })
+
   it('[getModule] inspect the type of namespace', () => {
     store.add('action', {
       partialState: {
@@ -607,6 +623,51 @@ describe('Module', () => {
     store.dispatch('two', 2)
     expect(store.state.a).toBe(2)
     expect(store.state.b.a).toBe(2)
+  })
+
+  it('in the setter function, change the submodule, if there are submodules in the submodule, you cannot delete', () => {
+    store.add('action', {
+      partialState: {
+        a: createModule({
+          b: createModule({
+            c: createModule({}),
+          }),
+        }),
+      },
+      setter (state, payload, rootState) {
+        return {
+          a: createModule({
+            b: createModule({
+              c: {},
+            }),
+          }),
+        }
+      },
+    })
+    const fn = () => store.dispatch('action')
+    expect(isError(fn)).toBeTruthy()
+  })
+
+  it('in the setter function, change the submodule, if there are submodules in the submodule, you cannot create new module', () => {
+    store.add('action', {
+      partialState: {
+        a: createModule({
+          b: createModule({
+          }),
+        }),
+      },
+      setter (state, payload, rootState) {
+        return {
+          a: createModule({
+            b: createModule({
+              c: createModule({}),
+            }),
+          }),
+        }
+      },
+    })
+    const fn = () => store.dispatch('action')
+    expect(isError(fn)).toBeTruthy()
   })
 
   it('[one] when a multi-level module is associated with a view', () => {

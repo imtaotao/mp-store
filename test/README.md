@@ -121,6 +121,7 @@
 + [x] setter 函数返回的对象中，不能创建新的模块
 + [x] setter 函数返回的对象作用于当前 namespace 定义的模块
 + [x] setter 函数中第一个参数为 module, 第二个参数为 payload，如果有 namespace，第三个参数为全局 state
++ [x] setter 函数中，更改子模块，如果子模块中还有子模块，则不能删除，也不能新增
 + [x] 多级 module 与视图关联时，是否正确
 + [x] 与 middleware 联动时
 + [x] 与 timeTravel 联动时
@@ -130,6 +131,7 @@
 + [x] 允许重复添加，但不能有相同的 action
 + [x] 允许通过 symbol 和 string 作为 key
 + [x] 先添加 string 类型的 key，再添加 symbol 类型的 key
++ [x] reducer 中 namespace 将被替换为全局的 namespace
 + [x] 默认是调用 `store.add` 方法
 
 ### getModule
