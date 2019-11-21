@@ -1,5 +1,5 @@
 function warning (message, noError) {
-  message = `\n\n[MpStore warning]: ${message}\n\n`;
+  message = `\n\nMpStore warning: ${message}\n\n`;
   if (noError) {
     console.warn(message);
     return
@@ -644,7 +644,7 @@ class Store {
     this.depComponents = [];
     this.GLOBALWORD = 'global';
     this.isDispatching = false;
-    this.version = '0.1.4';
+    this.version = '1.0.0';
     this.state = Object.freeze(createModule({}));
     this.middleware = new Middleware(this);
   }
@@ -881,7 +881,7 @@ class Store {
   }
 }
 
-const version = '0.1.4';
+const version = '1.0.0';
 const nativePage = Page;
 const nativeComponent = Component;
 function expandConfig (config, expandMethods, isPage) {

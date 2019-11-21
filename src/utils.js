@@ -1,5 +1,5 @@
 export function warning (message, noError) {
-  message = `\n\n[MpStore warning]: ${message}\n\n`
+  message = `\n\nMpStore warning: ${message}\n\n`
   if (noError) {
     console.warn(message)
     return

@@ -92,7 +92,7 @@ function _nonIterableRest() {
 }
 
 function warning(message, noError) {
-  message = "\n\n[MpStore warning]: ".concat(message, "\n\n");
+  message = "\n\nMpStore warning: ".concat(message, "\n\n");
 
   if (noError) {
     console.warn(message);
@@ -810,7 +810,7 @@ function () {
     this.depComponents = [];
     this.GLOBALWORD = 'global';
     this.isDispatching = false;
-    this.version = '0.1.4';
+    this.version = '1.0.0';
     this.state = Object.freeze(createModule({}));
     this.middleware = new Middleware(this);
   }
@@ -1070,7 +1070,7 @@ function () {
   return Store;
 }();
 
-var version = '0.1.4';
+var version = '1.0.0';
 var nativePage = Page;
 var nativeComponent = Component;
 
