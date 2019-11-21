@@ -12,6 +12,26 @@ export function isModule (m) {
   return isPlainObject(m) && m[MODULE_FLAG] === true
 }
 
+// the `__mpModule` flag is not allowed to be traversed
+export function addModuleFlag (obj) {
+  obj[MODULE_FLAG] = true
+  return obj
+}
+
+export function createModule (obj) {
+  assert(
+    isPlainObject(obj),
+    'The base module object must be an plain object',
+  )
+
+  if (isModule(obj)) {
+    return obj
+  }
+
+  addModuleFlag(obj)
+  return obj
+}
+
 // get module by namespace
 export function getModule (state, namespace) {
   if (!namespace) return state
@@ -65,26 +85,6 @@ export function mergeModule (module, partialModule, moduleName, createMsg) {
   }
 
   return createModule(Object.assign({}, module, partialModule))
-}
-
-// the `__mpModule` flag is not allowed to be traversed
-export function addModuleFlag (obj) {
-  obj[MODULE_FLAG] = true
-  return obj
-}
-
-export function createModule (obj) {
-  assert(
-    isPlainObject(obj),
-    'The base module object must be an plain object',
-  )
-
-  if (isModule(obj)) {
-    return obj
-  }
-
-  addModuleFlag(obj)
-  return obj
 }
 
 // a. if want to define a module, the parent and child modules must be modules.
