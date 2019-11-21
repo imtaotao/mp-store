@@ -159,13 +159,14 @@ store.add('two', {
 #### 如果父模块中命名空间被占用，子模块需要使用相同的命名空间将如何处理？
 如果是在创建时，如果是通过 namespace 方式创建的将合并，否则将会报错。就是上一个 demo 演示的行为
 
-### 父模块创建的子模块，如果已经存在，是阻止创建还是合并？
+#### 父模块创建的子模块，如果已经存在，是阻止创建还是合并？
 在创建时，会阻止，并报错，在 setter 函数中将会合并，也就是上面那个 demo
 
 ## 如何使用
 一般情况下，我们使用 module，可以使用 `store.addModule` 方法来创建一个 module。所以如果你需要使用应该是下面这种样子，也是最常用的样子
+
+reducers.js
 ```js
-// reducers.js
 import store from './store'
 
 export const ONE = Symbol('one')
@@ -192,8 +193,10 @@ store.addModule('user', {
   [ONE]: oneReducer,
   [TWO]: twoReducer,
 })
+```
 
-// page
+Page
+```js
 import { ONE } from './reducers'
 Page({
   storeConfig: {
@@ -208,7 +211,9 @@ Page({
     this.store.dispatch(ONE, 'chentao')
   }
 })
+```
 
-// template taotao-24
+Template taotao-24
+```html
 <view bindtap="change">{{ global.age }}-{{ global.name }}</view>
 ```
