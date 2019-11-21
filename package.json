@@ -1,6 +1,6 @@
 {
   "name": "@rustle/mp-store",
-  "version": "0.1.4",
+  "version": "1.0.0",
   "description": "A lightweight wechat miniprogram state management library",
   "main": "dist/mpstore.common.js",
   "module": "dist/mpstore.esm.js",
