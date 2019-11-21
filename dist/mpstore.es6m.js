@@ -18,6 +18,7 @@ function isPrimitive (value) {
   )
 }
 function deepFreeze (state) {
+  if (Object.isFrozen(state)) return state
   const names = Object.getOwnPropertyNames(state);
   let len = names.length;
   while (~len--) {
@@ -136,6 +137,21 @@ const MODULE_FLAG = Symbol('module');
 function isModule (m) {
   return isPlainObject(m) && m[MODULE_FLAG] === true
 }
+function addModuleFlag (obj) {
+  obj[MODULE_FLAG] = true;
+  return obj
+}
+function createModule (obj) {
+  assert(
+    isPlainObject(obj),
+    'The base module object must be an plain object',
+  );
+  if (isModule(obj)) {
+    return obj
+  }
+  addModuleFlag(obj);
+  return obj
+}
 function getModule (state, namespace) {
   if (!namespace) return state
   let module = state;
@@ -176,21 +192,6 @@ function mergeModule (module, partialModule, moduleName, createMsg) {
     }
   }
   return createModule(Object.assign({}, module, partialModule))
-}
-function addModuleFlag (obj) {
-  obj[MODULE_FLAG] = true;
-  return obj
-}
-function createModule (obj) {
-  assert(
-    isPlainObject(obj),
-    'The base module object must be an plain object',
-  );
-  if (isModule(obj)) {
-    return obj
-  }
-  addModuleFlag(obj);
-  return obj
 }
 function createModuleByNamespace (namespace, partialModule, rootModule, stringifyAction, createMsg) {
   if (!namespace) {
@@ -643,7 +644,7 @@ class Store {
     this.depComponents = [];
     this.GLOBALWORD = 'global';
     this.isDispatching = false;
-    this.version = '0.1.3';
+    this.version = '0.1.4';
     this.state = Object.freeze(createModule({}));
     this.middleware = new Middleware(this);
   }
@@ -880,7 +881,7 @@ class Store {
   }
 }
 
-const version = '0.1.3';
+const version = '0.1.4';
 const nativePage = Page;
 const nativeComponent = Component;
 function expandConfig (config, expandMethods, isPage) {

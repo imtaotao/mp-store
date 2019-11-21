@@ -112,6 +112,7 @@ function isPrimitive(value) {
   return typeof value === 'string' || typeof value === 'number' || _typeof(value) === 'symbol' || typeof value === 'boolean';
 }
 function deepFreeze(state) {
+  if (Object.isFrozen(state)) return state;
   var names = Object.getOwnPropertyNames(state);
   var len = names.length;
 
@@ -241,6 +242,20 @@ var MODULE_FLAG = Symbol('module');
 function isModule(m) {
   return isPlainObject(m) && m[MODULE_FLAG] === true;
 }
+function addModuleFlag(obj) {
+  obj[MODULE_FLAG] = true;
+  return obj;
+}
+function createModule(obj) {
+  assert(isPlainObject(obj), 'The base module object must be an plain object');
+
+  if (isModule(obj)) {
+    return obj;
+  }
+
+  addModuleFlag(obj);
+  return obj;
+}
 function getModule(state, namespace) {
   if (!namespace) return state;
   var module = state;
@@ -277,20 +292,6 @@ function mergeModule(module, partialModule, moduleName, createMsg) {
   }
 
   return createModule(Object.assign({}, module, partialModule));
-}
-function addModuleFlag(obj) {
-  obj[MODULE_FLAG] = true;
-  return obj;
-}
-function createModule(obj) {
-  assert(isPlainObject(obj), 'The base module object must be an plain object');
-
-  if (isModule(obj)) {
-    return obj;
-  }
-
-  addModuleFlag(obj);
-  return obj;
 }
 function createModuleByNamespace(namespace, partialModule, rootModule, stringifyAction, createMsg) {
   if (!namespace) {
@@ -813,7 +814,7 @@ function () {
     this.depComponents = [];
     this.GLOBALWORD = 'global';
     this.isDispatching = false;
-    this.version = '0.1.3';
+    this.version = '0.1.4';
     this.state = Object.freeze(createModule({}));
     this.middleware = new Middleware(this);
   }
@@ -1073,7 +1074,7 @@ function () {
   return Store;
 }();
 
-var version = '0.1.3';
+var version = '0.1.4';
 var nativePage = Page;
 var nativeComponent = Component;
 

@@ -21,6 +21,8 @@ export function isPrimitive (value) {
 }
 
 export function deepFreeze (state) {
+  if (Object.isFrozen(state)) return state
+
   const names = Object.getOwnPropertyNames(state)
   let len = names.length
   while (~len--) {
@@ -58,6 +60,8 @@ export function callHook (hooks, name, args) {
   }
 }
 
+// can't jugement symbal value
+// isEmptyObject({ [Symbol()]: 1 }) => ture
 export function isEmptyObject (obj) {
   for (const k in obj){
     return false
