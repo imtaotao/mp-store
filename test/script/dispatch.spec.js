@@ -129,9 +129,10 @@ describe('Dispatch', () => {
 
   it('dispatch `callback` after the component is updated', done => {
     const obj = {
-      callback () {
+      callback (destPayload) {
         expect(Object.keys(store.state).length).toBe(1)
         expect(store.state.a).toBe(1)
+        expect(destPayload).toBe(null)
       }
     }
     spyOn(obj, 'callback')
@@ -141,7 +142,7 @@ describe('Dispatch', () => {
         expect(payload).toBeNull()
         setTimeout(() => {
           expect(obj.callback).toHaveBeenCalled()
-          expect(obj.callback).toHaveBeenCalledWith()
+          expect(obj.callback).toHaveBeenCalledWith(null)
           done()
         })
         return { a: 1 }

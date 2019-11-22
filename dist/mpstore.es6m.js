@@ -370,16 +370,12 @@ function updateComponents (store, callback) {
   } = store;
   const len = depComponents.length;
   if (len === 0) {
-    if (typeof callback === 'function') {
-      callback();
-    }
+    callback();
     return
   }
   const renderedCallback = () => {
     if (++total === len) {
-      if (typeof callback === 'function') {
-        callback();
-      }
+      callback();
     }
   };
   for (let i = 0; i < len; i++) {
@@ -644,7 +640,7 @@ class Store {
     this.depComponents = [];
     this.GLOBALWORD = 'global';
     this.isDispatching = false;
-    this.version = '1.0.0';
+    this.version = '0.1.5';
     this.state = Object.freeze(createModule({}));
     this.middleware = new Middleware(this);
   }
@@ -714,7 +710,11 @@ class Store {
          this.isDispatching = false;
         restoreProcessState();
       }
-      updateComponents(this, callback);
+      updateComponents(this, () => {
+        if (typeof callback === 'function') {
+          callback(destPayload);
+        }
+      });
     });
   }
   use (action, fn) {
@@ -881,7 +881,7 @@ class Store {
   }
 }
 
-const version = '1.0.0';
+const version = '0.1.5';
 const nativePage = Page;
 const nativeComponent = Component;
 function expandConfig (config, expandMethods, isPage) {

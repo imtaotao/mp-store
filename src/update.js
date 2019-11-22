@@ -23,18 +23,14 @@ export function updateComponents (store, callback) {
   const len = depComponents.length
 
   if (len === 0) {
-    if (typeof callback === 'function') {
-      callback()
-    }
+    callback()
     return
   }
 
   // call `callback`, when all component views are rendered
   const renderedCallback = () => {
     if (++total === len) {
-      if (typeof callback === 'function') {
-        callback()
-      }
+      callback()
     }
   }
 

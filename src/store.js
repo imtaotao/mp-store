@@ -191,7 +191,11 @@ export class Store {
       }
 
       // update components
-      updateComponents(this, callback)
+      updateComponents(this, () => {
+        if (typeof callback === 'function') {
+          callback(destPayload)
+        }
+      })
     })
   }
 

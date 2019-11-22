@@ -503,18 +503,13 @@ function updateComponents(store, callback) {
   var len = depComponents.length;
 
   if (len === 0) {
-    if (typeof callback === 'function') {
-      callback();
-    }
-
+    callback();
     return;
   }
 
   var renderedCallback = function renderedCallback() {
     if (++total === len) {
-      if (typeof callback === 'function') {
-        callback();
-      }
+      callback();
     }
   };
 
@@ -814,7 +809,7 @@ function () {
     this.depComponents = [];
     this.GLOBALWORD = 'global';
     this.isDispatching = false;
-    this.version = '1.0.0';
+    this.version = '0.1.5';
     this.state = Object.freeze(createModule({}));
     this.middleware = new Middleware(this);
   }
@@ -882,7 +877,11 @@ function () {
           restoreProcessState();
         }
 
-        updateComponents(_this, callback);
+        updateComponents(_this, function () {
+          if (typeof callback === 'function') {
+            callback(destPayload);
+          }
+        });
       });
     }
   }, {
@@ -1074,7 +1073,7 @@ function () {
   return Store;
 }();
 
-var version = '1.0.0';
+var version = '0.1.5';
 var nativePage = Page;
 var nativeComponent = Component;
 
