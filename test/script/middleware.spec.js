@@ -307,4 +307,57 @@ describe('Middleware', () => {
     threeTime = Date.now()
     store.dispatch('testActionThree', 30)
   })
+
+  it('if actions is an array', () => {
+    let i = 0
+    const actionOne = 'one'
+    const actionTwo = 'two'
+    const actionThree = Symbol()
+    const reset = () => {
+      i = 0
+      store = createStore()
+      store.add(actionOne, { partialState: {} })
+      store.add(actionTwo, { partialState: {} })
+      store.add(actionThree, { partialState: {} })
+      store.use(actionOne, (payload, next) => {
+        i++
+        expect(i).toBe(1)
+        next(i)
+      })
+      store.use(actionTwo, (payload, next) => {
+        i++
+        expect(i).toBe(1)
+        next(i)
+      })
+      store.use(actionThree, (payload, next) => {
+        i++
+        expect(i).toBe(1)
+        next(i)
+      })
+      store.use([actionOne, actionThree], (payload, next) => {
+        i++
+        expect(i).toBe(2)
+        next(i)
+      })
+      store.use((payload, next) => {
+        i++
+      })
+    }
+    reset()
+    store.dispatch(actionOne)
+    expect(i).toBe(3)
+    reset()
+    store.dispatch(actionTwo)
+    expect(i).toBe(2)
+    reset()
+    store.dispatch(actionThree)
+    expect(i).toBe(3)
+    store = createStore()
+    expect(store.middleware.stack.length).toBe(0)
+    store.use(actionOne, () => {})
+    const remove = store.use([actionOne, actionTwo], () => {})
+    expect(store.middleware.stack.length).toBe(2)
+    remove()
+    expect(store.middleware.stack.length).toBe(1)
+  })
 })

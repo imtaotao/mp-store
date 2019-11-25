@@ -1,7 +1,4 @@
-import {
-  assert,
-  isPlainObject,
-} from './utils'
+import { assert, isPlainObject } from './utils'
 
 // a. modules allow nesting
 // b. can't delete module, if module is created
@@ -90,9 +87,9 @@ export function mergeModule (module, partialModule, moduleName, createMsg) {
 // a. if want to define a module, the parent and child modules must be modules.
 // demo:
 //   store.add('action', {
-//     __mpModule: true,
+//     Symbol(module): true,
 //      childModule: {
-//       __mpModule: true,
+//       Symbol(module): true,
 //     }
 //   })
 // 

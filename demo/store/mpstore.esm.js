@@ -666,7 +666,14 @@ function () {
 var COMMONACTION = function COMMONACTION() {};
 
 function match(layer, action) {
-  if (layer.action === COMMONACTION) return true;
+  if (layer.action === COMMONACTION) {
+    return true;
+  }
+
+  if (Array.isArray(layer.action)) {
+    return layer.action.indexOf(action) > -1;
+  }
+
   return action === layer.action;
 }
 
@@ -805,7 +812,7 @@ function () {
     this.depComponents = [];
     this.GLOBALWORD = 'global';
     this.isDispatching = false;
-    this.version = '0.1.5';
+    this.version = '0.1.6';
     this.state = Object.freeze(createModule({}));
     this.middleware = new Middleware(this);
   }
@@ -1069,7 +1076,7 @@ function () {
   return Store;
 }();
 
-var version = '0.1.5';
+var version = '0.1.6';
 var nativePage = Page;
 var nativeComponent = Component;
 

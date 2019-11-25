@@ -2,8 +2,18 @@ import { warning, assert } from './utils'
 
 export const COMMONACTION = () => {}
 
+/**
+ * use((payload, next) => {})
+ * use(action, (payload, next) => {})
+ * use([action, action], (payload, next) => {})
+ */
 function match (layer, action) {
-  if (layer.action === COMMONACTION) return true
+  if (layer.action === COMMONACTION) {
+    return true
+  }
+  if (Array.isArray(layer.action)) {
+    return layer.action.indexOf(action) > -1
+  }
   return action === layer.action
 }
 

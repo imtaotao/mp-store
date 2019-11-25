@@ -502,7 +502,12 @@ class TimeTravel {
 
 const COMMONACTION = () => {};
 function match (layer, action) {
-  if (layer.action === COMMONACTION) return true
+  if (layer.action === COMMONACTION) {
+    return true
+  }
+  if (Array.isArray(layer.action)) {
+    return layer.action.indexOf(action) > -1
+  }
   return action === layer.action
 }
 function handleLayer (
@@ -640,7 +645,7 @@ class Store {
     this.depComponents = [];
     this.GLOBALWORD = 'global';
     this.isDispatching = false;
-    this.version = '0.1.5';
+    this.version = '0.1.6';
     this.state = Object.freeze(createModule({}));
     this.middleware = new Middleware(this);
   }
@@ -881,7 +886,7 @@ class Store {
   }
 }
 
-const version = '0.1.5';
+const version = '0.1.6';
 const nativePage = Page;
 const nativeComponent = Component;
 function expandConfig (config, expandMethods, isPage) {
