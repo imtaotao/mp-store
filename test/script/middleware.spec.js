@@ -169,6 +169,16 @@ describe('Middleware', () => {
     })
     store.dispatch('testAction')
     expect(i).toBe(2)
+    store = createStore()
+    const s = Symbol()
+    define(s)
+    store.use((payload, next, action) => {
+      expect(arguments.length).toBe(3)
+      expect(payload).toBeUndefined()
+      expect(typeof next).toBe('function')
+      expect(action === s).toBeTruthy()
+    })
+    store.dispatch(s)
   })
 
   it('need call next callback', () => {
