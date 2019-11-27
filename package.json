@@ -1,6 +1,6 @@
 {
   "name": "@rustle/mp-store",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "A lightweight wechat miniprogram state management library",
   "main": "dist/mpstore.common.js",
   "module": "dist/mpstore.esm.js",
@@ -53,7 +53,7 @@
     "webpack": "^3.10.0"
   },
   "author": "imtaotao",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/imtaotao/mp-store/issues"
   },

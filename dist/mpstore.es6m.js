@@ -1,3 +1,8 @@
+/*!
+ * Mpstore.js v0.1.7
+ * (c) 2019-2019 Imtaotao
+ * Released under the MIT License.
+ */
 function warning (message, noError) {
   message = `\n\nMpStore warning: ${message}\n\n`;
   if (noError) {
@@ -645,7 +650,7 @@ class Store {
     this.depComponents = [];
     this.GLOBALWORD = 'global';
     this.isDispatching = false;
-    this.version = '0.1.6';
+    this.version = '0.1.7';
     this.state = Object.freeze(createModule({}));
     this.middleware = new Middleware(this);
   }
@@ -886,7 +891,7 @@ class Store {
   }
 }
 
-const version = '0.1.6';
+const version = '0.1.7';
 const nativePage = Page;
 const nativeComponent = Component;
 function expandConfig (config, expandMethods, isPage) {

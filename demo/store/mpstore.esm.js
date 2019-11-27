@@ -1,3 +1,8 @@
+/*!
+ * Mpstore.js v0.1.7
+ * (c) 2019-2019 Imtaotao
+ * Released under the MIT License.
+ */
 function _typeof(obj) {
   if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") {
     _typeof = function (obj) {
@@ -812,7 +817,7 @@ function () {
     this.depComponents = [];
     this.GLOBALWORD = 'global';
     this.isDispatching = false;
-    this.version = '0.1.6';
+    this.version = '0.1.7';
     this.state = Object.freeze(createModule({}));
     this.middleware = new Middleware(this);
   }
@@ -1076,7 +1081,7 @@ function () {
   return Store;
 }();
 
-var version = '0.1.6';
+var version = '0.1.7';
 var nativePage = Page;
 var nativeComponent = Component;
 

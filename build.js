@@ -16,35 +16,46 @@ const devStoreDir = path.resolve(testLibPath, './store')
 const entryPath = path.resolve(__dirname, './src/index.js')
 const outputPath = filename => path.resolve(__dirname, './dist', filename)
 
+const banner =
+  '/*!\n' +
+  ` * Mpstore.js v${version}\n` +
+  ` * (c) 2019-${new Date().getFullYear()} Imtaotao\n` +
+  ' * Released under the MIT License.\n' +
+  ' */'
+
 const esm = {
   input: entryPath,
   output: {
-    file: outputPath(`${libName}.esm.js`),
+    banner,
     format: 'es',
+    file: outputPath(`${libName}.esm.js`),
   },
 }
 
 const es6m = {
   input: entryPath,
   output: {
-    file: outputPath(`${libName}.es6m.js`),
+    banner,
     format: 'es',
+    file: outputPath(`${libName}.es6m.js`),
   },
 }
 
 const cjs = {
   input: entryPath,
   output: {
-    file: outputPath(`${libName}.common.js`),
+    banner,
     format: 'cjs',
+    file: outputPath(`${libName}.common.js`),
   },
 }
 
 const uglifyCjs = {
   input: entryPath,
   output: {
-    file: outputPath(`${libName}.min.js`),
+    banner,
     format: 'cjs',
+    file: outputPath(`${libName}.min.js`),
   },
 }
 
