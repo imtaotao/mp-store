@@ -60,12 +60,14 @@ Page({
 如果你使用了模块，则会稍微有一点不同，看下面的 demo
 1. 创建 `reducer`
 ```js
+// 定义全局的 state
 store.add('global', {
   partialState: {
     age: 25,
   },
 })
 
+// 模块
 const action = 'action'
 const reducer =  {
   partialState: {
@@ -83,7 +85,7 @@ store.addMoudle('user', {
 
 2. 在 `Page` 和 `Component` 中使用
 ```js
-// useState 是第一个需要注入的 module
+// useState 是一个数组，第一个参数为需要注入的 module
 Page({
   storeConfig: {
     useState: ['user', (store) => ({
