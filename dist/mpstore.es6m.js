@@ -1,5 +1,5 @@
 /*!
- * Mpstore.js v0.1.7
+ * Mpstore.js v0.1.8
  * (c) 2019-2019 Imtaotao
  * Released under the MIT License.
  */
@@ -595,12 +595,7 @@ function assertReducer (action, reducer) {
   const { setter, partialState } = reducer;
   const stringifyAction = action.toString();
   assert(
-    'partialState' in reducer,
-    `You must defined [partialState].` +
-      `\n\n --- from [${stringifyAction}] action.`,
-  );
-  assert(
-    isPlainObject(partialState),
+    !('partialState' in reducer && !isPlainObject(partialState)),
     `The [partialState] must be an object.` +
       `\n\n --- from [${stringifyAction}] action.`,
   );
@@ -650,7 +645,7 @@ class Store {
     this.depComponents = [];
     this.GLOBALWORD = 'global';
     this.isDispatching = false;
-    this.version = '0.1.7';
+    this.version = '0.1.8';
     this.state = Object.freeze(createModule({}));
     this.middleware = new Middleware(this);
   }
@@ -891,7 +886,7 @@ class Store {
   }
 }
 
-const version = '0.1.7';
+const version = '0.1.8';
 const nativePage = Page;
 const nativeComponent = Component;
 function expandConfig (config, expandMethods, isPage) {

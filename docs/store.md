@@ -29,7 +29,7 @@ const store = createStore(() => {}, {})
 ```ts
   interface Reducere {
     namespace?: string
-    partialState: Object
+    partialState?: Object
     setter?: (state: module, payload: any, rootState?: Store['state'] ) : Object
   }
 ```

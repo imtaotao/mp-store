@@ -56,18 +56,18 @@ describe('Reducer', () => {
     expect(isError(two)).toBeTruthy()
   })
 
-  it('need `partialState` word', () => {
+  it('no need `partialState` word', () => {
     const fn = () => store.add('testAction', {
       partialState: {},
     })
     expect(isError(fn)).toBeFalsy()
   })
 
-  it('[error] need `partialState` word', () => {
+  it('[error] no need `partialState` word', () => {
     const fn = () => store.add('testAction', {
       _partialState: {},
     })
-    expect(isError(fn)).toBeTruthy()
+    expect(isError(fn)).toBeFalsy()
   })
 
   it('partialState is plain object', () => {

@@ -32,13 +32,7 @@ function assertReducer (action, reducer) {
   const stringifyAction = action.toString()
 
   assert(
-    'partialState' in reducer,
-    `You must defined [partialState].` + 
-      `\n\n --- from [${stringifyAction}] action.`,
-  )
-
-  assert(
-    isPlainObject(partialState),
+    !('partialState' in reducer && !isPlainObject(partialState)),
     `The [partialState] must be an object.` +
       `\n\n --- from [${stringifyAction}] action.`,
   )

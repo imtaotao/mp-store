@@ -18,7 +18,7 @@
 + [x] `action` 必须是 string 或者 symbol 类型
 + [x] `action` 是唯一的
 + [x] `namespace` 必须是 string 类型
-+ [x] reducer 里面必须定义 `partialState` 字段
++ [x] reducer 里面不一定需要 `partialState` 字段
 + [x] `partialState` 字段必须为一个普通对象
 + [x] `partialState` 中不能有重复的全局字段
 + [x] `partialState` 只拥有 symbol 类型的值时，将会判断为空对象，不添加
