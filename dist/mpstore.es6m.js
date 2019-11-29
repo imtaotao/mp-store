@@ -664,7 +664,7 @@ class Store {
     reducer.action = action;
     this.reducers.push(reducer);
     const { partialState } = reducer;
-    if (!isEmptyObject(partialState)) {
+    if (partialState && !isEmptyObject(partialState)) {
       this.state = mergeState(this.state, partialState);
     }
   }

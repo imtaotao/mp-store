@@ -113,7 +113,7 @@ export class Store {
     const { partialState } = reducer
     
     // we filter the symbol when we diff, so we don't need to detect
-    if (!isEmptyObject(partialState)) {
+    if (partialState && !isEmptyObject(partialState)) {
       // because we don't allow duplicate fields to be created,
       // so don't need to use `mergeModule`
       this.state = mergeState(this.state, partialState)

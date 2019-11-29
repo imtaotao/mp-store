@@ -836,7 +836,7 @@ function () {
       this.reducers.push(reducer);
       var partialState = reducer.partialState;
 
-      if (!isEmptyObject(partialState)) {
+      if (partialState && !isEmptyObject(partialState)) {
         this.state = mergeState(this.state, partialState);
       }
     }
