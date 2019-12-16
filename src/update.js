@@ -34,7 +34,8 @@ export function updateComponents (store, callback) {
     }
   }
 
-  for (let i = 0; i < len; i++) {
+  // the component maybe aleard unload, so, can't use `len`
+  for (let i = 0; i < depComponents.length; i++) {
     const {
       isPage,
       component,
