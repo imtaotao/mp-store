@@ -132,19 +132,19 @@ export class Store {
         `\n\n   --- from [${stringifyAction}] action.`
     )
 
-    const reducer = reducers.find(v => v.action === action)
-
-    assert(
-      reducer,
-      `The [${stringifyAction}] action does not exist. ` +
-        'Maybe you have not defined.'
-    )
-
     // call all middleware
     this.middleware.process(action, payload, (destPayload, restoreProcessState) => {
       this.isDispatching = true
+      
 
       try {
+        const reducer = reducers.find(v => v.action === action)
+        assert(
+          reducer,
+          `The [${stringifyAction}] action does not exist. ` +
+            'Maybe you have not defined.'
+        )
+
         let newPartialState
         const namespace = reducer.namespace
         const isModuleDispatching = typeof namespace === 'string'

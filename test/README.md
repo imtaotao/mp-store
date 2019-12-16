@@ -75,7 +75,7 @@
 + [x] 顺带单独测试 `applyPatchs` 这个内部方法
 
 ### middleware
-+ [x] 可以拦截 symbal action
++ [x] 可以拦截 symbol action
 + [x] 如果没有指定 `action`，则默认为拦截所有 `dispatch`
 + [x] 拦截所有 `action`
 + [x] 检查中间件的数量
@@ -86,6 +86,7 @@
 + [x] 中间件如果没有调用 `next` 将不会更新
 + [x] 中间件调用的顺序与添加的顺序保持一致
 + [x] 拦截的 action 可以为一个数组，用来拦截多个 action
++ [x] 可以拦截没有定义的 action
 
 ### time travel
 + [x] 检测 `go` 方法

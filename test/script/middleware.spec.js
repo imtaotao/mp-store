@@ -360,4 +360,47 @@ describe('Middleware', () => {
     remove()
     expect(store.middleware.stack.length).toBe(1)
   })
+
+  it('can intercept no defined actions', () => {
+    let i = 0
+    const one = () => {
+      expect(store.middleware.stack.length).toBe(0)
+      store.use('action', (payload, next) => {
+        expect(i).toBe(0)
+        i++
+      })
+      store.dispatch('action')
+      store.middleware.stack = []
+    }
+    const two = () => {
+      expect(store.middleware.stack.length).toBe(0)
+      store.use('action', (payload, next) => {
+        expect(i).toBe(1)
+        i++
+        next()
+      })
+      store.dispatch('action')
+    }
+    const three = () => {
+      expect(store.middleware.stack.length).toBe(0)
+      store.add('action', {
+        setter(state, payload) {
+          expect(payload).toBe('tao')
+          return {}
+        }
+      })
+      store.use('action', (payload, next) => {
+        expect(i).toBe(2)
+        i++
+        next(payload)
+      })
+      store.dispatch('action', 'tao')
+      store.middleware.stack = []
+    }
+    expect(isError(one)).toBeFalse()
+    expect(isError(two)).toBeTruthy()
+    store.middleware.stack = []
+    expect(isError(three)).toBeFalse()
+    expect(i).toBe(3)
+  })
 })

@@ -1,5 +1,5 @@
 /*!
- * Mpstore.js v0.1.9
+ * Mpstore.js v0.1.10
  * (c) 2019-2019 Imtaotao
  * Released under the MIT License.
  */
@@ -816,7 +816,7 @@ function () {
     this.depComponents = [];
     this.GLOBALWORD = 'global';
     this.isDispatching = false;
-    this.version = '0.1.9';
+    this.version = '0.1.10';
     this.state = Object.freeze(createModule({}));
     this.middleware = new Middleware(this);
   }
@@ -849,14 +849,14 @@ function () {
           isDispatching = this.isDispatching;
       var stringifyAction = action.toString();
       assert(!isDispatching, 'It is not allowed to call "dispatch" during dispatch execution.' + "\n\n   --- from [".concat(stringifyAction, "] action."));
-      var reducer = reducers.find(function (v) {
-        return v.action === action;
-      });
-      assert(reducer, "The [".concat(stringifyAction, "] action does not exist. ") + 'Maybe you have not defined.');
       this.middleware.process(action, payload, function (destPayload, restoreProcessState) {
         _this.isDispatching = true;
 
         try {
+          var reducer = reducers.find(function (v) {
+            return v.action === action;
+          });
+          assert(reducer, "The [".concat(stringifyAction, "] action does not exist. ") + 'Maybe you have not defined.');
           var newPartialState;
           var namespace = reducer.namespace;
           var isModuleDispatching = typeof namespace === 'string';
@@ -1080,7 +1080,7 @@ function () {
   return Store;
 }();
 
-var version = '0.1.9';
+var version = '0.1.10';
 var nativePage = Page;
 var nativeComponent = Component;
 
