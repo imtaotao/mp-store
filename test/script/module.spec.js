@@ -273,9 +273,9 @@ describe('Module', () => {
       'aa': {}
     })
     expect(isError(one)).toBeTruthy()
-    expect(isError(two)).toBeTruthy()
-    store.addModule('a', {
-      'aa': {
+    expect(isError(two)).toBeFalsy()
+    store.addModule('b', {
+      'aaa': {
         partialState: {
           name: 'tao',
         }
@@ -287,9 +287,9 @@ describe('Module', () => {
       }
     })
     expect(isModule(store.state.a)).toBeTruthy()
-    expect(Object.keys(store.state.a).length).toBe(2)
-    expect(store.state.a.name).toBe('tao')
-    expect(store.state.a.nameTwo).toBe('imtaotao')
+    expect(Object.keys(store.state.b).length).toBe(2)
+    expect(store.state.b.name).toBe('tao')
+    expect(store.state.b.nameTwo).toBe('imtaotao')
   })
 
   it('[addModule] allow duplicate additions, but not the same action', () => {

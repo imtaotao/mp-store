@@ -1,5 +1,5 @@
 /*!
- * Mpstore.js v0.1.10
+ * Mpstore.js v0.1.11
  * (c) 2019-2019 Imtaotao
  * Released under the MIT License.
  */
@@ -199,6 +199,7 @@ function mergeModule (module, partialModule, moduleName, createMsg) {
   return createModule(Object.assign({}, module, partialModule))
 }
 function createModuleByNamespace (namespace, partialModule, rootModule, stringifyAction, createMsg) {
+  partialModule = partialModule || {};
   if (!namespace) {
     return mergeModule(rootModule, partialModule)
   }
@@ -645,7 +646,7 @@ class Store {
     this.depComponents = [];
     this.GLOBALWORD = 'global';
     this.isDispatching = false;
-    this.version = '0.1.10';
+    this.version = '0.1.11';
     this.state = Object.freeze(createModule({}));
     this.middleware = new Middleware(this);
   }
@@ -886,7 +887,7 @@ class Store {
   }
 }
 
-const version = '0.1.10';
+const version = '0.1.11';
 const nativePage = Page;
 const nativeComponent = Component;
 function expandConfig (config, expandMethods, isPage) {

@@ -95,6 +95,7 @@ export function mergeModule (module, partialModule, moduleName, createMsg) {
 // 
 // b. if create new module, we need jugement the namespace whether in parent module
 export function createModuleByNamespace (namespace, partialModule, rootModule, stringifyAction, createMsg) {
+  partialModule = partialModule || {}
   if (!namespace) {
     return mergeModule(rootModule, partialModule)
   }
