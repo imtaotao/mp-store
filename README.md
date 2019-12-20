@@ -40,7 +40,7 @@ store.add('action', {
 // mp-store 对 page 和 component 无差别对待
 Page({
   storeConfig: {
-    useState: (store) => ({
+    useState: store => ({
       name: state => state.name 
     })
   },
@@ -88,10 +88,10 @@ store.addMoudle('user', {
 // useState 是一个数组，第一个参数为需要注入的 module
 Page({
   storeConfig: {
-    useState: ['user', (store) => ({
+    useState: store => ['user', {
       name: module => module.name,
       age: (module, rootState) => rootState.age
-    })]
+    }]
   },
 
   onLoad () {

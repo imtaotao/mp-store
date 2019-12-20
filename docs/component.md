@@ -94,7 +94,7 @@
 ```
 
 ### useState(store: Store) : Object
-`useState` 是最为重要的一个钩子，他定义了当前组件需要使用的全局状态，如果 `useState` 钩子未被定义，当前组件将不会被依赖，也不会注入 `glabal`，你将不会有 `this.data.global`。`useState` 必须返回一个 `object`，这个 `object` 定义着当前组件需要使用的数据，他会被缓存这，用来参与 `data diff` 的过程。这意味着，每次组件更新时，都会用到这个 `object` 来生成全新的数据 
+`useState` 是最为重要的一个钩子，他定义了当前组件需要使用的全局状态，如果 `useState` 钩子未被定义，当前组件将不会被依赖，也不会注入 `glabal`，你将不会有 `this.data.global`。`useState` 必须返回一个 `object`，这个 `object` 定义着当前组件需要使用的数据，他会被缓存着，用来参与 `data diff` 的过程。这意味着，每次组件更新时，都会用到这个 `object` 来生成全新的数据 
 ```js
   store.add('action', {
     partialState: {
@@ -147,7 +147,7 @@ Page({
     useState (store) {
       // state 将会是是 store.state.a.b 这个模块
       // 而且你将会得到第二个参数，参数是 rootModule，也就是 store.state
-      return['a.b', {
+      return ['a.b', {
         a: (state, rootState) => state.a,
         b: (state, rootState) => state.b,
       }]

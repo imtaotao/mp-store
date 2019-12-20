@@ -27,7 +27,7 @@ const store = createStore(() => {}, {})
 #### add(action: string | symbol, reducer: Object) : void
 `add` 方法用于添加一个 `reducer`, `action` 是唯一的，如果有重复，将会报错，`reducer` 的类型如下
 ```ts
-  interface Reducere {
+  interface Reducer{
     namespace?: string
     partialState?: Object
     setter?: (state: module, payload: any, rootState?: Store['state'] ) : Object
