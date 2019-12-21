@@ -20,17 +20,18 @@ export function updateComponents (store, callback) {
     GLOBALWORD,
     depComponents,
   } = store
-  const len = depComponents.length
-
-  if (len === 0) {
+  if (depComponents.length === 0) {
     callback()
     return
   }
 
   // call `callback`, when all component views are rendered
   const renderedCallback = () => {
-    if (++total === len) {
-      callback()
+    if (++total === depComponents.length) {
+      if (!callback._called) {
+        callback._called = true
+        callback()
+      }
     }
   }
 
