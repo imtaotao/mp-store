@@ -1,0 +1,2 @@
+<view>{{ global.sex }}-{{ global.name }}-{{ global.age }}</view>
+

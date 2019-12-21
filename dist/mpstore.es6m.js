@@ -1,5 +1,5 @@
 /*!
- * Mpstore.js v0.1.11
+ * Mpstore.js v0.1.12
  * (c) 2019-2019 Imtaotao
  * Released under the MIT License.
  */
@@ -167,6 +167,41 @@ function getModule (state, namespace) {
   }
   return isModule(module) ? module : null
 }
+function assertChildModule(a, b, key) {
+  const isModuleForOrigin = isModule(a);
+  const isModuleForCurrent = isModule(b);
+  assert(
+    !(isModuleForOrigin && !isModuleForCurrent),
+    `The namespace [${key}] is a module that you can change to other value, ` +
+      'You can use `createModule` method to recreate a module.' +
+        '\n\n  --- from setter function.',
+  );
+  assert(
+    !(!isModuleForOrigin && isModuleForCurrent),
+    `The namespace [${key}] is not a module, you can't create it as a module, ` +
+      'you must define the module in `reducer`.' +
+        '\n\n  --- from setter function.',
+  );
+  return isModuleForOrigin && isModuleForCurrent
+}
+function checkChildModule(a, b) {
+  let keys = Object.keys(b);
+  let len = keys.length;
+  while(~--len) {
+    const key = keys[len];
+    if (assertChildModule(a[key], b[key], key)) {
+      checkChildModule(a[key], b[key]);
+    }
+  }
+  keys = Object.keys(a);
+  len = keys.length;
+  while(~--len) {
+    const key = keys[len];
+    if (!(key in b)) {
+      assertChildModule(a[key], b[key], key);
+    }
+  }
+}
 function mergeModule (module, partialModule, moduleName, createMsg) {
   const keys = Object.keys(partialModule);
   let len = keys.length;
@@ -177,22 +212,8 @@ function mergeModule (module, partialModule, moduleName, createMsg) {
     } else {
       const originItem = module[key];
       const currentPartialItem = partialModule[key];
-      const isModuleForOrigin = isModule(originItem);
-      const isModuleForCurrent = isModule(currentPartialItem);
-      assert(
-        !(isModuleForOrigin && !isModuleForCurrent),
-        `The namespace [${key}] is a module that you can change to other value, ` +
-          'You can use `createModule` method to recreate a module.' +
-            '\n\n  --- from setter function.',
-      );
-      assert(
-        !(!isModuleForOrigin && isModuleForCurrent),
-        `The namespace [${key}] is not a module, you can't create it as a module, ` +
-          'you must define the module in `reducer`.' +
-            '\n\n  --- from setter function.',
-      );
-      if (isModuleForOrigin && isModuleForCurrent) {
-        partialModule[key] = mergeModule(originItem, currentPartialItem);
+      if (assertChildModule(originItem, currentPartialItem, key)) {
+        checkChildModule(originItem, currentPartialItem);
       }
     }
   }
@@ -646,7 +667,7 @@ class Store {
     this.depComponents = [];
     this.GLOBALWORD = 'global';
     this.isDispatching = false;
-    this.version = '0.1.11';
+    this.version = '0.1.12';
     this.state = Object.freeze(createModule({}));
     this.middleware = new Middleware(this);
   }
@@ -887,7 +908,7 @@ class Store {
   }
 }
 
-const version = '0.1.11';
+const version = '0.1.12';
 const nativePage = Page;
 const nativeComponent = Component;
 function expandConfig (config, expandMethods, isPage) {

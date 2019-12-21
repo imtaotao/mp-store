@@ -43,6 +43,47 @@ export function getModule (state, namespace) {
   return isModule(module) ? module : null
 }
 
+function assertChildModule(a, b, key) {
+  const isModuleForOrigin = isModule(a)
+  const isModuleForCurrent = isModule(b)
+
+  assert(
+    !(isModuleForOrigin && !isModuleForCurrent),
+    `The namespace [${key}] is a module that you can change to other value, ` +
+      'You can use `createModule` method to recreate a module.' + 
+        '\n\n  --- from setter function.',
+  )
+
+  assert(
+    !(!isModuleForOrigin && isModuleForCurrent),
+    `The namespace [${key}] is not a module, you can't create it as a module, ` +
+      'you must define the module in `reducer`.' + 
+        '\n\n  --- from setter function.',
+  )
+  return isModuleForOrigin && isModuleForCurrent
+}
+
+function checkChildModule(a, b) {
+  let keys = Object.keys(b)
+  let len = keys.length
+  while(~--len) {
+    const key = keys[len]
+    if (assertChildModule(a[key], b[key], key)) {
+      checkChildModule(a[key], b[key])
+    }
+  }
+  // checkout a module
+  keys = Object.keys(a)
+  len = keys.length
+  while(~--len) {
+    const key = keys[len]
+    if (!(key in b)) {
+      // the b[key] must be a undefined
+      assertChildModule(a[key], b[key], key)
+    }
+  }
+}
+
 export function mergeModule (module, partialModule, moduleName, createMsg) {
   const keys = Object.keys(partialModule)
   let len = keys.length
@@ -57,30 +98,14 @@ export function mergeModule (module, partialModule, moduleName, createMsg) {
       // when changing by the setter function
       const originItem = module[key]
       const currentPartialItem = partialModule[key]
-      const isModuleForOrigin = isModule(originItem)
-      const isModuleForCurrent = isModule(currentPartialItem)
 
-      assert(
-        !(isModuleForOrigin && !isModuleForCurrent),
-        `The namespace [${key}] is a module that you can change to other value, ` +
-          'You can use `createModule` method to recreate a module.' + 
-            '\n\n  --- from setter function.',
-      )
-
-      assert(
-        !(!isModuleForOrigin && isModuleForCurrent),
-        `The namespace [${key}] is not a module, you can't create it as a module, ` +
-          'you must define the module in `reducer`.' + 
-            '\n\n  --- from setter function.',
-      )
-      
       // allow merge child module
-      if (isModuleForOrigin && isModuleForCurrent) {
-        partialModule[key] = mergeModule(originItem, currentPartialItem)
+      // but if from setter function，can't allow merge
+      if (assertChildModule(originItem, currentPartialItem, key)) {
+        checkChildModule(originItem, currentPartialItem)
       }
     }
   }
-
   return createModule(Object.assign({}, module, partialModule))
 }
 

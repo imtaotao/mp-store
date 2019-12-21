@@ -2,7 +2,8 @@
   "pages": [
     "pages/index/index",
     "pages/module/index",
-    "pages/time-travel/index"
+    "pages/time-travel/index",
+    "pages/module-two/index"
   ],
   "window": {
     "backgroundTextStyle": "light",

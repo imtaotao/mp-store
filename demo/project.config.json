@@ -35,7 +35,7 @@
 			"list": []
 		},
 		"miniprogram": {
-			"current": 2,
+			"current": 3,
 			"list": [
 				{
 					"id": -1,
@@ -55,6 +55,13 @@
 					"id": -1,
 					"name": "模块",
 					"pathName": "pages/module/index",
+					"query": "",
+					"scene": null
+				},
+				{
+					"id": -1,
+					"name": "模块嵌套",
+					"pathName": "pages/module-two/index",
 					"query": "",
 					"scene": null
 				}

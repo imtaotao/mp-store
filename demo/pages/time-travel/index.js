@@ -3,14 +3,14 @@ Page({
   storeConfig: {
     travelLimit: 5,
     defineReducer (store) {
-      store.add('TIMETRAVEL', {
-        partialState: {
-          index: 0,
-        },
-        setter (state, payload) {
-          return { index: payload }
-        },
-      })
+      // store.add('TIMETRAVEL', {
+      //   partialState: {
+      //     index: 0,
+      //   },
+      //   setter (state, payload) {
+      //     return { index: payload }
+      //   },
+      // })
     },
 
     useState: () => ({

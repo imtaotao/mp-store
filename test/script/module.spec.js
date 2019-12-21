@@ -507,16 +507,23 @@ describe('Module', () => {
   )
 
   it(
-    'In the object returned by the setter function, if the submodule is changed, it must be the same module, ' +
-    'cannot be changed to other values (the module has higher priority), and the recursive merge submodule is merged',
+    'In the object returned by the setter function, ' +
+    'if the submodule is changed, it must be the same module and cannot be changed to another value (the module has a higher priority),' +
+    'and the submodules of the recursive detection submodule are merged,' + 
+    'and the submodule will eventually be replaced',
     () => {
       store.add('one', {
         partialState: {
-          a: createModule({}),
+          a: createModule({
+            sex: 'man'
+          }),
           b: 1,
         },
         setter: (state, payload) => payload
       })
+      expect(store.state.b).toBe(1)
+      expect(store.state.a.sex).toBe('man')
+      expect(store.state.a.name).toBeUndefined()
       store.dispatch('one', {
         a: createModule({
           name: 'tao',
@@ -525,6 +532,7 @@ describe('Module', () => {
       })
       expect(store.state.b).toBe(2)
       expect(store.state.a.name).toBe('tao')
+      expect(store.state.a.sex).toBeUndefined()
       expect(isModule(store.state.a)).toBeTruthy()
     },
   )
@@ -681,6 +689,7 @@ describe('Module', () => {
           name: payload,
           a: createModule({
             age: 20,
+            b: store.getModule('a.b'),
           }),
         }
       },
@@ -691,7 +700,7 @@ describe('Module', () => {
         sex: 'man',
       },
       setter (state, payload) {
-        return  { sex: payload }
+        return { sex: payload }
       },
     })
     const id = simulate.load(Component({
@@ -899,5 +908,37 @@ describe('Module', () => {
     fnTwo('man', 'chen', 0)
     store.dispatch('two', 22)
     fn('women', 'imtaotao', 22)
+  })
+
+  it(
+    'The object returned by the setter function. ' +
+    'If a change is made to a submodule, the submodule of this submodule will be detected.',
+  () => {
+    store.addModule('a', {
+      'clear': {
+        setter:(state, payload) => payload,
+      }
+    })
+    store.addModule('a.b.c', {
+      'childModule': {
+        partialState: {
+          name: 'tao'
+        }
+      }
+    })
+    const oneFn = () => {
+      store.dispatch('clear', {
+        b: createModule({
+          c: createModule({})
+        })
+      })
+    }
+    const twoFn = () => {
+      store.dispatch('clear', {
+        b: createModule({})
+      })
+    }
+    expect(isError(oneFn)).toBeFalse()
+    expect(isError(twoFn)).toBeTruthy()
   })
 })
