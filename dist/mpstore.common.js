@@ -1,5 +1,5 @@
 /*!
- * Mpstore.js v0.1.13
+ * Mpstore.js v0.1.14
  * (c) 2019-2019 Imtaotao
  * Released under the MIT License.
  */
@@ -542,8 +542,11 @@ function updateComponents(store, callback) {
     return;
   }
 
+  var simulateDeps = depComponents.slice();
+  var len = simulateDeps.length;
+
   var renderedCallback = function renderedCallback() {
-    if (++total === depComponents.length) {
+    if (++total === len) {
       if (!callback._called) {
         callback._called = true;
         callback();
@@ -551,15 +554,15 @@ function updateComponents(store, callback) {
     }
   };
 
-  for (var i = 0; i < depComponents.length; i++) {
-    var _depComponents$i = depComponents[i],
-        isPage = _depComponents$i.isPage,
-        component = _depComponents$i.component,
-        didUpdate = _depComponents$i.didUpdate,
-        willUpdate = _depComponents$i.willUpdate,
-        createState = _depComponents$i.createState;
+  for (var i = 0; i < len; i++) {
+    var _simulateDeps$i = simulateDeps[i],
+        isPage = _simulateDeps$i.isPage,
+        component = _simulateDeps$i.component,
+        didUpdate = _simulateDeps$i.didUpdate,
+        willUpdate = _simulateDeps$i.willUpdate,
+        createState = _simulateDeps$i.createState;
 
-    if (component.data[GLOBALWORD]) {
+    if (component._$loaded && component.data[GLOBALWORD]) {
       var newPartialState = createState();
 
       if (typeof willUpdate === 'function') {
@@ -853,7 +856,7 @@ function () {
     this.depComponents = [];
     this.GLOBALWORD = 'global';
     this.isDispatching = false;
-    this.version = '0.1.13';
+    this.version = '0.1.14';
     this.state = Object.freeze(createModule({}));
     this.middleware = new Middleware(this);
   }
@@ -1084,14 +1087,20 @@ function () {
         }
       };
 
+      function onLoad() {
+        addDep(this);
+        this.store = store;
+        this._$loaded = true;
+      }
+
+      function onUnload() {
+        this._$loaded = false;
+        remove(store.depComponents, this);
+      }
+
       if (isPage) {
-        config.onLoad = createWraper(config.onLoad, function () {
-          addDep(this);
-          this.store = store;
-        });
-        config.onUnload = createWraper(config.onUnload, null, function () {
-          remove(store.depComponents, this);
-        });
+        config.onLoad = createWraper(config.onLoad, onLoad, null);
+        config.onUnload = createWraper(config.onUnload, null, onUnload);
       } else {
         config.lifetimes = config.lifetimes || {};
 
@@ -1103,13 +1112,8 @@ function () {
           return config[name] = config.lifetimes[name] = fn;
         };
 
-        set('attached', createWraper(get('attached'), function () {
-          addDep(this);
-          this.store = store;
-        }));
-        set('detached', createWraper(get('detached'), null, function () {
-          remove(store.depComponents, this);
-        }));
+        set('attached', createWraper(get('attached'), onLoad, null));
+        set('detached', createWraper(get('detached'), null, onUnload));
       }
     }
   }]);
@@ -1117,7 +1121,7 @@ function () {
   return Store;
 }();
 
-var version = '0.1.13';
+var version = '0.1.14';
 var nativePage = Page;
 var nativeComponent = Component;
 

@@ -24,28 +24,32 @@ export function updateComponents (store, callback) {
     callback()
     return
   }
+  
+  // the component maybe aleard unload, so, need copy
+  const simulateDeps = depComponents.slice()
+  const len = simulateDeps.length
 
   // call `callback`, when all component views are rendered
   const renderedCallback = () => {
-    if (++total === depComponents.length) {
+    if (++total === len) {
       if (!callback._called) {
         callback._called = true
         callback()
       }
     }
   }
-
-  // the component maybe aleard unload, so, can't use `len`
-  for (let i = 0; i < depComponents.length; i++) {
+  
+  for (let i = 0; i < len; i++) {
     const {
       isPage,
       component,
       didUpdate,
       willUpdate,
       createState,
-    } = depComponents[i]
+    } = simulateDeps[i]
 
-    if (component.data[GLOBALWORD]) {
+    // no update required if uninstalled
+    if (component._$loaded && component.data[GLOBALWORD]) {
       const newPartialState = createState()
 
       // the `willUpdate` function will optimize component

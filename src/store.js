@@ -363,45 +363,29 @@ export class Store {
       }
     }
 
+    function onLoad () {
+      addDep(this)
+      // rigister store to component within
+      this.store = store
+      this._$loaded = true
+    }
+
+    function onUnload () {
+      this._$loaded = false
+      // clear cache
+      remove(store.depComponents, this)
+    }
+
     if (isPage) {
-      config.onLoad = createWraper(
-        config.onLoad,
-        function () {
-          addDep(this)
-          // rigister store to component within
-          this.store = store
-        },
-      )
-      
-      config.onUnload = createWraper(
-        config.onUnload,
-        null,
-        function () {
-          // clear cache
-          remove(store.depComponents, this)
-        },
-      )
+      config.onLoad = createWraper(config.onLoad, onLoad, null)
+      config.onUnload = createWraper(config.onUnload, null, onUnload)
     } else {
       // Component
       config.lifetimes = config.lifetimes || {}
       const get = name => config[name] || config.lifetimes[name]
       const set = (name, fn) => config[name] = config.lifetimes[name] = fn
-
-      set('attached', createWraper(
-        get('attached'),
-        function () {
-          addDep(this)
-          this.store = store
-        },
-      ))
-
-      set('detached', createWraper(
-        get('detached'),
-        null,
-        function () {
-          remove(store.depComponents, this)
-        },
-      ))
+      set('attached', createWraper(get('attached'), onLoad, null))
+      set('detached', createWraper(get('detached'), null, onUnload))
     }
   }
 }

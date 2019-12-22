@@ -148,3 +148,6 @@
 + [x] createModule 必须传入一个 plainObject
 + [x] isModule 检查时，必须是一个 plainObject
 + [x] isModule 将检查 symbol 标识符
+
+### update
++ [x] 更新的时候如果有组件卸载的话，是否所有的依赖的组件都能正常更新

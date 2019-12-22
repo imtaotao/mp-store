@@ -1,5 +1,5 @@
 /*!
- * Mpstore.js v0.1.13
+ * Mpstore.js v0.1.14
  * (c) 2019-2019 Imtaotao
  * Released under the MIT License.
  */
@@ -399,23 +399,25 @@ function updateComponents (store, callback) {
     callback();
     return
   }
+  const simulateDeps = depComponents.slice();
+  const len = simulateDeps.length;
   const renderedCallback = () => {
-    if (++total === depComponents.length) {
+    if (++total === len) {
       if (!callback._called) {
         callback._called = true;
         callback();
       }
     }
   };
-  for (let i = 0; i < depComponents.length; i++) {
+  for (let i = 0; i < len; i++) {
     const {
       isPage,
       component,
       didUpdate,
       willUpdate,
       createState,
-    } = depComponents[i];
-    if (component.data[GLOBALWORD]) {
+    } = simulateDeps[i];
+    if (component._$loaded && component.data[GLOBALWORD]) {
       const newPartialState = createState();
       if (typeof willUpdate === 'function') {
         if (willUpdate.call(store, component, newPartialState) === false) {
@@ -669,7 +671,7 @@ class Store {
     this.depComponents = [];
     this.GLOBALWORD = 'global';
     this.isDispatching = false;
-    this.version = '0.1.13';
+    this.version = '0.1.14';
     this.state = Object.freeze(createModule({}));
     this.middleware = new Middleware(this);
   }
@@ -873,44 +875,29 @@ class Store {
         }
       }
     };
+    function onLoad () {
+      addDep(this);
+      this.store = store;
+      this._$loaded = true;
+    }
+    function onUnload () {
+      this._$loaded = false;
+      remove(store.depComponents, this);
+    }
     if (isPage) {
-      config.onLoad = createWraper(
-        config.onLoad,
-        function () {
-          addDep(this);
-          this.store = store;
-        },
-      );
-      config.onUnload = createWraper(
-        config.onUnload,
-        null,
-        function () {
-          remove(store.depComponents, this);
-        },
-      );
+      config.onLoad = createWraper(config.onLoad, onLoad, null);
+      config.onUnload = createWraper(config.onUnload, null, onUnload);
     } else {
       config.lifetimes = config.lifetimes || {};
       const get = name => config[name] || config.lifetimes[name];
       const set = (name, fn) => config[name] = config.lifetimes[name] = fn;
-      set('attached', createWraper(
-        get('attached'),
-        function () {
-          addDep(this);
-          this.store = store;
-        },
-      ));
-      set('detached', createWraper(
-        get('detached'),
-        null,
-        function () {
-          remove(store.depComponents, this);
-        },
-      ));
+      set('attached', createWraper(get('attached'), onLoad, null));
+      set('detached', createWraper(get('detached'), null, onUnload));
     }
   }
 }
 
-const version = '0.1.13';
+const version = '0.1.14';
 const nativePage = Page;
 const nativeComponent = Component;
 function expandConfig (config, expandMethods, isPage) {
