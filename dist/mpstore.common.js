@@ -1,5 +1,5 @@
 /*!
- * Mpstore.js v0.1.14
+ * Mpstore.js v0.2.0
  * (c) 2019-2019 Imtaotao
  * Released under the MIT License.
  */
@@ -519,6 +519,106 @@ function restore(obj, patchs) {
   return obj;
 }
 
+var COMMONACTION = function COMMONACTION() {};
+
+function match(layer, action) {
+  if (layer.action === COMMONACTION) {
+    return true;
+  }
+
+  if (Array.isArray(layer.action)) {
+    return layer.action.indexOf(action) > -1;
+  }
+
+  return action === layer.action;
+}
+
+function handleLayer(action, fn, store, payload, next, restoreProcessState) {
+  try {
+    fn.call(store, payload, next, action);
+    restoreProcessState();
+  } catch (error) {
+    var hooks = store.hooks;
+    restoreProcessState();
+
+    if (hooks && typeof hooks['middlewareError'] === 'function') {
+      hooks['middlewareError'](action, payload, error);
+    } else {
+      warning("".concat(error, "\n\n   --- from middleware [").concat(action.toString(), "] action."));
+    }
+  }
+}
+
+var Middleware =
+/*#__PURE__*/
+function () {
+  function Middleware(store) {
+    _classCallCheck(this, Middleware);
+
+    this.stack = [];
+    this.store = store;
+    this.isProcessing = false;
+  }
+
+  _createClass(Middleware, [{
+    key: "use",
+    value: function use(action, fn) {
+      assert(!this.isProcessing, 'can\'t allow add new middleware in the middleware processing.');
+      this.stack.push({
+        fn: fn,
+        action: action
+      });
+    }
+  }, {
+    key: "remove",
+    value: function remove(action, fn) {
+      var index = this.stack.findIndex(function (layer) {
+        return layer.fn === fn && layer.action === action;
+      });
+
+      if (index > -1) {
+        this.stack.splice(index, 1);
+      }
+    }
+  }, {
+    key: "process",
+    value: function process(action, payload, finish) {
+      var _this = this;
+
+      this.isProcessing = true;
+
+      var restoreProcessState = function restoreProcessState() {
+        _this.isProcessing = false;
+      };
+
+      if (this.stack.length > 0) {
+        var index = 0;
+
+        var next = function next(prevPayload) {
+          var layer = _this.stack[index];
+          index++;
+
+          while (layer && !match(layer, action)) {
+            layer = _this.stack[index++];
+          }
+
+          if (layer) {
+            handleLayer(action, layer.fn, _this.store, prevPayload, next, restoreProcessState);
+          } else {
+            finish(prevPayload, restoreProcessState);
+          }
+        };
+
+        next(payload);
+      } else {
+        finish(payload, restoreProcessState);
+      }
+    }
+  }]);
+
+  return Middleware;
+}();
+
 function applyPatchs(component, patchs, callback) {
   var destObject = {};
 
@@ -531,6 +631,30 @@ function applyPatchs(component, patchs, callback) {
 
   component.setData(destObject, callback);
 }
+function asyncUpdate(store, type, callback) {
+  if (type === null) {
+    updateComponents(store, callback);
+    return;
+  }
+
+  if (store[type].length === 0) {
+    setTimeout(function () {
+      updateComponents(store, function () {
+        var cbs = store[type].slice();
+        store[type].length = 0;
+
+        for (var i = 0; i < cbs.length; i++) {
+          if (typeof cbs[i] === 'function') {
+            cbs[i](destPayload);
+          }
+        }
+      });
+    });
+  } else {
+    store[type].push(callback);
+  }
+}
+
 function updateComponents(store, callback) {
   var total = 0;
   var hooks = store.hooks,
@@ -708,106 +832,6 @@ function () {
   return TimeTravel;
 }();
 
-var COMMONACTION = function COMMONACTION() {};
-
-function match(layer, action) {
-  if (layer.action === COMMONACTION) {
-    return true;
-  }
-
-  if (Array.isArray(layer.action)) {
-    return layer.action.indexOf(action) > -1;
-  }
-
-  return action === layer.action;
-}
-
-function handleLayer(action, fn, store, payload, next, restoreProcessState) {
-  try {
-    fn.call(store, payload, next, action);
-    restoreProcessState();
-  } catch (error) {
-    var hooks = store.hooks;
-    restoreProcessState();
-
-    if (hooks && typeof hooks['middlewareError'] === 'function') {
-      hooks['middlewareError'](action, payload, error);
-    } else {
-      warning("".concat(error, "\n\n   --- from middleware [").concat(action.toString(), "] action."));
-    }
-  }
-}
-
-var Middleware =
-/*#__PURE__*/
-function () {
-  function Middleware(store) {
-    _classCallCheck(this, Middleware);
-
-    this.stack = [];
-    this.store = store;
-    this.isProcessing = false;
-  }
-
-  _createClass(Middleware, [{
-    key: "use",
-    value: function use(action, fn) {
-      assert(!this.isProcessing, 'can\'t allow add new middleware in the middleware processing.');
-      this.stack.push({
-        fn: fn,
-        action: action
-      });
-    }
-  }, {
-    key: "remove",
-    value: function remove(action, fn) {
-      var index = this.stack.findIndex(function (layer) {
-        return layer.fn === fn && layer.action === action;
-      });
-
-      if (index > -1) {
-        this.stack.splice(index, 1);
-      }
-    }
-  }, {
-    key: "process",
-    value: function process(action, payload, finish) {
-      var _this = this;
-
-      this.isProcessing = true;
-
-      var restoreProcessState = function restoreProcessState() {
-        _this.isProcessing = false;
-      };
-
-      if (this.stack.length > 0) {
-        var index = 0;
-
-        var next = function next(prevPayload) {
-          var layer = _this.stack[index];
-          index++;
-
-          while (layer && !match(layer, action)) {
-            layer = _this.stack[index++];
-          }
-
-          if (layer) {
-            handleLayer(action, layer.fn, _this.store, prevPayload, next, restoreProcessState);
-          } else {
-            finish(prevPayload, restoreProcessState);
-          }
-        };
-
-        next(payload);
-      } else {
-        finish(payload, restoreProcessState);
-      }
-    }
-  }]);
-
-  return Middleware;
-}();
-
 var storeId = 0;
 
 function assertReducer(action, reducer) {
@@ -856,7 +880,9 @@ function () {
     this.depComponents = [];
     this.GLOBALWORD = 'global';
     this.isDispatching = false;
-    this.version = '0.1.14';
+    this.restoreCallbacks = [];
+    this.dispatchCallbacks = [];
+    this.version = '0.2.0';
     this.state = Object.freeze(createModule({}));
     this.middleware = new Middleware(this);
   }
@@ -897,26 +923,28 @@ function () {
             return v.action === action;
           });
           assert(reducer, "The [".concat(stringifyAction, "] action does not exist. ") + 'Maybe you have not defined.');
-          var newPartialState;
+
+          var _newPartialState;
+
           var namespace = reducer.namespace;
           var isModuleDispatching = typeof namespace === 'string';
 
           if (isModuleDispatching) {
             var module = _this.getModule(namespace, "\n\n --- from [".concat(stringifyAction, "] action."));
 
-            newPartialState = reducer.setter(module, destPayload, _this.state);
+            _newPartialState = reducer.setter(module, destPayload, _this.state);
           } else {
-            newPartialState = reducer.setter(_this.state, destPayload);
+            _newPartialState = reducer.setter(_this.state, destPayload);
           }
 
-          assert(isPlainObject(newPartialState), 'setter function should be return a plain object.');
+          assert(isPlainObject(_newPartialState), 'setter function should be return a plain object.');
 
-          if (!isEmptyObject(newPartialState)) {
+          if (!isEmptyObject(_newPartialState)) {
             if (isModuleDispatching) {
-              newPartialState = createModuleByNamespace(namespace, newPartialState, _this.state, stringifyAction);
-              _this.state = mergeState(_this.state, newPartialState);
+              _newPartialState = createModuleByNamespace(namespace, _newPartialState, _this.state, stringifyAction);
+              _this.state = mergeState(_this.state, _newPartialState);
             } else {
-              _this.state = deepFreeze(mergeModule(_this.state, newPartialState));
+              _this.state = deepFreeze(mergeModule(_this.state, _newPartialState));
             }
           }
         } finally {
@@ -924,11 +952,7 @@ function () {
           restoreProcessState();
         }
 
-        updateComponents(_this, function () {
-          if (typeof callback === 'function') {
-            callback(destPayload);
-          }
-        });
+        asyncUpdate(_this, 'dispatchCallbacks', callback);
       });
     }
   }, {
@@ -945,6 +969,32 @@ function () {
       return function () {
         return _this2.middleware.remove(action, fn);
       };
+    }
+  }, {
+    key: "restore",
+    value: function restore(action, callback) {
+      var reducer = this.reducers.find(function (v) {
+        return v.action === action;
+      });
+      var stringifyAction = action.toString();
+      assert(reducer, "The [".concat(stringifyAction, "] action does not exist. ") + 'Maybe you have not defined.');
+      var namespace = reducer.namespace,
+          partialState = reducer.partialState;
+      assert(partialState, 'no initialized state, do you have a definition?' + "\n\n   --- from [".concat(stringifyAction, "] action."));
+
+      if (typeof namespace === 'string') {
+        newPartialState = createModuleByNamespace(namespace, partialState, this.state, stringifyAction);
+        this.state = mergeState(this.state, newPartialState);
+      } else {
+        this.state = deepFreeze(mergeModule(this.state, partialState));
+      }
+
+      asyncUpdate(this, 'restoreCallbacks', callback);
+    }
+  }, {
+    key: "forceUpdate",
+    value: function forceUpdate() {
+      asyncUpdate(this, null, COMMONACTION);
     }
   }, {
     key: "setNamespace",
@@ -1121,7 +1171,7 @@ function () {
   return Store;
 }();
 
-var version = '0.1.14';
+var version = '0.2.0';
 var nativePage = Page;
 var nativeComponent = Component;
 

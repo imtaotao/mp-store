@@ -21,8 +21,8 @@ import {
 
 import { diff } from './diff'
 import TimeTravel from './time-travel'
+import { applyPatchs, asyncUpdate } from './update'
 import { Middleware, COMMONACTION } from './middleware'
-import { applyPatchs, updateComponents } from './update'
 
 // Each `store` instance has a unique id
 let storeId = 0
@@ -88,6 +88,8 @@ export class Store {
     this.depComponents = []
     this.GLOBALWORD = 'global' // global state namespace
     this.isDispatching = false
+    this.restoreCallbacks = []
+    this.dispatchCallbacks = []
     this.version = __VERSION__
     this.state = Object.freeze(createModule({}))
     this.middleware = new Middleware(this)
@@ -111,7 +113,7 @@ export class Store {
     reducer.action = action
     this.reducers.push(reducer)
     const { partialState } = reducer
-    
+
     // we filter the symbol when we diff, so we don't need to detect
     if (partialState && !isEmptyObject(partialState)) {
       // because we don't allow duplicate fields to be created,
@@ -135,7 +137,6 @@ export class Store {
     // call all middleware
     this.middleware.process(action, payload, (destPayload, restoreProcessState) => {
       this.isDispatching = true
-      
 
       try {
         const reducer = reducers.find(v => v.action === action)
@@ -185,26 +186,58 @@ export class Store {
       }
 
       // update components
-      updateComponents(this, () => {
-        if (typeof callback === 'function') {
-          callback(destPayload)
-        }
-      })
+      asyncUpdate(this, 'dispatchCallbacks', callback)
     })
   }
 
   // add middleware
   use (action, fn) {
-    if (
-      typeof action === 'function' &&
-      action !== COMMONACTION
-    ) {
+    if (typeof action === 'function' && action !== COMMONACTION) {
       fn = action
       action = COMMONACTION
     }
 
     this.middleware.use(action, fn)
     return () => this.middleware.remove(action, fn)
+  }
+
+  // restore to init state
+  restore (action, callback) {
+    const reducer = this.reducers.find(v => v.action === action)
+    const stringifyAction = action.toString()
+    assert(
+      reducer,
+      `The [${stringifyAction}] action does not exist. ` +
+        'Maybe you have not defined.'
+    )
+
+    const { namespace, partialState} = reducer
+
+    assert(
+      partialState,
+      'no initialized state, do you have a definition?' +
+        `\n\n   --- from [${stringifyAction}] action.`
+    )
+    
+    // set state
+    if (typeof namespace === 'string') {
+      newPartialState = createModuleByNamespace(
+        namespace,
+        partialState,
+        this.state,
+        stringifyAction,
+      )
+      this.state = mergeState(this.state, newPartialState)
+    } else {
+      this.state = deepFreeze(mergeModule(this.state, partialState))
+    }
+
+    // update components
+    asyncUpdate(this, 'restoreCallbacks', callback)
+  }
+
+  forceUpdate () {
+    asyncUpdate(this, null, COMMONACTION)
   }
 
   // allow change `GLOBALWORD`.
@@ -384,6 +417,7 @@ export class Store {
       config.lifetimes = config.lifetimes || {}
       const get = name => config[name] || config.lifetimes[name]
       const set = (name, fn) => config[name] = config.lifetimes[name] = fn
+
       set('attached', createWraper(get('attached'), onLoad, null))
       set('detached', createWraper(get('detached'), null, onUnload))
     }

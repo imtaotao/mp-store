@@ -1,5 +1,6 @@
 import { diff } from './diff'
 import { callHook } from './utils'
+import { COMMONACTION } from './middleware'
 
 export function applyPatchs (component, patchs, callback) {
   const destObject = {}
@@ -12,8 +13,33 @@ export function applyPatchs (component, patchs, callback) {
   component.setData(destObject, callback)
 }
 
+export function asyncUpdate (store, type, callback) {
+  if (type === null) {
+    updateComponents(store, callback)
+    return
+  }
+  // update components
+  if (store[type].length === 0) {
+    setTimeout(() => {
+      updateComponents(store, () => {
+        // If called recursively
+        const cbs = store[type].slice()
+        store[type].length = 0
+
+        for (let i = 0; i < cbs.length; i++) {
+          if (typeof cbs[i] === 'function') {
+            cbs[i](destPayload)
+          }
+        }
+      })
+    })
+  } else {
+    store[type].push(callback)
+  }
+}
+
 // update page and component
-export function updateComponents (store, callback) {
+function updateComponents (store, callback) {
   let total = 0
   const {
     hooks,
