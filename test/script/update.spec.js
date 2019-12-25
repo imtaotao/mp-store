@@ -1,4 +1,3 @@
-import { isError } from '../utils'
 import createStore from '../../src/index'
 
 describe('Update', () => {
@@ -74,5 +73,35 @@ describe('Update', () => {
       expect(cmThree.dom.textContent).toBe('tao')
       called = true
     })
+  })
+
+  it('forceUpdata', done => {
+    const store = createStore()
+    store.add('action', {
+      partialState: { name: 'tao' },
+      setter (state, payload) {
+        return { name: payload }
+      }
+    })
+    const id = simulate.load(Component({
+      template: '<div>{{ global.name }}</div>',
+      storeConfig: {
+        useState: () => ({ name: state => state.name }),
+      },
+    }))
+    const cm = simulate.render(id)
+    cm.attach(document.createElement('parent-wrapper'))
+    expect(cm.dom.textContent).toBe('tao')
+    expect(store.state.name).toBe('tao')
+    store.dispatch('action', 'chen', () => {
+      expect(store.state.name).toBe('chen')
+      expect(cm.dom.textContent).toBe('chen')
+      store.state = { name: 'imtaotao' }
+      store.forceUpdate()
+      expect(store.state.name).toBe('imtaotao')
+      expect(cm.dom.textContent).toBe('imtaotao')
+      done()
+    })
+    expect(store.state.name).toBe('chen')
   })
 })
