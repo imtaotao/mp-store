@@ -261,7 +261,7 @@ describe('Component config', () => {
     cfg.onUnload.call(instance)
   })
 
-  it('inspect `willUpdate` behaiver', () => {
+  it('inspect `willUpdate` behaiver', done => {
     const store = createStore()
     let i = 0
     store.add('testAction', {
@@ -293,9 +293,12 @@ describe('Component config', () => {
     expect(cm.dom.textContent).toBe('tao')
     store.dispatch('testAction', 'taotao')
     expect(cfg.data.global.name).toBe('tao')
-    expect(cm.data.global.name).toBe('taotao')
-    expect(cm.dom.textContent).toBe('taotao')
-    expect(i).toBe(1)
+    setTimeout(() => {
+      expect(cm.data.global.name).toBe('taotao')
+      expect(cm.dom.textContent).toBe('taotao')
+      expect(i).toBe(1)
+      done()
+    })
   })
 
   it('inspect `willUpdate` behaiver, return false', () => {
@@ -325,7 +328,7 @@ describe('Component config', () => {
     expect(cm.dom.textContent).toBe('tao')
   })
 
-  it('inspect `didUpdate` behaiver', () => {
+  it('inspect `didUpdate` behaiver', done => {
     const store = createStore()
     let i = 0
     store.add('testAction', {
@@ -366,12 +369,16 @@ describe('Component config', () => {
     expect(cm.dom.textContent).toBe('tao')
     store.dispatch('testAction', 'taotao')
     expect(cfg.data.global.name).toBe('tao')
-    expect(cm.data.global.name).toBe('taotao')
-    expect(cm.dom.textContent).toBe('taotao')
-    expect(i).toBe(2)
+    // view updates are asynchronous
+    setTimeout(() => {
+      expect(cm.data.global.name).toBe('taotao')
+      expect(cm.dom.textContent).toBe('taotao')
+      expect(i).toBe(2)
+      done()
+    })
   })
 
-  it('component init value is changed', () => {
+  it('component init value is changed', done => {
     const store = createStore()
     let i = 0
     store.add('testAction', {
@@ -415,13 +422,16 @@ describe('Component config', () => {
     expect(cmOne.data.global.name).toBe('tao')
     expect(cmOne.dom.textContent).toBe('tao')
     store.dispatch('testAction', 'imtaotao')
-    expect(cmOne.data.global.name).toBe('imtaotao')
-    expect(cmOne.dom.textContent).toBe('imtaotao')
-    expect(i).toBe(2)
-    cmTwo.attach(document.createElement('parent-wrapper'))
-    expect(cmTwo.data.global.name).toBe('imtaotao')
-    expect(cmTwo.dom.textContent).toBe('imtaotao')
-    expect(cfgTwo.data.global.name).toBe('tao')
-    expect(i).toBe(2)
+    setTimeout(() => {
+      expect(cmOne.data.global.name).toBe('imtaotao')
+      expect(cmOne.dom.textContent).toBe('imtaotao')
+      expect(i).toBe(2)
+      cmTwo.attach(document.createElement('parent-wrapper'))
+      expect(cmTwo.data.global.name).toBe('imtaotao')
+      expect(cmTwo.dom.textContent).toBe('imtaotao')
+      expect(cfgTwo.data.global.name).toBe('tao')
+      expect(i).toBe(2)
+      done()
+    })
   })
 })

@@ -42,7 +42,6 @@ describe('Hooks', () => {
         setTimeout(() => {
           expect(store.depComponents.length).toBe(1)
           expect(store.depComponents[0].component).toBe(component)
-          done()
         })
       },
     }
@@ -64,7 +63,10 @@ describe('Hooks', () => {
     expect(store.depComponents[0].component).toBe(cm.instance)
     expect(i).toBe(1)
     store.dispatch('testAction', 2)
-    expect(cm.dom.textContent).toBe('2')
+    setTimeout(() => {
+      expect(cm.dom.textContent).toBe('2')
+      done()
+    })
   })
 
   it('addDep will return false', done => {
@@ -99,7 +101,7 @@ describe('Hooks', () => {
     expect(cm.dom.textContent).toBe('1')
   })
 
-  it('willUpdate', () => {
+  it('willUpdate', done => {
     let i = 0
     const hooks = {
       willUpdate (component, newPartialState, patchs, isPage) {
@@ -132,11 +134,14 @@ describe('Hooks', () => {
     expect(cm.dom.textContent).toBe('1')
     store.dispatch('testAction', 2)
     expect(store.state.a).toBe(2)
-    expect(cm.dom.textContent).toBe('2')
-    expect(i).toBe(1)
+    setTimeout(() => {
+      expect(cm.dom.textContent).toBe('2')
+      expect(i).toBe(1)
+      done()
+    })
   })
 
-  it('willUpdate return false', () => {
+  it('willUpdate return false', done => {
     let i = 0
     const hooks = {
       willUpdate () {
@@ -161,11 +166,14 @@ describe('Hooks', () => {
     expect(cm.dom.textContent).toBe('1')
     store.dispatch('testAction', 2)
     expect(store.state.a).toBe(2)
-    expect(cm.dom.textContent).toBe('1')
-    expect(i).toBe(1)
+    setTimeout(() => {
+      expect(cm.dom.textContent).toBe('1')
+      expect(i).toBe(1)
+      done()
+    })
   })
 
-  it('didUpdate', () => {
+  it('didUpdate', done => {
     let i = 0
     const hooks = {
       willUpdate() {
@@ -200,8 +208,11 @@ describe('Hooks', () => {
     expect(cm.dom.textContent).toBe('1')
     store.dispatch('testAction', 2)
     expect(store.state.a).toBe(2)
-    expect(cm.dom.textContent).toBe('2')
-    expect(i).toBe(2)
+    setTimeout(() => {
+      expect(cm.dom.textContent).toBe('2')
+      expect(i).toBe(2)
+      done()
+    })
   })
 
   it('middlewareError', () => {
@@ -240,7 +251,7 @@ describe('Hooks', () => {
     expect(isError(fn)).toBeTruthy()
   })
 
-  it('`applyPatchs`', () => {
+  it('`applyPatchs`', done => {
     let i = 0
     const hooks = {
       willUpdate (component, newPartialState, patchs, isPage) {
@@ -266,7 +277,10 @@ describe('Hooks', () => {
     expect(cm.dom.textContent).toBe('1')
     store.dispatch('testAction', 2)
     expect(store.state.a).toBe(2)
-    expect(cm.dom.textContent).toBe('2')
-    expect(i).toBe(1)
+    setTimeout(() => {
+      expect(cm.dom.textContent).toBe('2')
+      expect(i).toBe(1)
+      done()
+    })
   })
 })

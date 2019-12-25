@@ -18,24 +18,23 @@ export function asyncUpdate (store, type, callback) {
     updateComponents(store, callback)
     return
   }
+  
   // update components
   if (store[type].length === 0) {
     setTimeout(() => {
+      // If called recursively
+      const cbs = store[type].slice()
+      store[type].length = 0
       updateComponents(store, () => {
-        // If called recursively
-        const cbs = store[type].slice()
-        store[type].length = 0
-
         for (let i = 0; i < cbs.length; i++) {
           if (typeof cbs[i] === 'function') {
-            cbs[i](destPayload)
+            cbs[i]()
           }
         }
       })
     })
-  } else {
-    store[type].push(callback)
   }
+  store[type].push(callback)
 }
 
 // update page and component

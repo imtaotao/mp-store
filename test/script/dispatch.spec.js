@@ -54,7 +54,7 @@ describe('Dispatch', () => {
     store.dispatch('testActionOne')
   })
 
-  it('allow call dispatch in update callback', () => {
+  it('allow call dispatch in update callback', done => {
     let i = 0
     store.add('testAction', {
       partialState: {},
@@ -65,11 +65,12 @@ describe('Dispatch', () => {
     })
     store.dispatch('testAction', 1, () => {
       store.dispatch('testAction', 2)
+      expect(i).toBe(3)
+      done()
     })
-    expect(i).toBe(3)
   })
 
-  it('allow add new middleware in update callback', () => {
+  it('allow add new middleware in update callback', done => {
     let i = 0
     store.add('testAction', {
       partialState: {},
@@ -86,11 +87,11 @@ describe('Dispatch', () => {
       })
       // no call `next`, so only need expect null
       store.use('testAction', (payload, next) => { i++ })
-      expect(store.middleware.stack.length).toBe(2)
       store.dispatch('testAction')
+      expect(store.middleware.stack.length).toBe(2)
+      expect(i).toBe(2)
+      done()
     })
-    expect(store.middleware.stack.length).toBe(2)
-    expect(i).toBe(2)
   })
 
   it('allow call dispatch again in the middleware', done => {
@@ -141,9 +142,11 @@ describe('Dispatch', () => {
       setter (state, payload) {
         expect(payload).toBeNull()
         setTimeout(() => {
-          expect(obj.callback).toHaveBeenCalled()
-          expect(obj.callback).toHaveBeenCalledWith(null)
-          done()
+          setTimeout(() => {
+            expect(obj.callback).toHaveBeenCalled()
+            expect(obj.callback).toHaveBeenCalledWith(null)
+            done()
+          })
         })
         return { a: 1 }
       },
@@ -209,7 +212,7 @@ describe('Dispatch', () => {
     })
   })
 
-  it('component data update', () => {
+  it('component data update', done => {
     // need to recreate store
     const store = createStore()
     let i = 0
@@ -283,16 +286,21 @@ describe('Dispatch', () => {
     expect(i).toBe(2)
     expect(j).toBe(2)
     cmOne.instance.changed()
-    fn('taotao_')
-    expect(i).toBe(3)
-    expect(j).toBe(3)
-    cmTwo.instance.changed()
-    fn('imtaotao_')
-    expect(i).toBe(4)
-    expect(j).toBe(4)
+    setTimeout(() => {
+      fn('taotao_')
+      expect(i).toBe(3)
+      expect(j).toBe(3)
+      cmTwo.instance.changed()
+      setTimeout(() => {
+        fn('imtaotao_')
+        expect(i).toBe(4)
+        expect(j).toBe(4)
+        done()
+      }, 100)
+    })
   })
 
-  it('mutiple component and parent-child component update', () => {
+  it('mutiple component and parent-child component update', done => {
     const store = createStore()
     store.add('testAction', {
       partialState: {
@@ -350,11 +358,18 @@ describe('Dispatch', () => {
     }
     inspect(1, 2)
     cmOne.instance.changed({ a: 2 })
-    inspect(2, 2)
-    cmTwo.instance.changed({ a: 1, b: 1})
-    inspect(1, 1)
-    cmTwo.instance.changed({ b: 3 })
-    inspect(1, 3)
+    setTimeout(() => {
+      inspect(2, 2)
+      cmTwo.instance.changed({ a: 1, b: 1})
+      setTimeout(() => {
+        inspect(1, 1)
+        cmTwo.instance.changed({ b: 3 })
+        setTimeout(() => {
+          inspect(1, 3)
+          done()
+        })
+      })
+    })
   })
 
   it('[async] mutiple component and parent-child component update', done => {
@@ -429,7 +444,7 @@ describe('Dispatch', () => {
     })
   })
 
-  it('dispatch a function', () => {
+  it('dispatch a function', done => {
     const store = createStore()
     store.add('testAction', {
       partialState: {
@@ -450,10 +465,12 @@ describe('Dispatch', () => {
     cm.attach(document.createElement('parent-wrapper'))
     expect(store.state.fn()).toBe(1)
     expect(cm.data.global.fn()).toBe(1)
-    store.dispatch('testAction', newfn)
-    expect(store.state.fn).toBe(newfn)
-    expect(store.state.fn()).toBe(2)
-    expect(cm.data.global.fn).toBe(newfn)
-    expect(cm.data.global.fn()).toBe(2)
+    store.dispatch('testAction', newfn, () => {
+      expect(store.state.fn).toBe(newfn)
+      expect(store.state.fn()).toBe(2)
+      expect(cm.data.global.fn).toBe(newfn)
+      expect(cm.data.global.fn()).toBe(2)
+      done()
+    })
   })
 })

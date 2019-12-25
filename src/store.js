@@ -186,7 +186,11 @@ export class Store {
       }
 
       // update components
-      asyncUpdate(this, 'dispatchCallbacks', callback)
+      asyncUpdate(this, 'dispatchCallbacks', () => {
+        if (typeof callback === 'function') {
+          callback(payload)
+        }
+      })
     })
   }
 
