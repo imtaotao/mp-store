@@ -639,20 +639,19 @@ function asyncUpdate(store, type, callback) {
 
   if (store[type].length === 0) {
     setTimeout(function () {
+      var cbs = store[type].slice();
+      store[type].length = 0;
       updateComponents(store, function () {
-        var cbs = store[type].slice();
-        store[type].length = 0;
-
         for (var i = 0; i < cbs.length; i++) {
           if (typeof cbs[i] === 'function') {
-            cbs[i](destPayload);
+            cbs[i]();
           }
         }
       });
     });
-  } else {
-    store[type].push(callback);
   }
+
+  store[type].push(callback);
 }
 
 function updateComponents(store, callback) {
@@ -923,28 +922,26 @@ function () {
             return v.action === action;
           });
           assert(reducer, "The [".concat(stringifyAction, "] action does not exist. ") + 'Maybe you have not defined.');
-
-          var _newPartialState;
-
+          var newPartialState;
           var namespace = reducer.namespace;
           var isModuleDispatching = typeof namespace === 'string';
 
           if (isModuleDispatching) {
             var module = _this.getModule(namespace, "\n\n --- from [".concat(stringifyAction, "] action."));
 
-            _newPartialState = reducer.setter(module, destPayload, _this.state);
+            newPartialState = reducer.setter(module, destPayload, _this.state);
           } else {
-            _newPartialState = reducer.setter(_this.state, destPayload);
+            newPartialState = reducer.setter(_this.state, destPayload);
           }
 
-          assert(isPlainObject(_newPartialState), 'setter function should be return a plain object.');
+          assert(isPlainObject(newPartialState), 'setter function should be return a plain object.');
 
-          if (!isEmptyObject(_newPartialState)) {
+          if (!isEmptyObject(newPartialState)) {
             if (isModuleDispatching) {
-              _newPartialState = createModuleByNamespace(namespace, _newPartialState, _this.state, stringifyAction);
-              _this.state = mergeState(_this.state, _newPartialState);
+              newPartialState = createModuleByNamespace(namespace, newPartialState, _this.state, stringifyAction);
+              _this.state = mergeState(_this.state, newPartialState);
             } else {
-              _this.state = deepFreeze(mergeModule(_this.state, _newPartialState));
+              _this.state = deepFreeze(mergeModule(_this.state, newPartialState));
             }
           }
         } finally {
@@ -952,7 +949,11 @@ function () {
           restoreProcessState();
         }
 
-        asyncUpdate(_this, 'dispatchCallbacks', callback);
+        asyncUpdate(_this, 'dispatchCallbacks', function () {
+          if (typeof callback === 'function') {
+            callback(destPayload);
+          }
+        });
       });
     }
   }, {
@@ -977,13 +978,14 @@ function () {
         return v.action === action;
       });
       var stringifyAction = action.toString();
+      console.log('CHENTAO', action, reducer);
       assert(reducer, "The [".concat(stringifyAction, "] action does not exist. ") + 'Maybe you have not defined.');
       var namespace = reducer.namespace,
           partialState = reducer.partialState;
-      assert(partialState, 'no initialized state, do you have a definition?' + "\n\n   --- from [".concat(stringifyAction, "] action."));
+      assert(isPlainObject(partialState), 'no initialized state, do you have a definition?' + "\n\n   --- from [".concat(stringifyAction, "] action."));
 
       if (typeof namespace === 'string') {
-        newPartialState = createModuleByNamespace(namespace, partialState, this.state, stringifyAction);
+        var newPartialState = createModuleByNamespace(namespace, partialState, this.state, stringifyAction, function () {});
         this.state = mergeState(this.state, newPartialState);
       } else {
         this.state = deepFreeze(mergeModule(this.state, partialState));
@@ -1061,7 +1063,8 @@ function () {
       var data = config.data,
           _config$storeConfig = config.storeConfig,
           storeConfig = _config$storeConfig === void 0 ? {} : _config$storeConfig;
-      var useState = storeConfig.useState,
+      var addDep = storeConfig.addDep,
+          useState = storeConfig.useState,
           didUpdate = storeConfig.didUpdate,
           willUpdate = storeConfig.willUpdate,
           defineReducer = storeConfig.defineReducer,
@@ -1113,7 +1116,13 @@ function () {
         }
       }
 
-      var addDep = function addDep(component) {
+      var addDepToStore = function addDepToStore(component) {
+        if (typeof addDep === 'function') {
+          if (addDep.call(store, component, isPage) === false) {
+            return;
+          }
+        }
+
         var shouldAdd = callHook(_this4.hooks, 'addDep', [component, isPage]);
 
         if (shouldAdd !== false && createState !== null) {
@@ -1138,7 +1147,7 @@ function () {
       };
 
       function onLoad() {
-        addDep(this);
+        addDepToStore(this);
         this.store = store;
         this._$loaded = true;
       }

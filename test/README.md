@@ -154,4 +154,5 @@
 
 ### update
 + [x] 更新的时候如果有组件卸载的话，是否所有的依赖的组件都能正常更新
-+ [ ] forceUpdate 参数检测和行为是否正常
++ [x] forceUpdate 行为是否正常
++ [X] restore 方法能否给恢复 reducer 到初始值

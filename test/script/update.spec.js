@@ -1,3 +1,4 @@
+import { isError } from '../utils'
 import createStore from '../../src/index'
 
 describe('Update', () => {
@@ -103,5 +104,78 @@ describe('Update', () => {
       done()
     })
     expect(store.state.name).toBe('chen')
+  })
+
+  it('restore', done => {
+    const store = createStore()
+    store.add('action', {
+      partialState: { name: 'tao' },
+      setter (state, payload) {
+        return { name: payload }
+      }
+    })
+    const id = simulate.load(Component({
+      template: '<div>{{ global.name }}</div>',
+      storeConfig: {
+        useState: () => ({ name: state => state.name }),
+      },
+    }))
+    const cm = simulate.render(id)
+    cm.attach(document.createElement('parent-wrapper'))
+    expect(cm.dom.textContent).toBe('tao')
+    expect(store.state.name).toBe('tao')
+    store.dispatch('action', 'chen', () => {
+      expect(store.state.name).toBe('chen')
+      expect(cm.dom.textContent).toBe('chen')
+      store.dispatch('action', 'imtaotao', () => {
+        expect(store.state.name).toBe('imtaotao')
+        expect(cm.dom.textContent).toBe('imtaotao')
+        expect(isError(() => store.restore())).toBeTrue()
+        store.restore('action', () => {
+          expect(store.state.name).toBe('tao')
+          expect(cm.dom.textContent).toBe('tao')
+          done()
+        })
+        expect(store.state.name).toBe('tao')
+        expect(cm.dom.textContent).toBe('imtaotao')
+      })
+    })
+  })
+
+  it('restore namespace', done => {
+    const store = createStore()
+    store.add('action', {
+      namespace: 'a.b',
+      partialState: { name: 'tao' },
+      setter (state, payload) {
+        return { name: payload }
+      }
+    })
+    const id = simulate.load(Component({
+      template: '<div>{{ global.name }}</div>',
+      storeConfig: {
+        useState: () => ['a.b', { name: m => m.name }],
+      },
+    }))
+    const cm = simulate.render(id)
+    cm.attach(document.createElement('parent-wrapper'))
+    expect(cm.dom.textContent).toBe('tao')
+    expect(store.state.a.b.name).toBe('tao')
+    store.dispatch('action', 'chen', () => {
+      expect(store.state.a.b.name).toBe('chen')
+      expect(cm.dom.textContent).toBe('chen')
+      store.dispatch('action', 'imtaotao', () => {
+        expect(store.state.a.b.name).toBe('imtaotao')
+        expect(cm.dom.textContent).toBe('imtaotao')
+        expect(isError(() => store.restore())).toBeTrue()
+        store.restore('action', () => {
+    //       expect(store.state.a.b.name).toBe('tao')
+    //       expect(cm.dom.textContent).toBe('tao')
+          done()
+        })
+        // expect(store.state.a.b.name).toBe('tao')
+        // expect(cm.dom.textContent).toBe('imtaotao')
+      })
+    })
   })
 })

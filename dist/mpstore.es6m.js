@@ -480,19 +480,18 @@ function asyncUpdate (store, type, callback) {
   }
   if (store[type].length === 0) {
     setTimeout(() => {
+      const cbs = store[type].slice();
+      store[type].length = 0;
       updateComponents(store, () => {
-        const cbs = store[type].slice();
-        store[type].length = 0;
         for (let i = 0; i < cbs.length; i++) {
           if (typeof cbs[i] === 'function') {
-            cbs[i](destPayload);
+            cbs[i]();
           }
         }
       });
     });
-  } else {
-    store[type].push(callback);
   }
+  store[type].push(callback);
 }
 function updateComponents (store, callback) {
   let total = 0;
@@ -764,7 +763,11 @@ class Store {
          this.isDispatching = false;
         restoreProcessState();
       }
-      asyncUpdate(this, 'dispatchCallbacks', callback);
+      asyncUpdate(this, 'dispatchCallbacks', () => {
+        if (typeof callback === 'function') {
+          callback(destPayload);
+        }
+      });
     });
   }
   use (action, fn) {
@@ -778,23 +781,25 @@ class Store {
   restore (action, callback) {
     const reducer = this.reducers.find(v => v.action === action);
     const stringifyAction = action.toString();
+    console.log('CHENTAO', action, reducer);
     assert(
       reducer,
       `The [${stringifyAction}] action does not exist. ` +
         'Maybe you have not defined.'
     );
-    const { namespace, partialState} = reducer;
+    const { namespace, partialState } = reducer;
     assert(
-      partialState,
+      isPlainObject(partialState),
       'no initialized state, do you have a definition?' +
         `\n\n   --- from [${stringifyAction}] action.`
     );
     if (typeof namespace === 'string') {
-      newPartialState = createModuleByNamespace(
+      const newPartialState = createModuleByNamespace(
         namespace,
         partialState,
         this.state,
         stringifyAction,
+        () => {},
       );
       this.state = mergeState(this.state, newPartialState);
     } else {
@@ -856,6 +861,7 @@ class Store {
     const GLOBALWORD = this.GLOBALWORD;
     const { data, storeConfig = {} } = config;
     const {
+      addDep,
       useState,
       didUpdate,
       willUpdate,
@@ -902,7 +908,12 @@ class Store {
           : config.data = { [GLOBALWORD]: useState };
       }
     }
-    const addDep = component => {
+    const addDepToStore = component => {
+      if (typeof addDep === 'function') {
+        if (addDep.call(store, component, isPage) === false) {
+          return
+        }
+      }
       const shouldAdd = callHook(this.hooks, 'addDep', [component, isPage]);
       if (shouldAdd !== false && createState !== null) {
         if (component.data && isPlainObject(component.data[GLOBALWORD])) {
@@ -922,7 +933,7 @@ class Store {
       }
     };
     function onLoad () {
-      addDep(this);
+      addDepToStore(this);
       this.store = store;
       this._$loaded = true;
     }

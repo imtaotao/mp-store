@@ -209,27 +209,29 @@ export class Store {
   restore (action, callback) {
     const reducer = this.reducers.find(v => v.action === action)
     const stringifyAction = action.toString()
+    console.log('CHENTAO', action, reducer)
     assert(
       reducer,
       `The [${stringifyAction}] action does not exist. ` +
         'Maybe you have not defined.'
     )
 
-    const { namespace, partialState} = reducer
+    const { namespace, partialState } = reducer
 
     assert(
-      partialState,
+      isPlainObject(partialState),
       'no initialized state, do you have a definition?' +
         `\n\n   --- from [${stringifyAction}] action.`
     )
     
     // set state
     if (typeof namespace === 'string') {
-      newPartialState = createModuleByNamespace(
+      const newPartialState = createModuleByNamespace(
         namespace,
         partialState,
         this.state,
         stringifyAction,
+        () => {},
       )
       this.state = mergeState(this.state, newPartialState)
     } else {
