@@ -33,8 +33,7 @@ module.exports = {
 
   files: [
     'simulate.js',
-    // 'script/*.spec.js',
-    'script/hooks.spec.js',
+    'script/*.spec.js',
     'miniprogram-simulate.js',
   ],
 

@@ -678,7 +678,7 @@ describe('Module', () => {
     expect(isError(fn)).toBeTruthy()
   })
 
-  it('[one] when a multi-level module is associated with a view', () => {
+  it('[one] when a multi-level module is associated with a view', done => {
     const store = createStore()
     store.add('one', {
       partialState: {
@@ -725,13 +725,16 @@ describe('Module', () => {
       expect(cm.dom.textContent).toBe(`${sex}-${name}-${age || ''}`)
     }
     fn('man', 'chen', undefined)
-    store.dispatch('one', 'imtaotao')
-    fn('man', 'imtaotao', 20)
-    store.dispatch('two', 'women')
-    fn('women', 'imtaotao', 20)
+    store.dispatch('one', 'imtaotao', () => {
+      fn('man', 'imtaotao', 20)
+      store.dispatch('two', 'women', () => {
+        fn('women', 'imtaotao', 20)
+        done()
+      })
+    })
   })
 
-  it('[two] when a multi-level module is associated with a view', () => {
+  it('[two] when a multi-level module is associated with a view', done => {
     const store = createStore()
     store.add('one', {
       partialState: {
@@ -775,12 +778,16 @@ describe('Module', () => {
       expect(cm.dom.textContent).toBe(`${sex}-${name}-${age}`)
     }
     fn('man', 'chen', 0)
-    store.dispatch('one', 'imtaotao')
-    fn('man', 'imtaotao', 0)
-    store.dispatch('two', 20)
-    fn('man', 'imtaotao', 20)
-    store.dispatch('three', 'women')
-    fn('women', 'imtaotao', 20)
+    store.dispatch('one', 'imtaotao', () => {
+      fn('man', 'imtaotao', 0)
+      store.dispatch('two', 20, () => {
+        fn('man', 'imtaotao', 20)
+        store.dispatch('three', 'women', () => {
+          fn('women', 'imtaotao', 20)
+          done()
+        })
+      })
+    })
   })
 
   it('when linked with `middleware`', () => {
@@ -825,7 +832,7 @@ describe('Module', () => {
     expect(store.state.a.b.i).toBe(30)
   })
 
-  it('when linked with `timeTravel`', () => {
+  it('when linked with `timeTravel`', done => {
     const store = createStore()
     store.add('one', {
       partialState: {
@@ -873,41 +880,46 @@ describe('Module', () => {
       expect(cm.dom.textContent).toBe(`${sex}-${name}-${age}`)
     }
     fn('man', 'chen', 0)
-    store.dispatch('one', 'imtaotao')
-    fn('man', 'imtaotao', 0)
-    store.dispatch('two', 20)
-    fn('man', 'imtaotao', 20)
-    store.dispatch('three', 'women')
-    fn('women', 'imtaotao', 20)
-    const fnTwo = (sex, name, age) => {
-      recursiveInspect(store.state, 'a.b')
-      expect(store.state.name).toBe('imtaotao')
-      expect(store.state.a.b.sex).toBe('women')
-      expect(store.state.a.age).toBe(20)
-      expect(cm.data.global.sex).toBe(sex)
-      expect(cm.data.global.age).toBe(age)
-      expect(cm.data.global.name).toBe(name)
-      expect(cm.dom.textContent).toBe(`${sex}-${name}-${age}`)
-    }
-    const timeTravel = cm.instance.timeTravel
-    timeTravel.back()
-    fnTwo('man', 'imtaotao', 20)
-    timeTravel.forward()
-    fnTwo('women', 'imtaotao', 20)
-    timeTravel.go(-1)
-    fnTwo('man', 'imtaotao', 20)
-    timeTravel.go(-1)
-    fnTwo('man', 'imtaotao', 0)
-    timeTravel.back()
-    fnTwo('man', 'chen', 0)
-    timeTravel.back()
-    fnTwo('man', 'chen', 0)
-    timeTravel.toEnd()
-    fnTwo('women', 'imtaotao', 20)
-    timeTravel.toStart()
-    fnTwo('man', 'chen', 0)
-    store.dispatch('two', 22)
-    fn('women', 'imtaotao', 22)
+    store.dispatch('one', 'imtaotao', () => {
+      fn('man', 'imtaotao', 0)
+      store.dispatch('two', 20, () => {
+        fn('man', 'imtaotao', 20)
+        store.dispatch('three', 'women', () => {
+          fn('women', 'imtaotao', 20)
+          const fnTwo = (sex, name, age) => {
+            recursiveInspect(store.state, 'a.b')
+            expect(store.state.name).toBe('imtaotao')
+            expect(store.state.a.b.sex).toBe('women')
+            expect(store.state.a.age).toBe(20)
+            expect(cm.data.global.sex).toBe(sex)
+            expect(cm.data.global.age).toBe(age)
+            expect(cm.data.global.name).toBe(name)
+            expect(cm.dom.textContent).toBe(`${sex}-${name}-${age}`)
+          }
+          const timeTravel = cm.instance.timeTravel
+          timeTravel.back()
+          fnTwo('man', 'imtaotao', 20)
+          timeTravel.forward()
+          fnTwo('women', 'imtaotao', 20)
+          timeTravel.go(-1)
+          fnTwo('man', 'imtaotao', 20)
+          timeTravel.go(-1)
+          fnTwo('man', 'imtaotao', 0)
+          timeTravel.back()
+          fnTwo('man', 'chen', 0)
+          timeTravel.back()
+          fnTwo('man', 'chen', 0)
+          timeTravel.toEnd()
+          fnTwo('women', 'imtaotao', 20)
+          timeTravel.toStart()
+          fnTwo('man', 'chen', 0)
+          store.dispatch('two', 22, () => {
+            fn('women', 'imtaotao', 22)
+            done()
+          })
+        })
+      })
+    })
   })
 
   it(

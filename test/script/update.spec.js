@@ -52,6 +52,7 @@ describe('Update', () => {
         }),
       },
     })
+    let called = false
     expect(store.depComponents.length).toBe(3)
     expect(cmOne.dom.textContent).toBe('chen')
     expect(cmTwo.dom.textContent).toBe('chen')
@@ -63,11 +64,15 @@ describe('Update', () => {
       expect(cmOne.dom.textContent).toBe('tao')
       expect(cmTwo.dom.textContent).toBe('tao')
       expect(cmThree.dom.textContent).toBe('tao')
+      expect(called).toBeTrue()
       done()
     })
-    expect(store.depComponents.length).toBe(2)
-    expect(cmOne.dom.textContent).toBe('tao')
-    expect(cmTwo.dom.textContent).toBe('tao')
-    expect(cmThree.dom.textContent).toBe('tao')
+    setTimeout(() => {
+      expect(store.depComponents.length).toBe(2)
+      expect(cmOne.dom.textContent).toBe('tao')
+      expect(cmTwo.dom.textContent).toBe('tao')
+      expect(cmThree.dom.textContent).toBe('tao')
+      called = true
+    })
   })
 })
