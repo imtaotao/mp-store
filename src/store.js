@@ -188,7 +188,7 @@ export class Store {
       // update components
       asyncUpdate(this, 'dispatchCallbacks', () => {
         if (typeof callback === 'function') {
-          callback(payload)
+          callback(destPayload)
         }
       })
     })
@@ -311,6 +311,7 @@ export class Store {
     const GLOBALWORD = this.GLOBALWORD
     const { data, storeConfig = {} } = config
     const {
+      addDep,
       useState,
       didUpdate,
       willUpdate,
@@ -372,9 +373,16 @@ export class Store {
       }
     }
 
-    const addDep = component => {
-      const shouldAdd = callHook(this.hooks, 'addDep', [component, isPage])
+    const addDepToStore = component => {
+      // self hook
+      if (typeof addDep === 'function') {
+        if (addDep.call(store, component, isPage) === false) {
+          return
+        }
+      }
 
+      // global hook
+      const shouldAdd = callHook(this.hooks, 'addDep', [component, isPage])
       // if no used global state word,
       // no need to add dependencies.
       if (shouldAdd !== false && createState !== null) {
@@ -401,7 +409,7 @@ export class Store {
     }
 
     function onLoad () {
-      addDep(this)
+      addDepToStore(this)
       // rigister store to component within
       this.store = store
       this._$loaded = true

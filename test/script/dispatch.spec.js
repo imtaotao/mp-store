@@ -133,18 +133,18 @@ describe('Dispatch', () => {
       callback (destPayload) {
         expect(Object.keys(store.state).length).toBe(1)
         expect(store.state.a).toBe(1)
-        expect(destPayload).toBe(null)
+        expect(destPayload).toBe('null')
       }
     }
     spyOn(obj, 'callback')
     store.add('testAction', {
       partialState: {},
       setter (state, payload) {
-        expect(payload).toBeNull()
+        expect(payload).toBe('null')
         setTimeout(() => {
           setTimeout(() => {
             expect(obj.callback).toHaveBeenCalled()
-            expect(obj.callback).toHaveBeenCalledWith(null)
+            expect(obj.callback).toHaveBeenCalledWith('null')
             done()
           })
         })
@@ -153,7 +153,7 @@ describe('Dispatch', () => {
     })
     store.use('testAction', (payload, next) => {
       expect(payload).toBeNull()
-      setTimeout(() => next(payload))
+      setTimeout(() => next(String(payload)))
     })
     store.dispatch('testAction', null, obj.callback)
     expect(Object.keys(store.state).length).toBe(0)

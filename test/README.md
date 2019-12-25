@@ -52,6 +52,7 @@
 + [x] 依赖移除将在 `onUnload` 和 `detached` 钩子之后，`store` 不会被移除，`timeTravel` 不会被移除
 + [x] `willUpdate` 将在当前组件更新之前调用，返回 false 将阻止更新，接受两个参数 为 `component、newPartialState`， `this 为 store`
 + [x] `didUpdate` 将在组件更新完毕之后调用，接受三个参数，为 `component、 newPartialState、patchs`， `this 为 store`
++ [x] `addDep` 在添加依赖之前调用，返回 `false` 将会阻止添加进依赖，接受两个参数，一个为组件，一个为是否是 page，`this 为 store`
 + [x] 组件生成时的值与最开始存储的值不一致时，能否正常更新为新的值，这时的更新不会调用钩子
 
 ### setNamespace
@@ -149,5 +150,8 @@
 + [x] isModule 检查时，必须是一个 plainObject
 + [x] isModule 将检查 symbol 标识符
 
+### restore reducer
+
 ### update
 + [x] 更新的时候如果有组件卸载的话，是否所有的依赖的组件都能正常更新
++ [ ] forceUpdate 参数检测和行为是否正常

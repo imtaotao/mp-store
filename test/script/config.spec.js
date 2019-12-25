@@ -378,6 +378,74 @@ describe('Component config', () => {
     })
   })
 
+  it('inspect `addDep` behaiver', done => {
+    let i = 0
+    const store = createStore()
+    store.add('testAction', {
+      partialState: { a: 1 },
+      setter: (state, payload) => ({ a: payload })
+    })
+    const id = simulate.load(Component({
+      template: '<div>{{ global.a }}</div>',
+      storeConfig: {
+        addDep (component, isPage) {
+          i++
+          expect(this).toBe(store)
+          expect(arguments.length).toBe(2)
+          expect(component).toBe(cm.instance)
+          expect(isPage).toBeFalsy()
+          expect(store.depComponents.length).toBe(0)
+          setTimeout(() => {
+            expect(store.depComponents.length).toBe(1)
+            expect(store.depComponents[0].component).toBe(component)
+          })
+        },
+        useState: () => ({ a: state => state.a }),
+      },
+    }))
+    const cm = simulate.render(id)
+    cm.attach(document.createElement('parent-wrapper'))
+    expect(cm.dom.textContent).toBe('1')
+    expect(store.depComponents.length).toBe(1)
+    expect(store.depComponents[0].component).toBe(cm.instance)
+    expect(i).toBe(1)
+    store.dispatch('testAction', 2)
+    setTimeout(() => {
+      expect(cm.dom.textContent).toBe('2')
+      done()
+    })
+  })
+
+  it('inspect `addDep` behaiver, return false', done => {
+    let i = 0
+    const store = createStore()
+    store.add('testAction', {
+      partialState: { a: 1 },
+      setter: (state, payload) => ({ a: payload })
+    })
+    const id = simulate.load(Component({
+      template: '<div>{{ global.a }}</div>',
+      storeConfig: {
+        addDep () {
+          i++
+          setTimeout(() => {
+            expect(store.depComponents.length).toBe(0)
+            done()
+          })
+          return false
+        },
+        useState: () => ({ a: state => state.a }),
+      },
+    }))
+    const cm = simulate.render(id)
+    cm.attach(document.createElement('parent-wrapper'))
+    expect(cm.dom.textContent).toBe('1')
+    expect(i).toBe(1)
+    expect(store.depComponents.length).toBe(0)
+    store.dispatch('testAction', 2)
+    expect(cm.dom.textContent).toBe('1')
+  })
+
   it('component init value is changed', done => {
     const store = createStore()
     let i = 0
