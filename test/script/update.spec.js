@@ -168,9 +168,10 @@ describe('Update', () => {
         expect(store.state.a.b.name).toBe('imtaotao')
         expect(cm.dom.textContent).toBe('imtaotao')
         expect(isError(() => store.restore())).toBeTrue()
-        store.restore('action', () => {
+        store.restore('action', initState => {
           expect(store.state.a.b.name).toBe('tao')
           expect(cm.dom.textContent).toBe('tao')
+          expect(initState).toEqual({name: 'tao'})
           done()
         })
         expect(store.state.a.b.name).toBe('tao')

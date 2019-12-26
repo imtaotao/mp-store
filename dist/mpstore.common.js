@@ -978,7 +978,11 @@ function () {
         this.state = deepFreeze(mergeModule(this.state, partialState));
       }
 
-      asyncUpdate(this, 'restoreCallbacks', callback);
+      asyncUpdate(this, 'restoreCallbacks', function () {
+        if (typeof callback === 'function') {
+          callback(partialState);
+        }
+      });
     }
   }, {
     key: "forceUpdate",

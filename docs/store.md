@@ -19,8 +19,10 @@ const store = createStore(() => {}, {})
 ### API
 + `store.add`
 + `store.dispatch`
-+ `store.setNamespace`
++ `store.restore`
++ `store.forceUpdate`
 + `store.use`
++ `store.setNamespace`
 + `store.getModule`
 + `store.addModule`
 
@@ -52,7 +54,7 @@ const store = createStore(() => {}, {})
   console.log(store.state.name) // 'imtaotao'
 ```
 
-#### dispatch(action: string | symbol, payload: any, callback?: () => void) : void
+#### dispatch(action: string | symbol, payload: any, callback?: destPayload => void) : void
 `dispatch` 方法用于触发一个 `action`，他会调用所有的中间件，最后在调用 `reducer` 的 `setter` 函数，你将不能在 `setter` 函数中调用 `dispatch` 方法，以下的写法将会报错。这样做的愿意是为了避免逻辑过于混乱，但你可以在中间件中调用 `dispatch`
 ```js
   store.add('action', {
@@ -66,6 +68,42 @@ const store = createStore(() => {}, {})
   })
 
   store.dispatch('action', 'imtaotao')
+```
+
+`dispatch` 这个行为触发时，对 store 的状态更改是同步的，对视图的更新是异步的。mpStore 对视图的更新是批量的
+```js
+  store.add('action', {
+    partialState: {
+      name: 'chen',
+    },
+    setter (state, payload) {
+      return { name: payload }
+    },
+  })
+
+  Page({
+    storeConfig: {
+      useState (store) {
+        return ({
+          name: state => state.name,
+        })
+      },
+    },
+
+    onLoad() {
+      this.data.global.name // 'chen'
+      this.store.dispatch('action', 'tao', () => {
+        // 或者在回调里面拿到最新的值
+        this.data.global.name // 'tao'
+      })
+      this.data.global.name // 'chen'，store 的更新是同步的
+      this.store.state.name // 'tao'
+      // 由于视图的更新是异步的，所以可以这样
+      setTimeout(() => {
+        this.data.global.name // 'chen'
+      })
+    }
+  })
 ```
 
 `callback` 方法会在 `store.state` 改变后，所有依赖的组件更新后（包括视图）调用，因为**中间件中可能会处理异步行为**，所以这个 `callback` 的存在是必要的
@@ -91,6 +129,27 @@ const store = createStore(() => {}, {})
 
   console.log(store.state.name) // 'tao'
 ```
+
+#### restore(action: string | symbol, callback: initState => void) : void
+`restore` 会将定义的 reducer 恢复到初始状态。通常的情况下，我们需要在组件卸载时，及时清空相应的状态，为此而定义对应的 reducer，这一步完全可以由 mpStore 来做，所以这也是 `restore` 这个 api 出现的原因。`restore` 恢复为初始状态时，也会去异步更新依赖的组件，第二个参数与 `dispatch` 方法中的 callback 基本一致，除了接受的参数为初始状态之外，用法如下：
+```js
+  store.add('action', {
+    partialState: { name: 'tao' },
+    setter (state, payload) {
+      return { name: payload }
+    }
+  })
+  store.dispatch('action', 'chen', () => {
+    store.state.name // 'chen'
+    store.restore('action', initState => {
+      initState // { name: 'tao' }
+      store.state.name // 'tao'
+    })
+  })
+```
+
+#### forceUpdate() : void
+`forceUpdate` 会强制所有依赖的组件走一遍 diff -> patch 的过程，从而更新视图，当你用的这个方法时，99% 都是你自己的代码写的有问题。
 
 #### setNamespace(namespace: string) : void
 store 默认会在组件的 data 中添加 `global` 来接受用到的全局状态，如果需要更改，可以通过此方法。需要注意的是你必须在 `App` 初始化之前调用

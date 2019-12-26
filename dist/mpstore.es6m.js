@@ -797,7 +797,11 @@ class Store {
     } else {
       this.state = deepFreeze(mergeModule(this.state, partialState));
     }
-    asyncUpdate(this, 'restoreCallbacks', callback);
+    asyncUpdate(this, 'restoreCallbacks',  () => {
+      if (typeof callback === 'function') {
+        callback(partialState);
+      }
+    });
   }
   forceUpdate () {
     asyncUpdate(this, null, COMMONACTION);

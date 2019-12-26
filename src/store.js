@@ -232,7 +232,11 @@ export class Store {
     }
 
     // update components
-    asyncUpdate(this, 'restoreCallbacks', callback)
+    asyncUpdate(this, 'restoreCallbacks',  () => {
+      if (typeof callback === 'function') {
+        callback(partialState)
+      }
+    })
   }
 
   forceUpdate () {
