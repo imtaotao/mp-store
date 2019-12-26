@@ -707,6 +707,7 @@ class Store {
       !this.reducers.find(v => v.action === action),
       `Can't repeat defined [${action.toString()}] action.`,
     );
+    const originPartialState = reducer.partialState;
     assertReducer(action, reducer);
     filterReducer(this.state, action, reducer);
     reducer.action = action;
@@ -715,6 +716,7 @@ class Store {
     if (partialState && !isEmptyObject(partialState)) {
       this.state = mergeState(this.state, partialState);
     }
+    reducer.partialState = originPartialState;
   }
   dispatch (action, payload, callback) {
     const { reducers, isDispatching } = this;
@@ -770,18 +772,9 @@ class Store {
       });
     });
   }
-  use (action, fn) {
-    if (typeof action === 'function' && action !== COMMONACTION) {
-      fn = action;
-      action = COMMONACTION;
-    }
-    this.middleware.use(action, fn);
-    return () => this.middleware.remove(action, fn)
-  }
   restore (action, callback) {
     const reducer = this.reducers.find(v => v.action === action);
     const stringifyAction = action.toString();
-    console.log('CHENTAO', action, reducer);
     assert(
       reducer,
       `The [${stringifyAction}] action does not exist. ` +
@@ -799,7 +792,6 @@ class Store {
         partialState,
         this.state,
         stringifyAction,
-        () => {},
       );
       this.state = mergeState(this.state, newPartialState);
     } else {
@@ -809,6 +801,14 @@ class Store {
   }
   forceUpdate () {
     asyncUpdate(this, null, COMMONACTION);
+  }
+  use (action, fn) {
+    if (typeof action === 'function' && action !== COMMONACTION) {
+      fn = action;
+      action = COMMONACTION;
+    }
+    this.middleware.use(action, fn);
+    return () => this.middleware.remove(action, fn)
   }
   setNamespace (key) {
     assert(

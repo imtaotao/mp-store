@@ -169,13 +169,21 @@ describe('Update', () => {
         expect(cm.dom.textContent).toBe('imtaotao')
         expect(isError(() => store.restore())).toBeTrue()
         store.restore('action', () => {
-    //       expect(store.state.a.b.name).toBe('tao')
-    //       expect(cm.dom.textContent).toBe('tao')
+          expect(store.state.a.b.name).toBe('tao')
+          expect(cm.dom.textContent).toBe('tao')
           done()
         })
-        // expect(store.state.a.b.name).toBe('tao')
-        // expect(cm.dom.textContent).toBe('imtaotao')
+        expect(store.state.a.b.name).toBe('tao')
+        expect(cm.dom.textContent).toBe('imtaotao')
       })
     })
+  })
+
+  it('restore error check', () => {
+    const store = createStore()
+    store.add('action', {
+      setter (state, payload) {}
+    })
+    expect(isError(() => store.restore('action'))).toBeTrue()
   })
 })

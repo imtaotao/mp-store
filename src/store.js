@@ -107,6 +107,8 @@ export class Store {
       `Can't repeat defined [${action.toString()}] action.`,
     )
     
+    // record initial state
+    const originPartialState = reducer.partialState
     assertReducer(action, reducer)
     filterReducer(this.state, action, reducer)
 
@@ -120,6 +122,9 @@ export class Store {
       // so don't need to use `mergeModule`
       this.state = mergeState(this.state, partialState)
     }
+
+    // toggle to initial state
+    reducer.partialState = originPartialState
   }
 
   dispatch (action, payload, callback) {
@@ -194,22 +199,11 @@ export class Store {
     })
   }
 
-  // add middleware
-  use (action, fn) {
-    if (typeof action === 'function' && action !== COMMONACTION) {
-      fn = action
-      action = COMMONACTION
-    }
-
-    this.middleware.use(action, fn)
-    return () => this.middleware.remove(action, fn)
-  }
-
   // restore to init state
   restore (action, callback) {
     const reducer = this.reducers.find(v => v.action === action)
     const stringifyAction = action.toString()
-    console.log('CHENTAO', action, reducer)
+
     assert(
       reducer,
       `The [${stringifyAction}] action does not exist. ` +
@@ -231,7 +225,6 @@ export class Store {
         partialState,
         this.state,
         stringifyAction,
-        () => {},
       )
       this.state = mergeState(this.state, newPartialState)
     } else {
@@ -244,6 +237,17 @@ export class Store {
 
   forceUpdate () {
     asyncUpdate(this, null, COMMONACTION)
+  }
+
+  // add middleware
+  use (action, fn) {
+    if (typeof action === 'function' && action !== COMMONACTION) {
+      fn = action
+      action = COMMONACTION
+    }
+
+    this.middleware.use(action, fn)
+    return () => this.middleware.remove(action, fn)
   }
 
   // allow change `GLOBALWORD`.

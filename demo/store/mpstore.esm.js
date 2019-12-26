@@ -891,6 +891,7 @@ function () {
       assert(!this.reducers.find(function (v) {
         return v.action === action;
       }), "Can't repeat defined [".concat(action.toString(), "] action."));
+      var originPartialState = reducer.partialState;
       assertReducer(action, reducer);
       filterReducer(this.state, action, reducer);
       reducer.action = action;
@@ -900,6 +901,8 @@ function () {
       if (partialState && !isEmptyObject(partialState)) {
         this.state = mergeState(this.state, partialState);
       }
+
+      reducer.partialState = originPartialState;
     }
   }, {
     key: "dispatch",
@@ -953,6 +956,32 @@ function () {
       });
     }
   }, {
+    key: "restore",
+    value: function restore(action, callback) {
+      var reducer = this.reducers.find(function (v) {
+        return v.action === action;
+      });
+      var stringifyAction = action.toString();
+      assert(reducer, "The [".concat(stringifyAction, "] action does not exist. ") + 'Maybe you have not defined.');
+      var namespace = reducer.namespace,
+          partialState = reducer.partialState;
+      assert(isPlainObject(partialState), 'no initialized state, do you have a definition?' + "\n\n   --- from [".concat(stringifyAction, "] action."));
+
+      if (typeof namespace === 'string') {
+        var newPartialState = createModuleByNamespace(namespace, partialState, this.state, stringifyAction);
+        this.state = mergeState(this.state, newPartialState);
+      } else {
+        this.state = deepFreeze(mergeModule(this.state, partialState));
+      }
+
+      asyncUpdate(this, 'restoreCallbacks', callback);
+    }
+  }, {
+    key: "forceUpdate",
+    value: function forceUpdate() {
+      asyncUpdate(this, null, COMMONACTION);
+    }
+  }, {
     key: "use",
     value: function use(action, fn) {
       var _this2 = this;
@@ -966,33 +995,6 @@ function () {
       return function () {
         return _this2.middleware.remove(action, fn);
       };
-    }
-  }, {
-    key: "restore",
-    value: function restore(action, callback) {
-      var reducer = this.reducers.find(function (v) {
-        return v.action === action;
-      });
-      var stringifyAction = action.toString();
-      console.log('CHENTAO', action, reducer);
-      assert(reducer, "The [".concat(stringifyAction, "] action does not exist. ") + 'Maybe you have not defined.');
-      var namespace = reducer.namespace,
-          partialState = reducer.partialState;
-      assert(isPlainObject(partialState), 'no initialized state, do you have a definition?' + "\n\n   --- from [".concat(stringifyAction, "] action."));
-
-      if (typeof namespace === 'string') {
-        var newPartialState = createModuleByNamespace(namespace, partialState, this.state, stringifyAction, function () {});
-        this.state = mergeState(this.state, newPartialState);
-      } else {
-        this.state = deepFreeze(mergeModule(this.state, partialState));
-      }
-
-      asyncUpdate(this, 'restoreCallbacks', callback);
-    }
-  }, {
-    key: "forceUpdate",
-    value: function forceUpdate() {
-      asyncUpdate(this, null, COMMONACTION);
     }
   }, {
     key: "setNamespace",
