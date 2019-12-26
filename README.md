@@ -9,6 +9,8 @@ npm install @rustle/mp-store
 ```
 一个轻量级的微信小程序状态管理库，他将能够平滑的兼容以前的旧项目，并不会有很强的侵入性，所以你可以直接迁移过来。如果你的小程序没有引入 `npm` 包的功能，可以在[这里](https://cdn.jsdelivr.net/gh/imtaotao/mp-store/dist/mpstore.esm.js)下载，然后放到项目中去。
 
+> [更新日志](https://github.com/imtaotao/mp-store/releases)
+
 ## Usage
 这是一个简单的的迁移 demo
 ```js
