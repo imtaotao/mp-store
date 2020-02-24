@@ -137,7 +137,7 @@ const store = createStore(() => {}, {})
   console.log(store.state.name) // 'tao'
 ```
 
-#### restore(action: string | symbol, callback: initState => void) : void
+#### restore(action: string | symbol, callback: initState => void, notUpdate?: boolean) : void
 `restore` 会将定义的 reducer 恢复到初始状态。通常的情况下，我们需要在组件卸载时，及时清空相应的状态，为此而定义对应的 reducer，这一步完全可以由 mpStore 来做，所以这也是 `restore` 这个 api 出现的原因。`restore` 恢复为初始状态时，也会去异步更新依赖的组件，第二个参数与 `dispatch` 方法中的 callback 基本一致，除了接受的参数为初始状态之外，用法如下：
 ```js
   store.add('action', {
@@ -154,6 +154,7 @@ const store = createStore(() => {}, {})
     })
   })
 ```
+如果你希望在恢复初始状态后，不需要更新视图的变化，可以将 `notUpdate` 传为 `true`
 
 #### forceUpdate() : void
 `forceUpdate` 会强制所有依赖的组件走一遍 diff -> patch 的过程，从而更新视图，当你用的这个方法时，99% 都是你自己的代码写的有问题。

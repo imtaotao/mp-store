@@ -210,7 +210,7 @@ export class Store {
   }
 
   // restore to init state
-  restore (action, callback) {
+  restore (action, callback, notUpdate) {
     const reducer = this.reducers.find(v => v.action === action)
     const stringifyAction = action.toString()
 
@@ -243,12 +243,16 @@ export class Store {
       this.state = deepFreeze(mergeModule(this.state, partialState, null, null, env))
     }
 
-    // update components
-    asyncUpdate(this, 'restoreCallbacks',  () => {
-      if (typeof callback === 'function') {
-        callback(partialState)
-      }
-    })
+    if (notUpdate) {
+      callback(partialState)
+    } else {
+      // update components
+      asyncUpdate(this, 'restoreCallbacks',  () => {
+        if (typeof callback === 'function') {
+          callback(partialState)
+        }
+      })
+    }
   }
 
   forceUpdate () {

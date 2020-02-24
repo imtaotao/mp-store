@@ -790,7 +790,7 @@ class Store {
       });
     });
   }
-  restore (action, callback) {
+  restore (action, callback, notUpdate) {
     const reducer = this.reducers.find(v => v.action === action);
     const stringifyAction = action.toString();
     assert(
@@ -817,11 +817,15 @@ class Store {
     } else {
       this.state = deepFreeze(mergeModule(this.state, partialState, null, null, env));
     }
-    asyncUpdate(this, 'restoreCallbacks',  () => {
-      if (typeof callback === 'function') {
-        callback(partialState);
-      }
-    });
+    if (notUpdate) {
+      callback(partialState);
+    } else {
+      asyncUpdate(this, 'restoreCallbacks',  () => {
+        if (typeof callback === 'function') {
+          callback(partialState);
+        }
+      });
+    }
   }
   forceUpdate () {
     asyncUpdate(this, null, COMMONACTION);

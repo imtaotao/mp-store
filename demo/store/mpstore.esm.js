@@ -976,7 +976,7 @@ function () {
     }
   }, {
     key: "restore",
-    value: function restore(action, callback) {
+    value: function restore(action, callback, notUpdate) {
       var reducer = this.reducers.find(function (v) {
         return v.action === action;
       });
@@ -994,11 +994,15 @@ function () {
         this.state = deepFreeze(mergeModule(this.state, partialState, null, null, env));
       }
 
-      asyncUpdate(this, 'restoreCallbacks', function () {
-        if (typeof callback === 'function') {
-          callback(partialState);
-        }
-      });
+      if (notUpdate) {
+        callback(partialState);
+      } else {
+        asyncUpdate(this, 'restoreCallbacks', function () {
+          if (typeof callback === 'function') {
+            callback(partialState);
+          }
+        });
+      }
     }
   }, {
     key: "forceUpdate",
