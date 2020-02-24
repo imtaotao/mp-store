@@ -1,6 +1,5 @@
 import { diff } from './diff'
 import { callHook } from './utils'
-import { COMMONACTION } from './middleware'
 
 export function applyPatchs (component, patchs, callback) {
   const destObject = {}

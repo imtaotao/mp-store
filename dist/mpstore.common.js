@@ -1,6 +1,6 @@
 /*!
- * Mpstore.js v0.2.0
- * (c) 2019-2019 Imtaotao
+ * Mpstore.js v0.2.1
+ * (c) 2019-2020 Imtaotao
  * Released under the MIT License.
  */
 'use strict';
@@ -131,8 +131,9 @@ function deepFreeze(state) {
 
   return Object.freeze(state);
 }
-function mergeState(oldState, newState) {
-  return deepFreeze(Object.assign({}, oldState, newState));
+function mergeState(oldState, newState, env) {
+  var state = Object.assign({}, oldState, newState);
+  return env === 'develop' ? deepFreeze(state) : state;
 }
 function mixinMethods(config, methods) {
   for (var key in methods) {
@@ -306,32 +307,34 @@ function checkChildModule(a, b) {
   }
 }
 
-function mergeModule(module, partialModule, moduleName, createMsg) {
+function mergeModule(module, partialModule, moduleName, createMsg, env) {
   var keys = Object.keys(partialModule);
   var len = keys.length;
 
-  while (~--len) {
-    var key = keys[len];
+  if (env === 'develop') {
+    while (~--len) {
+      var key = keys[len];
 
-    if (typeof createMsg === 'function') {
-      assert(!(key in module), createMsg(key, moduleName));
-    } else {
-      var originItem = module[key];
-      var currentPartialItem = partialModule[key];
+      if (typeof createMsg === 'function') {
+        assert(!(key in module), createMsg(key, moduleName));
+      } else {
+        var originItem = module[key];
+        var currentPartialItem = partialModule[key];
 
-      if (assertChildModule(originItem, currentPartialItem, key)) {
-        checkChildModule(originItem, currentPartialItem);
+        if (assertChildModule(originItem, currentPartialItem, key)) {
+          checkChildModule(originItem, currentPartialItem);
+        }
       }
     }
   }
 
   return createModule(Object.assign({}, module, partialModule));
 }
-function createModuleByNamespace(namespace, partialModule, rootModule, stringifyAction, createMsg) {
+function createModuleByNamespace(namespace, partialModule, rootModule, stringifyAction, createMsg, env) {
   partialModule = partialModule || {};
 
   if (!namespace) {
-    return mergeModule(rootModule, partialModule);
+    return mergeModule(rootModule, partialModule, null, null, env);
   }
 
   var parentWraper = {};
@@ -347,7 +350,7 @@ function createModuleByNamespace(namespace, partialModule, rootModule, stringify
 
     if (key in parentModule) {
       assert(isModule(parentModule[key]), 'you can\'t create child moudle, ' + "because namespace [".concat(key, "] already exists in [").concat(segments[i - 1] || 'root', "] module, ") + "but [".concat(key, "] not a module.").concat(remaingMsg));
-      childModule = isLastIndex ? mergeModule(parentModule[key], partialModule, key, createMsg) : Object.assign({}, parentModule[key]);
+      childModule = isLastIndex ? mergeModule(parentModule[key], partialModule, key, createMsg, env) : Object.assign({}, parentModule[key]);
     } else {
       childModule = isLastIndex ? createModule(partialModule) : addModuleFlag({});
     }
@@ -518,106 +521,6 @@ function restore(obj, patchs) {
   });
   return obj;
 }
-
-var COMMONACTION = function COMMONACTION() {};
-
-function match(layer, action) {
-  if (layer.action === COMMONACTION) {
-    return true;
-  }
-
-  if (Array.isArray(layer.action)) {
-    return layer.action.indexOf(action) > -1;
-  }
-
-  return action === layer.action;
-}
-
-function handleLayer(action, fn, store, payload, next, restoreProcessState) {
-  try {
-    fn.call(store, payload, next, action);
-    restoreProcessState();
-  } catch (error) {
-    var hooks = store.hooks;
-    restoreProcessState();
-
-    if (hooks && typeof hooks['middlewareError'] === 'function') {
-      hooks['middlewareError'](action, payload, error);
-    } else {
-      warning("".concat(error, "\n\n   --- from middleware [").concat(action.toString(), "] action."));
-    }
-  }
-}
-
-var Middleware =
-/*#__PURE__*/
-function () {
-  function Middleware(store) {
-    _classCallCheck(this, Middleware);
-
-    this.stack = [];
-    this.store = store;
-    this.isProcessing = false;
-  }
-
-  _createClass(Middleware, [{
-    key: "use",
-    value: function use(action, fn) {
-      assert(!this.isProcessing, 'can\'t allow add new middleware in the middleware processing.');
-      this.stack.push({
-        fn: fn,
-        action: action
-      });
-    }
-  }, {
-    key: "remove",
-    value: function remove(action, fn) {
-      var index = this.stack.findIndex(function (layer) {
-        return layer.fn === fn && layer.action === action;
-      });
-
-      if (index > -1) {
-        this.stack.splice(index, 1);
-      }
-    }
-  }, {
-    key: "process",
-    value: function process(action, payload, finish) {
-      var _this = this;
-
-      this.isProcessing = true;
-
-      var restoreProcessState = function restoreProcessState() {
-        _this.isProcessing = false;
-      };
-
-      if (this.stack.length > 0) {
-        var index = 0;
-
-        var next = function next(prevPayload) {
-          var layer = _this.stack[index];
-          index++;
-
-          while (layer && !match(layer, action)) {
-            layer = _this.stack[index++];
-          }
-
-          if (layer) {
-            handleLayer(action, layer.fn, _this.store, prevPayload, next, restoreProcessState);
-          } else {
-            finish(prevPayload, restoreProcessState);
-          }
-        };
-
-        next(payload);
-      } else {
-        finish(payload, restoreProcessState);
-      }
-    }
-  }]);
-
-  return Middleware;
-}();
 
 function applyPatchs(component, patchs, callback) {
   var destObject = {};
@@ -831,6 +734,110 @@ function () {
   return TimeTravel;
 }();
 
+var defaultOption = {
+  env: 'develop'
+};
+
+var COMMONACTION = function COMMONACTION() {};
+
+function match(layer, action) {
+  if (layer.action === COMMONACTION) {
+    return true;
+  }
+
+  if (Array.isArray(layer.action)) {
+    return layer.action.indexOf(action) > -1;
+  }
+
+  return action === layer.action;
+}
+
+function handleLayer(action, fn, store, payload, next, restoreProcessState) {
+  try {
+    fn.call(store, payload, next, action);
+    restoreProcessState();
+  } catch (error) {
+    var hooks = store.hooks;
+    restoreProcessState();
+
+    if (hooks && typeof hooks['middlewareError'] === 'function') {
+      hooks['middlewareError'](action, payload, error);
+    } else {
+      warning("".concat(error, "\n\n   --- from middleware [").concat(action.toString(), "] action."));
+    }
+  }
+}
+
+var Middleware =
+/*#__PURE__*/
+function () {
+  function Middleware(store) {
+    _classCallCheck(this, Middleware);
+
+    this.stack = [];
+    this.store = store;
+    this.isProcessing = false;
+  }
+
+  _createClass(Middleware, [{
+    key: "use",
+    value: function use(action, fn) {
+      assert(!this.isProcessing, 'can\'t allow add new middleware in the middleware processing.');
+      this.stack.push({
+        fn: fn,
+        action: action
+      });
+    }
+  }, {
+    key: "remove",
+    value: function remove(action, fn) {
+      var index = this.stack.findIndex(function (layer) {
+        return layer.fn === fn && layer.action === action;
+      });
+
+      if (index > -1) {
+        this.stack.splice(index, 1);
+      }
+    }
+  }, {
+    key: "process",
+    value: function process(action, payload, finish) {
+      var _this = this;
+
+      this.isProcessing = true;
+
+      var restoreProcessState = function restoreProcessState() {
+        _this.isProcessing = false;
+      };
+
+      if (this.stack.length > 0) {
+        var index = 0;
+
+        var next = function next(prevPayload) {
+          var layer = _this.stack[index];
+          index++;
+
+          while (layer && !match(layer, action)) {
+            layer = _this.stack[index++];
+          }
+
+          if (layer) {
+            handleLayer(action, layer.fn, _this.store, prevPayload, next, restoreProcessState);
+          } else {
+            finish(prevPayload, restoreProcessState);
+          }
+        };
+
+        next(payload);
+      } else {
+        finish(payload, restoreProcessState);
+      }
+    }
+  }]);
+
+  return Middleware;
+}();
+
 var storeId = 0;
 
 function assertReducer(action, reducer) {
@@ -848,7 +855,7 @@ function assertReducer(action, reducer) {
   return reducer;
 }
 
-function filterReducer(state, action, reducer) {
+function filterReducer(state, action, reducer, env) {
   var stringifyAction = action.toString();
   var namespace = reducer.namespace,
       partialState = reducer.partialState;
@@ -857,10 +864,12 @@ function filterReducer(state, action, reducer) {
     assert(typeof namespace === 'string', 'The module namespace must be a string.' + "\n\n --- from [".concat(stringifyAction, "] action."));
     reducer.partialState = createModuleByNamespace(namespace, partialState, state, stringifyAction, function (key, moduleName) {
       return "The [".concat(key, "] already exists in [").concat(moduleName, "] module, ") + "Please don't repeat defined. \n\n --- from [".concat(stringifyAction, "] action.");
-    });
+    }, env);
   } else {
-    for (var key in partialState) {
-      assert(!state.hasOwnProperty(key), "The [".concat(key, "] already exists in global state, ") + "Please don't repeat defined. \n\n --- from [".concat(stringifyAction, "] action."));
+    if (env === 'develop') {
+      for (var key in partialState) {
+        assert(!state.hasOwnProperty(key), "The [".concat(key, "] already exists in global state, ") + "Please don't repeat defined. \n\n --- from [".concat(stringifyAction, "] action."));
+      }
     }
   }
 
@@ -871,6 +880,8 @@ var Store =
 /*#__PURE__*/
 function () {
   function Store(hooks) {
+    var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
     _classCallCheck(this, Store);
 
     this.hooks = hooks;
@@ -881,14 +892,17 @@ function () {
     this.isDispatching = false;
     this.restoreCallbacks = [];
     this.dispatchCallbacks = [];
-    this.version = '0.2.0';
+    this.version = '0.2.1';
     this.state = Object.freeze(createModule({}));
     this.middleware = new Middleware(this);
+    this.options = Object.assign(defaultOption, options);
   }
 
   _createClass(Store, [{
     key: "add",
     value: function add(action, reducer) {
+      var env = this.options.env;
+
       var actionType = _typeof(action);
 
       assert(actionType === 'string' || actionType === 'symbol', "The action must be a Symbol or String, but now is [".concat(actionType, "]."));
@@ -896,14 +910,18 @@ function () {
         return v.action === action;
       }), "Can't repeat defined [".concat(action.toString(), "] action."));
       var originPartialState = reducer.partialState;
-      assertReducer(action, reducer);
-      filterReducer(this.state, action, reducer);
+
+      if (env === 'develop') {
+        assertReducer(action, reducer);
+      }
+
+      filterReducer(this.state, action, reducer, env);
       reducer.action = action;
       this.reducers.push(reducer);
       var partialState = reducer.partialState;
 
       if (partialState && !isEmptyObject(partialState)) {
-        this.state = mergeState(this.state, partialState);
+        this.state = mergeState(this.state, partialState, env);
       }
 
       reducer.partialState = originPartialState;
@@ -913,7 +931,8 @@ function () {
     value: function dispatch(action, payload, callback) {
       var _this = this;
 
-      var reducers = this.reducers,
+      var options = this.options,
+          reducers = this.reducers,
           isDispatching = this.isDispatching;
       var stringifyAction = action.toString();
       assert(!isDispatching, 'It is not allowed to call "dispatch" during dispatch execution.' + "\n\n   --- from [".concat(stringifyAction, "] action."));
@@ -941,10 +960,10 @@ function () {
 
           if (!isEmptyObject(newPartialState)) {
             if (isModuleDispatching) {
-              newPartialState = createModuleByNamespace(namespace, newPartialState, _this.state, stringifyAction);
-              _this.state = mergeState(_this.state, newPartialState);
+              newPartialState = createModuleByNamespace(namespace, newPartialState, _this.state, stringifyAction, null, options.env);
+              _this.state = mergeState(_this.state, newPartialState, options.env);
             } else {
-              _this.state = deepFreeze(mergeModule(_this.state, newPartialState));
+              _this.state = deepFreeze(mergeModule(_this.state, newPartialState, null, null, options.env));
             }
           }
         } finally {
@@ -967,15 +986,16 @@ function () {
       });
       var stringifyAction = action.toString();
       assert(reducer, "The [".concat(stringifyAction, "] action does not exist. ") + 'Maybe you have not defined.');
+      var env = this.options.env;
       var namespace = reducer.namespace,
           partialState = reducer.partialState;
       assert(isPlainObject(partialState), 'no initialized state, do you have a definition?' + "\n\n   --- from [".concat(stringifyAction, "] action."));
 
       if (typeof namespace === 'string') {
-        var newPartialState = createModuleByNamespace(namespace, partialState, this.state, stringifyAction);
-        this.state = mergeState(this.state, newPartialState);
+        var newPartialState = createModuleByNamespace(namespace, partialState, this.state, stringifyAction, env);
+        this.state = mergeState(this.state, newPartialState, env);
       } else {
-        this.state = deepFreeze(mergeModule(this.state, partialState));
+        this.state = deepFreeze(mergeModule(this.state, partialState, null, null, env));
       }
 
       asyncUpdate(this, 'restoreCallbacks', function () {
@@ -1186,7 +1206,7 @@ function () {
   return Store;
 }();
 
-var version = '0.2.0';
+var version = '0.2.1';
 var nativePage = Page;
 var nativeComponent = Component;
 
@@ -1201,8 +1221,8 @@ function expandConfig(config, expandMethods, isPage) {
   }
 }
 
-function index (mixinInject, hooks) {
-  var store = new Store(hooks);
+function index (mixinInject, hooks, options) {
+  var store = new Store(hooks, options);
   var expandMethods = mixin(mixinInject);
   Page = createWraper(nativePage, function (config) {
     callHook(hooks, 'createBefore', [config, true]);

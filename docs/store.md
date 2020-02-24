@@ -1,16 +1,23 @@
 ## 这是关于 store 相关的使用介绍
 
-#### createStore(mixin?: Function, hooks?: Object) : Store
-store 是通过 `mp-store` 导出的 `createStore` 这个方法来创建的，这个方法接受两个参数。第一个参数为 [`mixin`](./mixin.md) 的注入函数，第二个参数为 [`hooks`](./hooks.md)
+#### createStore(mixin?: Function, hooks?: Object, Options?: Object) : Store
+store 是通过 `mp-store` 导出的 `createStore` 这个方法来创建的，这个方法接受三个参数
+  + 第一个参数为 [`mixin`](./mixin.md) 的注入函数
+  + 第二个参数为 [`hooks`](./hooks.md)
+  + 第三个参数为 `options`
 
 store 会把原生的 `Page`、`Component` 函数包装一层，来做一层拦截，这样 store 就可以收集到所有使用到全局状态的组件，也就是收集依赖。这也就是为什么 store 对原有的功能不影响的原因，下面是 store 的一些介绍
 
-+ `每个 store 拥有唯一的 id，可以通过 store.id 拿到`
-+ `store 的 state 是不可变的，所以你不能这样操作 this.store.state.xx = 1`
-+ `store 会把用到的全局状态放到所用到的 data 中去，默认的命名空间是 global，所以你可以这样在组件中拿到当前所用到的全局状态 this.data.global，如果与原有的项目有冲突，你可以在 App 初始化之前调用 setNamespace 方法更改为其他的名字`
-+ `store 会在 onLoad 和 attached 被调用之前被注入进实例中，依赖的收集也是在这个时间进行的`
-+ `store 会被注入到 page 和 component 示例中，所以你可以通过 this.store 来拿到 store`
+  + `每个 store 拥有唯一的 id，可以通过 store.id 拿到`
+  + `store 的 state 是不可变的，所以你不能这样操作 this.store.state.xx = 1`
+  + `store 会把用到的全局状态放到所用到的 data 中去，默认的命名空间是 global，所以你可以这样在组件中拿到当前所用到的全局状态 this.data.global，如果与原有的项目有冲突，你可以在 App 初始化之前调用 setNamespace 方法更改为其他的名字`
+  + `store 会在 onLoad 和 attached 被调用之前被注入进实例中，依赖的收集也是在这个时间进行的`
+  + `store 会被注入到 page 和 component 示例中，所以你可以通过 this.store 来拿到 store`
 
+### Options
+  + `env: 'develop' | 'product'`: 如果指定为 `product`，会去掉状态和模块合并时的检测，state 将不会被冻结住，从而提升性能
+
+### 启动
 ```js
 import createStore from '@ruslte/mp-store'
 const store = createStore(() => {}, {})

@@ -84,28 +84,31 @@ function checkChildModule(a, b) {
   }
 }
 
-export function mergeModule (module, partialModule, moduleName, createMsg) {
+export function mergeModule (module, partialModule, moduleName, createMsg, env) {
   const keys = Object.keys(partialModule)
   let len = keys.length
 
-  // inspect all attribute
-  while(~--len) {
-    const key = keys[len]
-    // when create by reducer
-    if (typeof createMsg === 'function') {
-      assert(!(key in module), createMsg(key, moduleName))
-    } else {
-      // when changing by the setter function
-      const originItem = module[key]
-      const currentPartialItem = partialModule[key]
+  if (env === 'develop') {
+    // inspect all attribute
+    while(~--len) {
+      const key = keys[len]
+      // when create by reducer
+      if (typeof createMsg === 'function') {
+        assert(!(key in module), createMsg(key, moduleName))
+      } else {
+        // when changing by the setter function
+        const originItem = module[key]
+        const currentPartialItem = partialModule[key]
 
-      // allow merge child module
-      // but if from setter function，can't allow merge
-      if (assertChildModule(originItem, currentPartialItem, key)) {
-        checkChildModule(originItem, currentPartialItem)
+        // allow merge child module
+        // but if from setter function，can't allow merge
+        if (assertChildModule(originItem, currentPartialItem, key)) {
+          checkChildModule(originItem, currentPartialItem)
+        }
       }
     }
   }
+
   return createModule(Object.assign({}, module, partialModule))
 }
 
@@ -119,10 +122,10 @@ export function mergeModule (module, partialModule, moduleName, createMsg) {
 //   })
 // 
 // b. if create new module, we need jugement the namespace whether in parent module
-export function createModuleByNamespace (namespace, partialModule, rootModule, stringifyAction, createMsg) {
+export function createModuleByNamespace (namespace, partialModule, rootModule, stringifyAction, createMsg, env) {
   partialModule = partialModule || {}
   if (!namespace) {
-    return mergeModule(rootModule, partialModule)
+    return mergeModule(rootModule, partialModule, null, null, env)
   }
 
   let parentWraper = {}
@@ -146,7 +149,7 @@ export function createModuleByNamespace (namespace, partialModule, rootModule, s
 
       // the parentModule is module
       childModule = isLastIndex
-        ? mergeModule(parentModule[key], partialModule, key, createMsg)
+        ? mergeModule(parentModule[key], partialModule, key, createMsg, env)
         : Object.assign({}, parentModule[key])
     } else {
       childModule = isLastIndex

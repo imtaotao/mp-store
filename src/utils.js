@@ -34,8 +34,11 @@ export function deepFreeze (state) {
   return Object.freeze(state)
 }
 
-export function mergeState (oldState, newState) {
-  return deepFreeze(Object.assign({}, oldState, newState))
+export function mergeState (oldState, newState, env) {
+  const state = Object.assign({}, oldState, newState)
+  return env === 'develop'
+    ? deepFreeze(state)
+    : state
 }
 
 export function mixinMethods (config, methods) {

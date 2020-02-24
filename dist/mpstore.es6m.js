@@ -1,6 +1,6 @@
 /*!
- * Mpstore.js v0.2.0
- * (c) 2019-2019 Imtaotao
+ * Mpstore.js v0.2.1
+ * (c) 2019-2020 Imtaotao
  * Released under the MIT License.
  */
 function warning (message, noError) {
@@ -34,8 +34,11 @@ function deepFreeze (state) {
   }
   return Object.freeze(state)
 }
-function mergeState (oldState, newState) {
-  return deepFreeze(Object.assign({}, oldState, newState))
+function mergeState (oldState, newState, env) {
+  const state = Object.assign({}, oldState, newState);
+  return env === 'develop'
+    ? deepFreeze(state)
+    : state
 }
 function mixinMethods (config, methods) {
   for (const key in methods) {
@@ -202,27 +205,29 @@ function checkChildModule(a, b) {
     }
   }
 }
-function mergeModule (module, partialModule, moduleName, createMsg) {
+function mergeModule (module, partialModule, moduleName, createMsg, env) {
   const keys = Object.keys(partialModule);
   let len = keys.length;
-  while(~--len) {
-    const key = keys[len];
-    if (typeof createMsg === 'function') {
-      assert(!(key in module), createMsg(key, moduleName));
-    } else {
-      const originItem = module[key];
-      const currentPartialItem = partialModule[key];
-      if (assertChildModule(originItem, currentPartialItem, key)) {
-        checkChildModule(originItem, currentPartialItem);
+  if (env === 'develop') {
+    while(~--len) {
+      const key = keys[len];
+      if (typeof createMsg === 'function') {
+        assert(!(key in module), createMsg(key, moduleName));
+      } else {
+        const originItem = module[key];
+        const currentPartialItem = partialModule[key];
+        if (assertChildModule(originItem, currentPartialItem, key)) {
+          checkChildModule(originItem, currentPartialItem);
+        }
       }
     }
   }
   return createModule(Object.assign({}, module, partialModule))
 }
-function createModuleByNamespace (namespace, partialModule, rootModule, stringifyAction, createMsg) {
+function createModuleByNamespace (namespace, partialModule, rootModule, stringifyAction, createMsg, env) {
   partialModule = partialModule || {};
   if (!namespace) {
-    return mergeModule(rootModule, partialModule)
+    return mergeModule(rootModule, partialModule, null, null, env)
   }
   let parentWraper = {};
   let parentModule = rootModule;
@@ -241,7 +246,7 @@ function createModuleByNamespace (namespace, partialModule, rootModule, stringif
             `but [${key}] not a module.${remaingMsg}`,
       );
       childModule = isLastIndex
-        ? mergeModule(parentModule[key], partialModule, key, createMsg)
+        ? mergeModule(parentModule[key], partialModule, key, createMsg, env)
         : Object.assign({}, parentModule[key]);
     } else {
       childModule = isLastIndex
@@ -378,91 +383,6 @@ function restore (obj, patchs) {
     prevTarget[key] = clone;
   });
   return obj
-}
-
-const COMMONACTION = () => {};
-function match (layer, action) {
-  if (layer.action === COMMONACTION) {
-    return true
-  }
-  if (Array.isArray(layer.action)) {
-    return layer.action.indexOf(action) > -1
-  }
-  return action === layer.action
-}
-function handleLayer (
-  action,
-  fn,
-  store,
-  payload,
-  next,
-  restoreProcessState,
-) {
-  try {
-    fn.call(store, payload, next, action);
-    restoreProcessState();
-  } catch (error) {
-    const hooks = store.hooks;
-    restoreProcessState();
-    if (hooks && typeof hooks['middlewareError'] === 'function') {
-      hooks['middlewareError'](action, payload, error);
-    } else {
-      warning(`${error}\n\n   --- from middleware [${action.toString()}] action.`);
-    }
-  }
-}
-class Middleware {
-  constructor (store) {
-    this.stack = [];
-    this.store = store;
-    this.isProcessing = false;
-  }
-  use (action, fn) {
-    assert(
-      !this.isProcessing,
-      'can\'t allow add new middleware in the middleware processing.'
-    );
-    this.stack.push({ fn, action });
-  }
-  remove (action, fn) {
-    const index = this.stack.findIndex(layer => {
-      return layer.fn === fn && layer.action === action
-    });
-    if (index > -1) {
-      this.stack.splice(index, 1);
-    }
-  }
-  process (action, payload, finish) {
-    this.isProcessing = true;
-    const restoreProcessState = () => {
-      this.isProcessing = false;
-    };
-    if (this.stack.length > 0) {
-      let index = 0;
-      const next = prevPayload => {
-        let layer = this.stack[index];
-        index++;
-        while (layer && !match(layer, action)) {
-          layer = this.stack[index++];
-        }
-        if (layer) {
-          handleLayer(
-            action,
-            layer.fn,
-            this.store,
-            prevPayload,
-            next,
-            restoreProcessState,
-          );
-        } else {
-          finish(prevPayload, restoreProcessState);
-        }
-      };
-      next(payload);
-    } else {
-      finish(payload, restoreProcessState);
-    }
-  }
 }
 
 function applyPatchs (component, patchs, callback) {
@@ -636,6 +556,95 @@ class TimeTravel {
   }
 }
 
+var defaultOption = {
+  env: 'develop',
+};
+
+const COMMONACTION = () => {};
+function match (layer, action) {
+  if (layer.action === COMMONACTION) {
+    return true
+  }
+  if (Array.isArray(layer.action)) {
+    return layer.action.indexOf(action) > -1
+  }
+  return action === layer.action
+}
+function handleLayer (
+  action,
+  fn,
+  store,
+  payload,
+  next,
+  restoreProcessState,
+) {
+  try {
+    fn.call(store, payload, next, action);
+    restoreProcessState();
+  } catch (error) {
+    const hooks = store.hooks;
+    restoreProcessState();
+    if (hooks && typeof hooks['middlewareError'] === 'function') {
+      hooks['middlewareError'](action, payload, error);
+    } else {
+      warning(`${error}\n\n   --- from middleware [${action.toString()}] action.`);
+    }
+  }
+}
+class Middleware {
+  constructor (store) {
+    this.stack = [];
+    this.store = store;
+    this.isProcessing = false;
+  }
+  use (action, fn) {
+    assert(
+      !this.isProcessing,
+      'can\'t allow add new middleware in the middleware processing.'
+    );
+    this.stack.push({ fn, action });
+  }
+  remove (action, fn) {
+    const index = this.stack.findIndex(layer => {
+      return layer.fn === fn && layer.action === action
+    });
+    if (index > -1) {
+      this.stack.splice(index, 1);
+    }
+  }
+  process (action, payload, finish) {
+    this.isProcessing = true;
+    const restoreProcessState = () => {
+      this.isProcessing = false;
+    };
+    if (this.stack.length > 0) {
+      let index = 0;
+      const next = prevPayload => {
+        let layer = this.stack[index];
+        index++;
+        while (layer && !match(layer, action)) {
+          layer = this.stack[index++];
+        }
+        if (layer) {
+          handleLayer(
+            action,
+            layer.fn,
+            this.store,
+            prevPayload,
+            next,
+            restoreProcessState,
+          );
+        } else {
+          finish(prevPayload, restoreProcessState);
+        }
+      };
+      next(payload);
+    } else {
+      finish(payload, restoreProcessState);
+    }
+  }
+}
+
 let storeId = 0;
 function assertReducer (action, reducer) {
   const { setter, partialState } = reducer;
@@ -655,7 +664,7 @@ function assertReducer (action, reducer) {
   }
   return reducer
 }
-function filterReducer (state, action, reducer) {
+function filterReducer (state, action, reducer, env) {
   const stringifyAction = action.toString();
   const { namespace, partialState } = reducer;
   if ('namespace' in reducer) {
@@ -671,20 +680,23 @@ function filterReducer (state, action, reducer) {
       stringifyAction,
       (key, moduleName) => `The [${key}] already exists in [${moduleName}] module, ` +
         `Please don't repeat defined. \n\n --- from [${stringifyAction}] action.`,
+      env,
     );
   } else {
-    for (const key in partialState) {
-      assert(
-        !state.hasOwnProperty(key),
-        `The [${key}] already exists in global state, ` +
-          `Please don't repeat defined. \n\n --- from [${stringifyAction}] action.`,
-      );
+    if (env === 'develop') {
+      for (const key in partialState) {
+        assert(
+          !state.hasOwnProperty(key),
+          `The [${key}] already exists in global state, ` +
+            `Please don't repeat defined. \n\n --- from [${stringifyAction}] action.`,
+        );
+      }
     }
   }
   return reducer
 }
 class Store {
-  constructor (hooks) {
+  constructor (hooks, options = {}) {
     this.hooks = hooks;
     this.reducers = [];
     this.id = ++storeId;
@@ -693,11 +705,13 @@ class Store {
     this.isDispatching = false;
     this.restoreCallbacks = [];
     this.dispatchCallbacks = [];
-    this.version = '0.2.0';
+    this.version = '0.2.1';
     this.state = Object.freeze(createModule({}));
     this.middleware = new Middleware(this);
+    this.options = Object.assign(defaultOption, options);
   }
   add (action, reducer) {
+    const env = this.options.env;
     const actionType = typeof action;
     assert(
       actionType === 'string' || actionType === 'symbol',
@@ -708,18 +722,20 @@ class Store {
       `Can't repeat defined [${action.toString()}] action.`,
     );
     const originPartialState = reducer.partialState;
-    assertReducer(action, reducer);
-    filterReducer(this.state, action, reducer);
+    if (env === 'develop') {
+      assertReducer(action, reducer);
+    }
+    filterReducer(this.state, action, reducer, env);
     reducer.action = action;
     this.reducers.push(reducer);
     const { partialState } = reducer;
     if (partialState && !isEmptyObject(partialState)) {
-      this.state = mergeState(this.state, partialState);
+      this.state = mergeState(this.state, partialState, env);
     }
     reducer.partialState = originPartialState;
   }
   dispatch (action, payload, callback) {
-    const { reducers, isDispatching } = this;
+    const { options, reducers, isDispatching } = this;
     const stringifyAction = action.toString();
     assert(
       !isDispatching,
@@ -755,10 +771,12 @@ class Store {
               newPartialState,
               this.state,
               stringifyAction,
+              null,
+              options.env,
             );
-            this.state = mergeState(this.state, newPartialState);
+            this.state = mergeState(this.state, newPartialState, options.env);
           } else {
-            this.state = deepFreeze(mergeModule(this.state, newPartialState));
+            this.state = deepFreeze(mergeModule(this.state, newPartialState, null, null, options.env));
           }
         }
       } finally {
@@ -780,6 +798,7 @@ class Store {
       `The [${stringifyAction}] action does not exist. ` +
         'Maybe you have not defined.'
     );
+    const env = this.options.env;
     const { namespace, partialState } = reducer;
     assert(
       isPlainObject(partialState),
@@ -792,10 +811,11 @@ class Store {
         partialState,
         this.state,
         stringifyAction,
+        env,
       );
-      this.state = mergeState(this.state, newPartialState);
+      this.state = mergeState(this.state, newPartialState, env);
     } else {
-      this.state = deepFreeze(mergeModule(this.state, partialState));
+      this.state = deepFreeze(mergeModule(this.state, partialState, null, null, env));
     }
     asyncUpdate(this, 'restoreCallbacks',  () => {
       if (typeof callback === 'function') {
@@ -958,7 +978,7 @@ class Store {
   }
 }
 
-const version = '0.2.0';
+const version = '0.2.1';
 const nativePage = Page;
 const nativeComponent = Component;
 function expandConfig (config, expandMethods, isPage) {
@@ -971,8 +991,8 @@ function expandConfig (config, expandMethods, isPage) {
     }
   }
 }
-function index (mixinInject, hooks) {
-  const store = new Store(hooks);
+function index (mixinInject, hooks, options) {
+  const store = new Store(hooks, options);
   const expandMethods = mixin(mixinInject);
   Page = createWraper(
     nativePage,

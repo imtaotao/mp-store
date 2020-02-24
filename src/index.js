@@ -26,8 +26,8 @@ function expandConfig (config, expandMethods, isPage) {
   }
 }
 
-export default function (mixinInject, hooks) {
-  const store = new Store(hooks)
+export default function (mixinInject, hooks, options) {
+  const store = new Store(hooks, options)
   const expandMethods = mixin(mixinInject)
 
   // we can rewirte Page and Component function

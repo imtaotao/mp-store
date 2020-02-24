@@ -21,6 +21,7 @@ import {
 
 import { diff } from './diff'
 import TimeTravel from './time-travel'
+import defaultOption from './default-option'
 import { applyPatchs, asyncUpdate } from './update'
 import { Middleware, COMMONACTION } from './middleware'
 
@@ -48,7 +49,7 @@ function assertReducer (action, reducer) {
   return reducer
 }
 
-function filterReducer (state, action, reducer) {
+function filterReducer (state, action, reducer, env) {
   const stringifyAction = action.toString()
   const { namespace, partialState } = reducer
 
@@ -66,22 +67,25 @@ function filterReducer (state, action, reducer) {
       stringifyAction,
       (key, moduleName) => `The [${key}] already exists in [${moduleName}] module, ` +
         `Please don't repeat defined. \n\n --- from [${stringifyAction}] action.`,
+      env,
     )
   } else {
-    // inspect all state key 
-    for (const key in partialState) {
-      assert(
-        !state.hasOwnProperty(key),
-        `The [${key}] already exists in global state, ` +
-          `Please don't repeat defined. \n\n --- from [${stringifyAction}] action.`,
-      )
+    if (env === 'develop') {
+      // inspect all state key 
+      for (const key in partialState) {
+        assert(
+          !state.hasOwnProperty(key),
+          `The [${key}] already exists in global state, ` +
+            `Please don't repeat defined. \n\n --- from [${stringifyAction}] action.`,
+        )
+      }
     }
   }
   return reducer
 }
 
 export class Store {
-  constructor (hooks) {
+  constructor (hooks, options = {}) {
     this.hooks = hooks
     this.reducers = []
     this.id = ++storeId
@@ -93,15 +97,17 @@ export class Store {
     this.version = __VERSION__
     this.state = Object.freeze(createModule({}))
     this.middleware = new Middleware(this)
+    this.options = Object.assign(defaultOption, options)
   }
 
   add (action, reducer) {
+    const env = this.options.env
     const actionType = typeof action
     assert(
       actionType === 'string' || actionType === 'symbol',
       `The action must be a Symbol or String, but now is [${actionType}].`,
     )
-
+    
     assert(
       !this.reducers.find(v => v.action === action),
       `Can't repeat defined [${action.toString()}] action.`,
@@ -109,8 +115,10 @@ export class Store {
     
     // record initial state
     const originPartialState = reducer.partialState
-    assertReducer(action, reducer)
-    filterReducer(this.state, action, reducer)
+    if (env === 'develop') {
+      assertReducer(action, reducer)
+    }
+    filterReducer(this.state, action, reducer, env)
 
     reducer.action = action
     this.reducers.push(reducer)
@@ -120,7 +128,7 @@ export class Store {
     if (partialState && !isEmptyObject(partialState)) {
       // because we don't allow duplicate fields to be created,
       // so don't need to use `mergeModule`
-      this.state = mergeState(this.state, partialState)
+      this.state = mergeState(this.state, partialState, env)
     }
 
     // toggle to initial state
@@ -128,7 +136,7 @@ export class Store {
   }
 
   dispatch (action, payload, callback) {
-    const { reducers, isDispatching } = this
+    const { options, reducers, isDispatching } = this
     const stringifyAction = action.toString()
 
     // if we in call dispatch process,
@@ -177,10 +185,12 @@ export class Store {
               newPartialState,
               this.state,
               stringifyAction,
+              null,
+              options.env,
             )
-            this.state = mergeState(this.state, newPartialState)
+            this.state = mergeState(this.state, newPartialState, options.env)
           } else {
-            this.state = deepFreeze(mergeModule(this.state, newPartialState))
+            this.state = deepFreeze(mergeModule(this.state, newPartialState, null, null, options.env))
           }
         }
       } finally {
@@ -209,7 +219,8 @@ export class Store {
       `The [${stringifyAction}] action does not exist. ` +
         'Maybe you have not defined.'
     )
-
+    
+    const env = this.options.env
     const { namespace, partialState } = reducer
 
     assert(
@@ -225,10 +236,11 @@ export class Store {
         partialState,
         this.state,
         stringifyAction,
+        env,
       )
-      this.state = mergeState(this.state, newPartialState)
+      this.state = mergeState(this.state, newPartialState, env)
     } else {
-      this.state = deepFreeze(mergeModule(this.state, partialState))
+      this.state = deepFreeze(mergeModule(this.state, partialState, null, null, env))
     }
 
     // update components
