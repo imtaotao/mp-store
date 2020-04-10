@@ -90,14 +90,14 @@ export class Store {
     this.reducers = []
     this.id = ++storeId
     this.depComponents = []
-    this.GLOBALWORD = 'global' // global state namespace
     this.isDispatching = false
     this.restoreCallbacks = []
     this.dispatchCallbacks = []
     this.version = __VERSION__
     this.state = Object.freeze(createModule({}))
     this.middleware = new Middleware(this)
-    this.options = Object.assign(defaultOption, options)
+    this.options = Object.assign({}, defaultOption, options)
+    this.GLOBALWORD = this.options.globalNamespace // global state namespace
   }
 
   add (action, reducer) {
@@ -276,7 +276,10 @@ export class Store {
       key && typeof key === 'string',
       'The [namespace] must be a string',
     )
-    this.GLOBALWORD = key
+    if (this.options.env === 'develop') {
+      console.error('The `setNamespace` is deprecated, please use options to specify.')
+    }
+    this.options.globalNamespace = this.GLOBALWORD = key
   }
 
   // get module
@@ -336,6 +339,7 @@ export class Store {
     const store = this
     const GLOBALWORD = this.GLOBALWORD
     const { data, storeConfig = {} } = config
+    const storeNamespace = this.options.storeNamespace
     const {
       addDep,
       useState,
@@ -437,7 +441,7 @@ export class Store {
     function onLoad () {
       addDepToStore(this)
       // rigister store to component within
-      this.store = store
+      this[storeNamespace] = store
       this._$loaded = true
     }
 

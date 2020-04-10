@@ -16,6 +16,8 @@ store 会把原生的 `Page`、`Component` 函数包装一层，来做一层拦�
 
 ### Options
   + `env: 'develop' | 'product'`: 如果指定为 `product`，会去掉状态和模块合并时的检测，state 将不会被冻结住，从而提升性能
+  + `storeNamespace: string`: 可以指定注入到组件内部的 store 命名空间，默认为 `store`
+  + `globalNamespace: string`: 可以指定注入到组件 data 中使用的全局状态命名空间，默认为 `global`
 
 ### 启动
 ```js
@@ -160,7 +162,7 @@ const store = createStore(() => {}, {})
 `forceUpdate` 会强制所有依赖的组件走一遍 diff -> patch 的过程，从而更新视图，当你用的这个方法时，99% 都是你自己的代码写的有问题。
 
 #### setNamespace(namespace: string) : void
-store 默认会在组件的 data 中添加 `global` 来接受用到的全局状态，如果需要更改，可以通过此方法。需要注意的是你必须在 `App` 初始化之前调用
+store 默认会在组件的 data 中添加 `global` 来接受用到的全局状态，如果需要更改，可以通过此方法。需要注意的是你必须在 `App` 初始化之前调用（此方法已经被弃用，请使用 options.globalNamespace 替换）
 ```js
   store.setNamespace('xxx')
 

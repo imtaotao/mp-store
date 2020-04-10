@@ -1,5 +1,5 @@
 /*!
- * Mpstore.js v0.2.1
+ * Mpstore.js v0.2.3
  * (c) 2019-2020 Imtaotao
  * Released under the MIT License.
  */
@@ -735,7 +735,9 @@ function () {
 }();
 
 var defaultOption = {
-  env: 'develop'
+  env: 'develop',
+  storeNamespace: 'store',
+  globalNamespace: 'global'
 };
 
 var COMMONACTION = function COMMONACTION() {};
@@ -888,14 +890,14 @@ function () {
     this.reducers = [];
     this.id = ++storeId;
     this.depComponents = [];
-    this.GLOBALWORD = 'global';
     this.isDispatching = false;
     this.restoreCallbacks = [];
     this.dispatchCallbacks = [];
-    this.version = '0.2.1';
+    this.version = '0.2.3';
     this.state = Object.freeze(createModule({}));
     this.middleware = new Middleware(this);
-    this.options = Object.assign(defaultOption, options);
+    this.options = Object.assign({}, defaultOption, options);
+    this.GLOBALWORD = this.options.globalNamespace;
   }
 
   _createClass(Store, [{
@@ -1032,7 +1034,12 @@ function () {
     key: "setNamespace",
     value: function setNamespace(key) {
       assert(key && typeof key === 'string', 'The [namespace] must be a string');
-      this.GLOBALWORD = key;
+
+      if (this.options.env === 'develop') {
+        console.error('The `setNamespace` is deprecated, please use options to specify.');
+      }
+
+      this.options.globalNamespace = this.GLOBALWORD = key;
     }
   }, {
     key: "getModule",
@@ -1093,6 +1100,7 @@ function () {
       var data = config.data,
           _config$storeConfig = config.storeConfig,
           storeConfig = _config$storeConfig === void 0 ? {} : _config$storeConfig;
+      var storeNamespace = this.options.storeNamespace;
       var addDep = storeConfig.addDep,
           useState = storeConfig.useState,
           didUpdate = storeConfig.didUpdate,
@@ -1178,7 +1186,7 @@ function () {
 
       function onLoad() {
         addDepToStore(this);
-        this.store = store;
+        this[storeNamespace] = store;
         this._$loaded = true;
       }
 
@@ -1210,7 +1218,7 @@ function () {
   return Store;
 }();
 
-var version = '0.2.1';
+var version = '0.2.3';
 var nativePage = Page;
 var nativeComponent = Component;
 

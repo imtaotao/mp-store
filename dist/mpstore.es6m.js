@@ -1,5 +1,5 @@
 /*!
- * Mpstore.js v0.2.1
+ * Mpstore.js v0.2.3
  * (c) 2019-2020 Imtaotao
  * Released under the MIT License.
  */
@@ -558,6 +558,8 @@ class TimeTravel {
 
 var defaultOption = {
   env: 'develop',
+  storeNamespace: 'store',
+  globalNamespace: 'global',
 };
 
 const COMMONACTION = () => {};
@@ -701,14 +703,14 @@ class Store {
     this.reducers = [];
     this.id = ++storeId;
     this.depComponents = [];
-    this.GLOBALWORD = 'global';
     this.isDispatching = false;
     this.restoreCallbacks = [];
     this.dispatchCallbacks = [];
-    this.version = '0.2.1';
+    this.version = '0.2.3';
     this.state = Object.freeze(createModule({}));
     this.middleware = new Middleware(this);
-    this.options = Object.assign(defaultOption, options);
+    this.options = Object.assign({}, defaultOption, options);
+    this.GLOBALWORD = this.options.globalNamespace;
   }
   add (action, reducer) {
     const env = this.options.env;
@@ -843,7 +845,10 @@ class Store {
       key && typeof key === 'string',
       'The [namespace] must be a string',
     );
-    this.GLOBALWORD = key;
+    if (this.options.env === 'develop') {
+      console.error('The `setNamespace` is deprecated, please use options to specify.');
+    }
+    this.options.globalNamespace = this.GLOBALWORD = key;
   }
   getModule (namespace, remainMsg) {
     assert(
@@ -888,6 +893,7 @@ class Store {
     const store = this;
     const GLOBALWORD = this.GLOBALWORD;
     const { data, storeConfig = {} } = config;
+    const storeNamespace = this.options.storeNamespace;
     const {
       addDep,
       useState,
@@ -962,7 +968,7 @@ class Store {
     };
     function onLoad () {
       addDepToStore(this);
-      this.store = store;
+      this[storeNamespace] = store;
       this._$loaded = true;
     }
     function onUnload () {
@@ -982,7 +988,7 @@ class Store {
   }
 }
 
-const version = '0.2.1';
+const version = '0.2.3';
 const nativePage = Page;
 const nativeComponent = Component;
 function expandConfig (config, expandMethods, isPage) {

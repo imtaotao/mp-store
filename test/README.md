@@ -160,3 +160,4 @@
 
 ### options
 + [x] 如果设置为 env 为除开 `develop` 之外的其他值，则会取消数据的检测
++ [x] storeNamespace　检查
