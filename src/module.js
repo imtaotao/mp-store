@@ -85,10 +85,10 @@ function checkChildModule(a, b) {
 }
 
 export function mergeModule (module, partialModule, moduleName, createMsg, env) {
-  const keys = Object.keys(partialModule)
-  let len = keys.length
-
   if (env === 'develop') {
+    const keys = Object.keys(partialModule)
+    let len = keys.length
+
     // inspect all attribute
     while(~--len) {
       const key = keys[len]
@@ -140,12 +140,14 @@ export function createModuleByNamespace (namespace, partialModule, rootModule, s
     const isLastIndex = i === len - 1
 
     if (key in parentModule) {
-      assert(
-        isModule(parentModule[key]),
-        'you can\'t create child moudle, ' +
-          `because namespace [${key}] already exists in [${segments[i - 1] || 'root'}] module, ` +
-            `but [${key}] not a module.${remaingMsg}`,
-      )
+      if (env === 'develop') {
+        assert(
+          isModule(parentModule[key]),
+          'you can\'t create child moudle, ' +
+            `because namespace [${key}] already exists in [${segments[i - 1] || 'root'}] module, ` +
+              `but [${key}] not a module.${remaingMsg}`,
+        )
+      }
 
       // the parentModule is module
       childModule = isLastIndex

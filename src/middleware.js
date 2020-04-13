@@ -36,7 +36,9 @@ function handleLayer (
     if (hooks && typeof hooks['middlewareError'] === 'function') {
       hooks['middlewareError'](action, payload, error)
     } else {
-      warning(`${error}\n\n   --- from middleware [${action.toString()}] action.`)
+      if (store.options.env === 'develop') {
+        warning(`${error}\n\n   --- from middleware [${action.toString()}] action.`)
+      }
     }
   }
 }
@@ -50,10 +52,12 @@ export class Middleware {
   }
 
   use (action, fn) {
-    assert(
-      !this.isProcessing,
-      'can\'t allow add new middleware in the middleware processing.'
-    )
+    if (this.store.options.env === 'develop') {
+      assert(
+        !this.isProcessing,
+        'can\'t allow add new middleware in the middleware processing.'
+      )
+    }
     this.stack.push({ fn, action })
   }
 

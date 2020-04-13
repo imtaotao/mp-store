@@ -1,5 +1,5 @@
 /*!
- * Mpstore.js v0.2.3
+ * Mpstore.js v0.2.4
  * (c) 2019-2020 Imtaotao
  * Released under the MIT License.
  */
@@ -206,9 +206,9 @@ function checkChildModule(a, b) {
   }
 }
 function mergeModule (module, partialModule, moduleName, createMsg, env) {
-  const keys = Object.keys(partialModule);
-  let len = keys.length;
   if (env === 'develop') {
+    const keys = Object.keys(partialModule);
+    let len = keys.length;
     while(~--len) {
       const key = keys[len];
       if (typeof createMsg === 'function') {
@@ -239,12 +239,14 @@ function createModuleByNamespace (namespace, partialModule, rootModule, stringif
     const key = segments[i];
     const isLastIndex = i === len - 1;
     if (key in parentModule) {
-      assert(
-        isModule(parentModule[key]),
-        'you can\'t create child moudle, ' +
-          `because namespace [${key}] already exists in [${segments[i - 1] || 'root'}] module, ` +
-            `but [${key}] not a module.${remaingMsg}`,
-      );
+      if (env === 'develop') {
+        assert(
+          isModule(parentModule[key]),
+          'you can\'t create child moudle, ' +
+            `because namespace [${key}] already exists in [${segments[i - 1] || 'root'}] module, ` +
+              `but [${key}] not a module.${remaingMsg}`,
+        );
+      }
       childModule = isLastIndex
         ? mergeModule(parentModule[key], partialModule, key, createMsg, env)
         : Object.assign({}, parentModule[key]);
@@ -475,7 +477,8 @@ function updateComponents (store, callback) {
 }
 
 class TimeTravel {
-  constructor (component, GLOBALWORD, limit) {
+  constructor (component, GLOBALWORD, limit, env) {
+    this.env = env;
     this.history = [];
     this.limit = limit;
     this.component = component;
@@ -505,22 +508,27 @@ class TimeTravel {
   }
   go (n) {
     const {
+      env,
       current,
       history,
       component,
       GLOBALWORD,
       finallyState,
     } = this;
-    assert(
-      GLOBALWORD in component.data,
-      'You can\'t use [timeTravel] because it only works for [global state]',
-    );
+    if (env === 'develop') {
+      assert(
+        GLOBALWORD in component.data,
+        'You can\'t use [timeTravel] because it only works for [global state]',
+      );
+    }
     if (this.limit > 0) {
       if (n !== 0) {
         const range = n + current;
         const backtrack = Math.abs(n);
         if (range < 0 || range > history.length) {
-          warning(`Index [${range}] is not within the allowed range.`, true);
+          if (env === 'develop') {
+            warning(`Index [${range}] is not within the allowed range.`, true);
+          }
           return
         }
         let index = 0;
@@ -589,7 +597,9 @@ function handleLayer (
     if (hooks && typeof hooks['middlewareError'] === 'function') {
       hooks['middlewareError'](action, payload, error);
     } else {
-      warning(`${error}\n\n   --- from middleware [${action.toString()}] action.`);
+      if (store.options.env === 'develop') {
+        warning(`${error}\n\n   --- from middleware [${action.toString()}] action.`);
+      }
     }
   }
 }
@@ -600,10 +610,12 @@ class Middleware {
     this.isProcessing = false;
   }
   use (action, fn) {
-    assert(
-      !this.isProcessing,
-      'can\'t allow add new middleware in the middleware processing.'
-    );
+    if (this.store.options.env === 'develop') {
+      assert(
+        !this.isProcessing,
+        'can\'t allow add new middleware in the middleware processing.'
+      );
+    }
     this.stack.push({ fn, action });
   }
   remove (action, fn) {
@@ -706,7 +718,7 @@ class Store {
     this.isDispatching = false;
     this.restoreCallbacks = [];
     this.dispatchCallbacks = [];
-    this.version = '0.2.3';
+    this.version = '0.2.4';
     this.state = Object.freeze(createModule({}));
     this.middleware = new Middleware(this);
     this.options = Object.assign({}, defaultOption, options);
@@ -714,15 +726,17 @@ class Store {
   }
   add (action, reducer) {
     const env = this.options.env;
-    const actionType = typeof action;
-    assert(
-      actionType === 'string' || actionType === 'symbol',
-      `The action must be a Symbol or String, but now is [${actionType}].`,
-    );
-    assert(
-      !this.reducers.find(v => v.action === action),
-      `Can't repeat defined [${action.toString()}] action.`,
-    );
+    if (env === 'develop') {
+      const actionType = typeof action;
+      assert(
+        actionType === 'string' || actionType === 'symbol',
+        `The action must be a Symbol or String, but now is [${actionType}].`,
+      );
+      assert(
+        !this.reducers.find(v => v.action === action),
+        `Can't repeat defined [${action.toString()}] action.`,
+      );
+    }
     const originPartialState = reducer.partialState;
     if (env === 'develop') {
       assertReducer(action, reducer);
@@ -737,22 +751,30 @@ class Store {
     reducer.partialState = originPartialState;
   }
   dispatch (action, payload, callback) {
-    const { options, reducers, isDispatching } = this;
+    const {
+      reducers,
+      isDispatching,
+      options: { env },
+    } = this;
     const stringifyAction = action.toString();
-    assert(
-      !isDispatching,
-      'It is not allowed to call "dispatch" during dispatch execution.' +
-        `\n\n   --- from [${stringifyAction}] action.`
-    );
+    if (env === 'develop') {
+      assert(
+        !isDispatching,
+        'It is not allowed to call "dispatch" during dispatch execution.' +
+          `\n\n   --- from [${stringifyAction}] action.`
+      );
+    }
     this.middleware.process(action, payload, (destPayload, restoreProcessState) => {
       this.isDispatching = true;
       try {
         const reducer = reducers.find(v => v.action === action);
-        assert(
-          reducer,
-          `The [${stringifyAction}] action does not exist. ` +
-            'Maybe you have not defined.'
-        );
+        if (env === 'develop') {
+          assert(
+            reducer,
+            `The [${stringifyAction}] action does not exist. ` +
+              'Maybe you have not defined.'
+          );
+        }
         let newPartialState;
         const namespace = reducer.namespace;
         const isModuleDispatching = typeof namespace === 'string';
@@ -762,10 +784,12 @@ class Store {
         } else {
           newPartialState = reducer.setter(this.state, destPayload);
         }
-        assert(
-          isPlainObject(newPartialState),
-          'setter function should be return a plain object.',
-        );
+        if (env === 'develop') {
+          assert(
+            isPlainObject(newPartialState),
+            'setter function should be return a plain object.',
+          );
+        }
         if (!isEmptyObject(newPartialState)) {
           if (isModuleDispatching) {
             newPartialState = createModuleByNamespace(
@@ -774,11 +798,14 @@ class Store {
               this.state,
               stringifyAction,
               null,
-              options.env,
+              env,
             );
-            this.state = mergeState(this.state, newPartialState, options.env);
+            this.state = mergeState(this.state, newPartialState, env);
           } else {
-            this.state = deepFreeze(mergeModule(this.state, newPartialState, null, null, options.env));
+            const newState = mergeModule(this.state, newPartialState, null, null, env);
+            this.state = env === 'develop'
+              ? newState
+              : deepFreeze(newState);
           }
         }
       } finally {
@@ -793,20 +820,24 @@ class Store {
     });
   }
   restore (action, callback, notUpdate) {
+    const env = this.options.env;
     const reducer = this.reducers.find(v => v.action === action);
     const stringifyAction = action.toString();
-    assert(
-      reducer,
-      `The [${stringifyAction}] action does not exist. ` +
-        'Maybe you have not defined.'
-    );
-    const env = this.options.env;
+    if (env === 'develop') {
+      assert(
+        reducer,
+        `The [${stringifyAction}] action does not exist. ` +
+          'Maybe you have not defined.'
+      );
+    }
     const { namespace, partialState } = reducer;
-    assert(
-      isPlainObject(partialState),
-      'no initialized state, do you have a definition?' +
-        `\n\n   --- from [${stringifyAction}] action.`
-    );
+    if (env === 'develop') {
+      assert(
+        isPlainObject(partialState),
+        'no initialized state, do you have a definition?' +
+          `\n\n   --- from [${stringifyAction}] action.`
+      );
+    }
     if (typeof namespace === 'string') {
       const newPartialState = createModuleByNamespace(
         namespace,
@@ -817,7 +848,10 @@ class Store {
       );
       this.state = mergeState(this.state, newPartialState, env);
     } else {
-      this.state = deepFreeze(mergeModule(this.state, partialState, null, null, env));
+      const newState = mergeModule(this.state, partialState, null, null, env);
+      this.state = env === 'develop'
+        ? newState
+        : deepFreeze(newState);
     }
     if (notUpdate) {
       callback(partialState);
@@ -841,34 +875,44 @@ class Store {
     return () => this.middleware.remove(action, fn)
   }
   setNamespace (key) {
-    assert(
-      key && typeof key === 'string',
-      'The [namespace] must be a string',
-    );
     if (this.options.env === 'develop') {
-      console.error('The `setNamespace` is deprecated, please use options to specify.');
+      assert(
+        key && typeof key === 'string',
+        'The [namespace] must be a string',
+      );
+      console.error(
+        'The `setNamespace` is deprecated, ' +
+          'please use options to specify.'
+      );
     }
     this.options.globalNamespace = this.GLOBALWORD = key;
   }
   getModule (namespace, remainMsg) {
-    assert(
-      typeof namespace === 'string',
-      'the namespace mast be a string',
-    );
+    const env = this.options.env;
+    if (env === 'develop') {
+      assert(
+        typeof namespace === 'string',
+        'the namespace mast be a string',
+      );
+    }
     if (!namespace) {
       return this.state
     }
     const module = getModule(this.state, namespace);
     if (remainMsg && module === null) {
-      warning(`The [${namespace}] module is not exist.${remainMsg || ''}`);
+      if (env === 'develop') {
+        warning(`The [${namespace}] module is not exist.${remainMsg || ''}`);
+      }
     }
     return module
   }
   addModule (namespace, reducers) {
-    assert(
-      typeof namespace === 'string',
-      'the namespace mast be a string',
-    );
+    if (this.options.env === 'develop') {
+      assert(
+        typeof namespace === 'string',
+        'the namespace mast be a string',
+      );
+    }
     if (isPlainObject(reducers)) {
       const keys = Object.keys(reducers);
       const symbols = Object.getOwnPropertySymbols(reducers);
@@ -892,8 +936,14 @@ class Store {
     let createState = null;
     const store = this;
     const GLOBALWORD = this.GLOBALWORD;
-    const { data, storeConfig = {} } = config;
-    const storeNamespace = this.options.storeNamespace;
+    const {
+      data,
+      storeConfig = {},
+    } = config;
+    const {
+      env,
+      storeNamespace,
+    } = this.options;
     const {
       addDep,
       useState,
@@ -902,10 +952,12 @@ class Store {
       defineReducer,
       travelLimit = 0,
     } = storeConfig;
-    assert(
-      typeof travelLimit === 'number',
-      `[travelLimit] must be a number, but now is [${typeof travelLimit}].`
-    );
+    if (env === 'develop') {
+      assert(
+        typeof travelLimit === 'number',
+        `[travelLimit] must be a number, but now is [${typeof travelLimit}].`
+      );
+    }
     delete config.storeConfig;
     if (typeof defineReducer === 'function') {
       defineReducer.call(store, store);
@@ -920,11 +972,13 @@ class Store {
       } else {
         defineObject = useConfig;
       }
-      assert(
-        isPlainObject(defineObject),
-        '[useState] must return a plain object, ' +
-          `but now is return a [${typeof defineObject}]`,
-      );
+      if (env === 'develop') {
+        assert(
+          isPlainObject(defineObject),
+          '[useState] must return a plain object, ' +
+            `but now is return a [${typeof defineObject}]`,
+        );
+      }
       if (namespace === null) {
         createState = () => clone(mapObject(defineObject, fn => fn(store.state)));
       } else {
@@ -951,7 +1005,7 @@ class Store {
       const shouldAdd = callHook(this.hooks, 'addDep', [component, isPage]);
       if (shouldAdd !== false && createState !== null) {
         if (component.data && isPlainObject(component.data[GLOBALWORD])) {
-          component.timeTravel = new TimeTravel(component, GLOBALWORD, travelLimit);
+          component.timeTravel = new TimeTravel(component, GLOBALWORD, travelLimit, env);
           this.depComponents.push({
             isPage,
             component,
@@ -988,7 +1042,7 @@ class Store {
   }
 }
 
-const version = '0.2.3';
+const version = '0.2.4';
 const nativePage = Page;
 const nativeComponent = Component;
 function expandConfig (config, expandMethods, isPage) {

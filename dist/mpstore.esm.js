@@ -1,5 +1,5 @@
 /*!
- * Mpstore.js v0.2.3
+ * Mpstore.js v0.2.4
  * (c) 2019-2020 Imtaotao
  * Released under the MIT License.
  */
@@ -304,10 +304,10 @@ function checkChildModule(a, b) {
 }
 
 function mergeModule(module, partialModule, moduleName, createMsg, env) {
-  var keys = Object.keys(partialModule);
-  var len = keys.length;
-
   if (env === 'develop') {
+    var keys = Object.keys(partialModule);
+    var len = keys.length;
+
     while (~--len) {
       var key = keys[len];
 
@@ -345,7 +345,10 @@ function createModuleByNamespace(namespace, partialModule, rootModule, stringify
     var isLastIndex = i === len - 1;
 
     if (key in parentModule) {
-      assert(isModule(parentModule[key]), 'you can\'t create child moudle, ' + "because namespace [".concat(key, "] already exists in [").concat(segments[i - 1] || 'root', "] module, ") + "but [".concat(key, "] not a module.").concat(remaingMsg));
+      if (env === 'develop') {
+        assert(isModule(parentModule[key]), 'you can\'t create child moudle, ' + "because namespace [".concat(key, "] already exists in [").concat(segments[i - 1] || 'root', "] module, ") + "but [".concat(key, "] not a module.").concat(remaingMsg));
+      }
+
       childModule = isLastIndex ? mergeModule(parentModule[key], partialModule, key, createMsg, env) : Object.assign({}, parentModule[key]);
     } else {
       childModule = isLastIndex ? createModule(partialModule) : addModuleFlag({});
@@ -627,9 +630,10 @@ function updateComponents(store, callback) {
 var TimeTravel =
 /*#__PURE__*/
 function () {
-  function TimeTravel(component, GLOBALWORD, limit) {
+  function TimeTravel(component, GLOBALWORD, limit, env) {
     _classCallCheck(this, TimeTravel);
 
+    this.env = env;
     this.history = [];
     this.limit = limit;
     this.component = component;
@@ -664,12 +668,16 @@ function () {
   }, {
     key: "go",
     value: function go(n) {
-      var current = this.current,
+      var env = this.env,
+          current = this.current,
           history = this.history,
           component = this.component,
           GLOBALWORD = this.GLOBALWORD,
           finallyState = this.finallyState;
-      assert(GLOBALWORD in component.data, 'You can\'t use [timeTravel] because it only works for [global state]');
+
+      if (env === 'develop') {
+        assert(GLOBALWORD in component.data, 'You can\'t use [timeTravel] because it only works for [global state]');
+      }
 
       if (this.limit > 0) {
         if (n !== 0) {
@@ -677,7 +685,10 @@ function () {
           var backtrack = Math.abs(n);
 
           if (range < 0 || range > history.length) {
-            warning("Index [".concat(range, "] is not within the allowed range."), true);
+            if (env === 'develop') {
+              warning("Index [".concat(range, "] is not within the allowed range."), true);
+            }
+
             return;
           }
 
@@ -761,7 +772,9 @@ function handleLayer(action, fn, store, payload, next, restoreProcessState) {
     if (hooks && typeof hooks['middlewareError'] === 'function') {
       hooks['middlewareError'](action, payload, error);
     } else {
-      warning("".concat(error, "\n\n   --- from middleware [").concat(action.toString(), "] action."));
+      if (store.options.env === 'develop') {
+        warning("".concat(error, "\n\n   --- from middleware [").concat(action.toString(), "] action."));
+      }
     }
   }
 }
@@ -780,7 +793,10 @@ function () {
   _createClass(Middleware, [{
     key: "use",
     value: function use(action, fn) {
-      assert(!this.isProcessing, 'can\'t allow add new middleware in the middleware processing.');
+      if (this.store.options.env === 'develop') {
+        assert(!this.isProcessing, 'can\'t allow add new middleware in the middleware processing.');
+      }
+
       this.stack.push({
         fn: fn,
         action: action
@@ -889,7 +905,7 @@ function () {
     this.isDispatching = false;
     this.restoreCallbacks = [];
     this.dispatchCallbacks = [];
-    this.version = '0.2.3';
+    this.version = '0.2.4';
     this.state = Object.freeze(createModule({}));
     this.middleware = new Middleware(this);
     this.options = Object.assign({}, defaultOption, options);
@@ -901,12 +917,15 @@ function () {
     value: function add(action, reducer) {
       var env = this.options.env;
 
-      var actionType = _typeof(action);
+      if (env === 'develop') {
+        var actionType = _typeof(action);
 
-      assert(actionType === 'string' || actionType === 'symbol', "The action must be a Symbol or String, but now is [".concat(actionType, "]."));
-      assert(!this.reducers.find(function (v) {
-        return v.action === action;
-      }), "Can't repeat defined [".concat(action.toString(), "] action."));
+        assert(actionType === 'string' || actionType === 'symbol', "The action must be a Symbol or String, but now is [".concat(actionType, "]."));
+        assert(!this.reducers.find(function (v) {
+          return v.action === action;
+        }), "Can't repeat defined [".concat(action.toString(), "] action."));
+      }
+
       var originPartialState = reducer.partialState;
 
       if (env === 'develop') {
@@ -929,11 +948,15 @@ function () {
     value: function dispatch(action, payload, callback) {
       var _this = this;
 
-      var options = this.options,
-          reducers = this.reducers,
-          isDispatching = this.isDispatching;
+      var reducers = this.reducers,
+          isDispatching = this.isDispatching,
+          env = this.options.env;
       var stringifyAction = action.toString();
-      assert(!isDispatching, 'It is not allowed to call "dispatch" during dispatch execution.' + "\n\n   --- from [".concat(stringifyAction, "] action."));
+
+      if (env === 'develop') {
+        assert(!isDispatching, 'It is not allowed to call "dispatch" during dispatch execution.' + "\n\n   --- from [".concat(stringifyAction, "] action."));
+      }
+
       this.middleware.process(action, payload, function (destPayload, restoreProcessState) {
         _this.isDispatching = true;
 
@@ -941,7 +964,11 @@ function () {
           var reducer = reducers.find(function (v) {
             return v.action === action;
           });
-          assert(reducer, "The [".concat(stringifyAction, "] action does not exist. ") + 'Maybe you have not defined.');
+
+          if (env === 'develop') {
+            assert(reducer, "The [".concat(stringifyAction, "] action does not exist. ") + 'Maybe you have not defined.');
+          }
+
           var newPartialState;
           var namespace = reducer.namespace;
           var isModuleDispatching = typeof namespace === 'string';
@@ -954,14 +981,17 @@ function () {
             newPartialState = reducer.setter(_this.state, destPayload);
           }
 
-          assert(isPlainObject(newPartialState), 'setter function should be return a plain object.');
+          if (env === 'develop') {
+            assert(isPlainObject(newPartialState), 'setter function should be return a plain object.');
+          }
 
           if (!isEmptyObject(newPartialState)) {
             if (isModuleDispatching) {
-              newPartialState = createModuleByNamespace(namespace, newPartialState, _this.state, stringifyAction, null, options.env);
-              _this.state = mergeState(_this.state, newPartialState, options.env);
+              newPartialState = createModuleByNamespace(namespace, newPartialState, _this.state, stringifyAction, null, env);
+              _this.state = mergeState(_this.state, newPartialState, env);
             } else {
-              _this.state = deepFreeze(mergeModule(_this.state, newPartialState, null, null, options.env));
+              var newState = mergeModule(_this.state, newPartialState, null, null, env);
+              _this.state = env === 'develop' ? newState : deepFreeze(newState);
             }
           }
         } finally {
@@ -979,21 +1009,29 @@ function () {
   }, {
     key: "restore",
     value: function restore(action, callback, notUpdate) {
+      var env = this.options.env;
       var reducer = this.reducers.find(function (v) {
         return v.action === action;
       });
       var stringifyAction = action.toString();
-      assert(reducer, "The [".concat(stringifyAction, "] action does not exist. ") + 'Maybe you have not defined.');
-      var env = this.options.env;
+
+      if (env === 'develop') {
+        assert(reducer, "The [".concat(stringifyAction, "] action does not exist. ") + 'Maybe you have not defined.');
+      }
+
       var namespace = reducer.namespace,
           partialState = reducer.partialState;
-      assert(isPlainObject(partialState), 'no initialized state, do you have a definition?' + "\n\n   --- from [".concat(stringifyAction, "] action."));
+
+      if (env === 'develop') {
+        assert(isPlainObject(partialState), 'no initialized state, do you have a definition?' + "\n\n   --- from [".concat(stringifyAction, "] action."));
+      }
 
       if (typeof namespace === 'string') {
         var newPartialState = createModuleByNamespace(namespace, partialState, this.state, stringifyAction, env);
         this.state = mergeState(this.state, newPartialState, env);
       } else {
-        this.state = deepFreeze(mergeModule(this.state, partialState, null, null, env));
+        var newState = mergeModule(this.state, partialState, null, null, env);
+        this.state = env === 'develop' ? newState : deepFreeze(newState);
       }
 
       if (notUpdate) {
@@ -1029,10 +1067,9 @@ function () {
   }, {
     key: "setNamespace",
     value: function setNamespace(key) {
-      assert(key && typeof key === 'string', 'The [namespace] must be a string');
-
       if (this.options.env === 'develop') {
-        console.error('The `setNamespace` is deprecated, please use options to specify.');
+        assert(key && typeof key === 'string', 'The [namespace] must be a string');
+        console.error('The `setNamespace` is deprecated, ' + 'please use options to specify.');
       }
 
       this.options.globalNamespace = this.GLOBALWORD = key;
@@ -1040,7 +1077,11 @@ function () {
   }, {
     key: "getModule",
     value: function getModule$1(namespace, remainMsg) {
-      assert(typeof namespace === 'string', 'the namespace mast be a string');
+      var env = this.options.env;
+
+      if (env === 'develop') {
+        assert(typeof namespace === 'string', 'the namespace mast be a string');
+      }
 
       if (!namespace) {
         return this.state;
@@ -1049,7 +1090,9 @@ function () {
       var module = getModule(this.state, namespace);
 
       if (remainMsg && module === null) {
-        warning("The [".concat(namespace, "] module is not exist.").concat(remainMsg || ''));
+        if (env === 'develop') {
+          warning("The [".concat(namespace, "] module is not exist.").concat(remainMsg || ''));
+        }
       }
 
       return module;
@@ -1059,7 +1102,9 @@ function () {
     value: function addModule(namespace, reducers) {
       var _this3 = this;
 
-      assert(typeof namespace === 'string', 'the namespace mast be a string');
+      if (this.options.env === 'develop') {
+        assert(typeof namespace === 'string', 'the namespace mast be a string');
+      }
 
       if (isPlainObject(reducers)) {
         var keys = Object.keys(reducers);
@@ -1096,7 +1141,9 @@ function () {
       var data = config.data,
           _config$storeConfig = config.storeConfig,
           storeConfig = _config$storeConfig === void 0 ? {} : _config$storeConfig;
-      var storeNamespace = this.options.storeNamespace;
+      var _this$options = this.options,
+          env = _this$options.env,
+          storeNamespace = _this$options.storeNamespace;
       var addDep = storeConfig.addDep,
           useState = storeConfig.useState,
           didUpdate = storeConfig.didUpdate,
@@ -1104,7 +1151,11 @@ function () {
           defineReducer = storeConfig.defineReducer,
           _storeConfig$travelLi = storeConfig.travelLimit,
           travelLimit = _storeConfig$travelLi === void 0 ? 0 : _storeConfig$travelLi;
-      assert(typeof travelLimit === 'number', "[travelLimit] must be a number, but now is [".concat(_typeof(travelLimit), "]."));
+
+      if (env === 'develop') {
+        assert(typeof travelLimit === 'number', "[travelLimit] must be a number, but now is [".concat(_typeof(travelLimit), "]."));
+      }
+
       delete config.storeConfig;
 
       if (typeof defineReducer === 'function') {
@@ -1123,7 +1174,9 @@ function () {
           defineObject = useConfig;
         }
 
-        assert(isPlainObject(defineObject), '[useState] must return a plain object, ' + "but now is return a [".concat(_typeof(defineObject), "]"));
+        if (env === 'develop') {
+          assert(isPlainObject(defineObject), '[useState] must return a plain object, ' + "but now is return a [".concat(_typeof(defineObject), "]"));
+        }
 
         if (namespace === null) {
           createState = function createState() {
@@ -1161,7 +1214,7 @@ function () {
 
         if (shouldAdd !== false && createState !== null) {
           if (component.data && isPlainObject(component.data[GLOBALWORD])) {
-            component.timeTravel = new TimeTravel(component, GLOBALWORD, travelLimit);
+            component.timeTravel = new TimeTravel(component, GLOBALWORD, travelLimit, env);
 
             _this4.depComponents.push({
               isPage: isPage,
@@ -1214,7 +1267,7 @@ function () {
   return Store;
 }();
 
-var version = '0.2.3';
+var version = '0.2.4';
 var nativePage = Page;
 var nativeComponent = Component;
 

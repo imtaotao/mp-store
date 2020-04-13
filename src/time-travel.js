@@ -3,7 +3,8 @@ import { diff, restore } from './diff'
 import { warning, clone, assert } from './utils'
 
 export default class TimeTravel {
-  constructor (component, GLOBALWORD, limit) {
+  constructor (component, GLOBALWORD, limit, env) {
+    this.env = env
     this.history = []
     this.limit = limit
     this.component = component
@@ -41,6 +42,7 @@ export default class TimeTravel {
 
   go (n) {
     const {
+      env,
       current,
       history,
       component,
@@ -48,10 +50,12 @@ export default class TimeTravel {
       finallyState,
     } = this
 
-    assert(
-      GLOBALWORD in component.data,
-      'You can\'t use [timeTravel] because it only works for [global state]',
-    )
+    if (env === 'develop') {
+      assert(
+        GLOBALWORD in component.data,
+        'You can\'t use [timeTravel] because it only works for [global state]',
+      )
+    }
 
     if (this.limit > 0) {
       if (n !== 0) {
@@ -59,7 +63,9 @@ export default class TimeTravel {
         const backtrack = Math.abs(n)
 
         if (range < 0 || range > history.length) {
-          warning(`Index [${range}] is not within the allowed range.`, true)
+          if (env === 'develop') {
+            warning(`Index [${range}] is not within the allowed range.`, true)
+          }
           return
         }
 

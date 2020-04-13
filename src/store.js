@@ -102,17 +102,19 @@ export class Store {
 
   add (action, reducer) {
     const env = this.options.env
-    const actionType = typeof action
-    assert(
-      actionType === 'string' || actionType === 'symbol',
-      `The action must be a Symbol or String, but now is [${actionType}].`,
-    )
-    
-    assert(
-      !this.reducers.find(v => v.action === action),
-      `Can't repeat defined [${action.toString()}] action.`,
-    )
-    
+
+    if (env === 'develop') {
+      const actionType = typeof action
+      assert(
+        actionType === 'string' || actionType === 'symbol',
+        `The action must be a Symbol or String, but now is [${actionType}].`,
+      )
+      assert(
+        !this.reducers.find(v => v.action === action),
+        `Can't repeat defined [${action.toString()}] action.`,
+      )
+    }
+
     // record initial state
     const originPartialState = reducer.partialState
     if (env === 'develop') {
@@ -136,16 +138,22 @@ export class Store {
   }
 
   dispatch (action, payload, callback) {
-    const { options, reducers, isDispatching } = this
+    const {
+      reducers,
+      isDispatching,
+      options: { env },
+    } = this
     const stringifyAction = action.toString()
 
     // if we in call dispatch process,
     // we don't allow call dispacth again.
-    assert(
-      !isDispatching,
-      'It is not allowed to call "dispatch" during dispatch execution.' +
-        `\n\n   --- from [${stringifyAction}] action.`
-    )
+    if (env === 'develop') {
+      assert(
+        !isDispatching,
+        'It is not allowed to call "dispatch" during dispatch execution.' +
+          `\n\n   --- from [${stringifyAction}] action.`
+      )
+    }
 
     // call all middleware
     this.middleware.process(action, payload, (destPayload, restoreProcessState) => {
@@ -153,11 +161,13 @@ export class Store {
 
       try {
         const reducer = reducers.find(v => v.action === action)
-        assert(
-          reducer,
-          `The [${stringifyAction}] action does not exist. ` +
-            'Maybe you have not defined.'
-        )
+        if (env === 'develop') {
+          assert(
+            reducer,
+            `The [${stringifyAction}] action does not exist. ` +
+              'Maybe you have not defined.'
+          )
+        }
 
         let newPartialState
         const namespace = reducer.namespace
@@ -171,10 +181,12 @@ export class Store {
           newPartialState = reducer.setter(this.state, destPayload)
         }
 
-        assert(
-          isPlainObject(newPartialState),
-          'setter function should be return a plain object.',
-        )
+        if (env === 'develop') {
+          assert(
+            isPlainObject(newPartialState),
+            'setter function should be return a plain object.',
+          )
+        }
 
         // update global state
         if (!isEmptyObject(newPartialState)) {
@@ -186,11 +198,14 @@ export class Store {
               this.state,
               stringifyAction,
               null,
-              options.env,
+              env,
             )
-            this.state = mergeState(this.state, newPartialState, options.env)
+            this.state = mergeState(this.state, newPartialState, env)
           } else {
-            this.state = deepFreeze(mergeModule(this.state, newPartialState, null, null, options.env))
+            const newState = mergeModule(this.state, newPartialState, null, null, env)
+            this.state = env === 'develop' 
+              ? newState
+              : deepFreeze(newState)
           }
         }
       } finally {
@@ -211,23 +226,27 @@ export class Store {
 
   // restore to init state
   restore (action, callback, notUpdate) {
+    const env = this.options.env
     const reducer = this.reducers.find(v => v.action === action)
     const stringifyAction = action.toString()
 
-    assert(
-      reducer,
-      `The [${stringifyAction}] action does not exist. ` +
-        'Maybe you have not defined.'
-    )
-    
-    const env = this.options.env
+    if (env === 'develop') {
+      assert(
+        reducer,
+        `The [${stringifyAction}] action does not exist. ` +
+          'Maybe you have not defined.'
+      )
+    }
+
     const { namespace, partialState } = reducer
 
-    assert(
-      isPlainObject(partialState),
-      'no initialized state, do you have a definition?' +
-        `\n\n   --- from [${stringifyAction}] action.`
-    )
+    if (env === 'develop') {
+      assert(
+        isPlainObject(partialState),
+        'no initialized state, do you have a definition?' +
+          `\n\n   --- from [${stringifyAction}] action.`
+      )
+    }
     
     // set state
     if (typeof namespace === 'string') {
@@ -240,7 +259,10 @@ export class Store {
       )
       this.state = mergeState(this.state, newPartialState, env)
     } else {
-      this.state = deepFreeze(mergeModule(this.state, partialState, null, null, env))
+      const newState = mergeModule(this.state, partialState, null, null, env)
+      this.state = env === 'develop'
+        ? newState
+        : deepFreeze(newState)
     }
 
     if (notUpdate) {
@@ -272,22 +294,28 @@ export class Store {
 
   // allow change `GLOBALWORD`.
   setNamespace (key) {
-    assert(
-      key && typeof key === 'string',
-      'The [namespace] must be a string',
-    )
     if (this.options.env === 'develop') {
-      console.error('The `setNamespace` is deprecated, please use options to specify.')
+      assert(
+        key && typeof key === 'string',
+        'The [namespace] must be a string',
+      )
+      console.error(
+        'The `setNamespace` is deprecated, ' +
+          'please use options to specify.'
+      )
     }
     this.options.globalNamespace = this.GLOBALWORD = key
   }
 
   // get module
   getModule (namespace, remainMsg) {
-    assert(
-      typeof namespace === 'string',
-      'the namespace mast be a string',
-    )
+    const env = this.options.env
+    if (env === 'develop') {
+      assert(
+        typeof namespace === 'string',
+        'the namespace mast be a string',
+      )
+    }
 
     if (!namespace) {
       return this.state
@@ -298,16 +326,20 @@ export class Store {
     // if the module does not meet the requirements
     // throw error
     if (remainMsg && module === null) {
-      warning(`The [${namespace}] module is not exist.${remainMsg || ''}`)
+      if (env === 'develop') {
+        warning(`The [${namespace}] module is not exist.${remainMsg || ''}`)
+      }
     }
     return module
   }
 
   addModule (namespace, reducers) {
-    assert(
-      typeof namespace === 'string',
-      'the namespace mast be a string',
-    )
+    if (this.options.env === 'develop') {
+      assert(
+        typeof namespace === 'string',
+        'the namespace mast be a string',
+      )
+    }
 
     if (isPlainObject(reducers)) {
       // Todo: replace to `Reflect.ownKeys`
@@ -338,8 +370,17 @@ export class Store {
     let createState = null
     const store = this
     const GLOBALWORD = this.GLOBALWORD
-    const { data, storeConfig = {} } = config
-    const storeNamespace = this.options.storeNamespace
+
+    const {
+      data,
+      storeConfig = {},
+    } = config
+
+    const {
+      env,
+      storeNamespace,
+    } = this.options
+
     const {
       addDep,
       useState,
@@ -349,10 +390,12 @@ export class Store {
       travelLimit = 0, // default not open time travel function
     } = storeConfig
 
-    assert(
-      typeof travelLimit === 'number',
-      `[travelLimit] must be a number, but now is [${typeof travelLimit}].`
-    )
+    if (env === 'develop') {
+      assert(
+        typeof travelLimit === 'number',
+        `[travelLimit] must be a number, but now is [${typeof travelLimit}].`
+      )
+    }
 
     delete config.storeConfig
 
@@ -376,11 +419,13 @@ export class Store {
         defineObject = useConfig
       }
 
-      assert(
-        isPlainObject(defineObject),
-        '[useState] must return a plain object, ' +
-          `but now is return a [${typeof defineObject}]`,
-      )
+      if (env === 'develop') {
+        assert(
+          isPlainObject(defineObject),
+          '[useState] must return a plain object, ' +
+            `but now is return a [${typeof defineObject}]`,
+        )
+      }
       
       // need deep clone, otherwise the `data.global` on the back of the component cannot be changed.
       if (namespace === null) {
@@ -418,7 +463,7 @@ export class Store {
       if (shouldAdd !== false && createState !== null) {
         if (component.data && isPlainObject(component.data[GLOBALWORD])) {
           // time travel can record diff patchs
-          component.timeTravel = new TimeTravel(component, GLOBALWORD, travelLimit)
+          component.timeTravel = new TimeTravel(component, GLOBALWORD, travelLimit, env)
 
           // add component to depComponents
           this.depComponents.push({
